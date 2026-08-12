@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+mawos.db
+ml/models/*.joblib
+ml/data/*.csv
+evaluation/results/
+fl/results/
+.venv/
+venv/
