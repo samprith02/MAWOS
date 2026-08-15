@@ -296,6 +296,62 @@ margin definition, the escalation policy, and the 50% cap.
 **Split discipline.** The sweep runs on **dev**. The test split stays
 empty and untouched until P5.
 
+### 9.3 P4 escalation-threshold selection — pre-registered before tuning
+
+τ is the router's only free parameter, so it is the project's largest
+remaining researcher degree of freedom. This clause fixes how it is chosen
+and is written **before `tune_router.py` was run**.
+
+**Model.** `qwen2.5:3b-instruct`, selected under §9.2. Not revisable at
+P4: a router that is retuned across models turns τ and model choice into
+one confounded knob.
+
+**Candidate set.** Every distinct observed margin value, plus −1.0
+(escalate nothing). Escalation is `margin <= tau`, so ties escalate
+together — that is what a deployed threshold actually does, and it means
+not every escalation rate is achievable. The 50% cap of §9.1 still binds.
+
+**Objective, evaluated on dev only.** At each τ, mean hybrid accuracy
+across seeds 0/1/2, where an escalated query is scored by that seed's LLM
+correctness and a kept query by the (deterministic) lexicon.
+
+**Selection rule — one-standard-error, favouring the cheaper operating
+point.** Let `A*` be the maximum mean hybrid accuracy over the candidate
+set and `σ*` the across-seed standard deviation at that τ.
+
+> Select the τ with the **lowest escalation rate** among all τ whose mean
+> hybrid accuracy is ≥ `A* − σ*`. Ties on escalation rate break to the
+> lower τ.
+
+Two reasons, both fixed in advance. (i) Picking the argmax of a curve
+computed on 108 queries fits τ to seed noise; the 1-SE rule (Breiman et
+al. 1984, CART §3.4.3) is the standard remedy and is imported here rather
+than invented. (ii) Escalation rate *is* the cost axis RQ3 is defined
+over — every escalated query costs an LLM call — so at statistically
+indistinguishable accuracy the cheaper threshold wins, exactly as in
+§9.2's latency tie-break.
+
+The rule can only move τ **downward** from the argmax, so it can only
+reduce the reported hybrid accuracy. It cannot flatter the router.
+
+**Prior exposure, disclosed.** `analyze_sweep.py` already reported the
+3B's accuracy *at the argmax* (§9.2's primary metric requires it), so
+`A*` was known when this clause was written. The shape of the curve
+elsewhere, the σ at the argmax, and every non-argmax operating point were
+not. The rule is therefore fixed against a partially observed curve, not
+a blind one; it is recorded this way rather than claimed to be blind.
+
+**Reporting.** The **complete** τ curve is published — every candidate
+threshold with its escalation rate, mean accuracy, per-seed accuracies,
+fixes and breaks — not only the selected point. Threshold selection must
+be auditable end to end.
+
+**Freeze.** The selected τ, the margin definition, the model and the
+prompt are written to a config file and hashed. Held-out evaluation (P5)
+loads that file and runs **once**. τ is never recomputed on test, and no
+test result may motivate a change to it — a revised τ makes it a new
+experiment reported as such, not a correction.
+
 ---
 
 ## 10. Hardware and run conditions
@@ -319,6 +375,24 @@ thermals); report medians of interleaved runs; log GPU temperature and
 clocks; discard warm-ups; report model load time separately; state Ollama
 residency on every latency table — CLAUDE.md records that cascade timing
 differs 3–4× between resident and non-resident.
+
+### 10.1 Runtime capture is mandatory
+
+Every LLM result file records the **Ollama version**, the model digest,
+`num_ctx`, temperature, seeds, and measured GPU residency. A result file
+missing any of these is not citable.
+
+This was added after the fact, and the reason is on the record: the v2↔v3
+equivalence check (`results/v3_llm/CONDITIONS.md`) failed with the entire
+divergence concentrated in *whether the model emitted a tool call at all*
+— the signature of a change in the runtime's tool-calling path, not in
+the model. v2 had not recorded its Ollama version, so the hypothesis
+cannot be tested and the two runs cannot be differenced. The rule exists
+so that never recurs; it cannot repair v2.
+
+**Consequence for reporting.** A v2 number and a v3 number are never
+subtracted. v2 figures are cited as *what v2 reported under an unrecorded
+runtime*, and any comparison of tiers is made **within** v3.
 
 ---
 
@@ -348,3 +422,5 @@ Stated here so they are criticised as design, not discovered as defects.
 |---|---|---|
 | 2026-08-15 | Protocol frozen at P0. | Initial. |
 | 2026-08-15 | Added §9.2, the P6 model selection rule. | P0.5 found the router's ceiling is set by the escalation model, promoting model choice to an experimental variable. Committed **before** any model beyond the 3B was run, so the rule cannot be fitted to the sweep. No existing clause changed. |
+| 2026-08-15 | Added §10.1, mandatory runtime capture. | The v2↔v3 equivalence check failed on a shift confined to abstention, and v2 had not recorded its Ollama version, so the cause could not be established. Recording it is now a requirement. Retrospective only in the sense that it cannot repair v2. |
+| 2026-08-15 | Added §9.3, the P4 threshold selection rule. | τ is the router's only free parameter and therefore the largest remaining degree of freedom. Committed **before** `tune_router.py` was run. Prior exposure to `A*` via §9.2 is disclosed inside the clause rather than denied. No existing clause changed. |
