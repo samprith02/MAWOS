@@ -446,6 +446,16 @@ Stated here so they are criticised as design, not discovered as defects.
   captures the difference.
 - **The dev split is contaminated by construction** — the lexicon was
   tuned on it. Every dev number is a tuning aid, never evidence.
+- **The scheduling objective can be gamed by emptying a day.** It
+  divides by the number of *non-empty* section-days, so a solver that
+  leaves a section free on Friday shrinks the denominator and scores
+  better without scheduling better. Found at P1 by trying to optimise
+  it. The metric is frozen and was **not** patched; the P1 solver
+  instead holds every section-day non-empty, which also preserves
+  comparability with v2 (all 200 of its section-days are occupied).
+- **Nothing in the scheduling objective prices block length.** A fully
+  compacted day is four classes back to back; the metric records
+  `longest_block_mean` but does not charge for it.
 - **One institution, synthetic data, one model family, English only.**
 - **Temperature 0.1 with 3 seeds** is a thin sample of decoding
   variability.
@@ -459,5 +469,6 @@ Stated here so they are criticised as design, not discovered as defects.
 | 2026-08-15 | Protocol frozen at P0. | Initial. |
 | 2026-08-15 | Added §9.2, the P6 model selection rule. | P0.5 found the router's ceiling is set by the escalation model, promoting model choice to an experimental variable. Committed **before** any model beyond the 3B was run, so the rule cannot be fitted to the sweep. No existing clause changed. |
 | 2026-08-15 | Added §10.1, mandatory runtime capture. | The v2↔v3 equivalence check failed on a shift confined to abstention, and v2 had not recorded its Ollama version, so the cause could not be established. Recording it is now a requirement. Retrospective only in the sense that it cannot repair v2. |
+| 2026-08-15 | Added two scheduling limitations to §11. | Found at P1 while optimising the frozen objective: it can be gamed by emptying a section-day, and it does not price block length. Documented, **not** patched — the metric is the instrument and the P1 solver carries an invariant instead. |
 | 2026-08-15 | Added §1.5 hashing, `FROZEN.sha256`, §9.4 the P5 run procedure. | P4 is done and P1/P7 now run in parallel with the research path. §1.5 makes silent edits to the instrument a failing test rather than an invisible one; §9.4 fixes the held-out procedure while the held-out set still does not exist, so it cannot be shaped by the data. |
 | 2026-08-15 | Added §9.3, the P4 threshold selection rule. | τ is the router's only free parameter and therefore the largest remaining degree of freedom. Committed **before** `tune_router.py` was run. Prior exposure to `A*` via §9.2 is disclosed inside the clause rather than denied. No existing clause changed. |

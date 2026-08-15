@@ -399,6 +399,76 @@ so later edits cannot silently improve the baseline.
 The seven-field per-query log in §3.1 is implemented and verified at P0.
 Nothing downstream is measurable without it.
 
+### 4.3.1 P1 result (run 2026-08-15) — the two defects are fixed
+
+`evaluation/scheduler_eval.py` → `results/v3_scheduler/e4.{json,md}`. The
+new solver is `backend/app/scheduler.py`: a compact greedy seed followed
+by simulated annealing over two hard-feasible moves. The v2 comparator is
+**read from the P0 freeze, not re-run**, and both are scored by the same
+frozen metric module, now hashed under §1.5.
+
+**Read the floor, not the percentages.** The best objective *any*
+schedule could reach on this instance is **196.0** — gaps, late starts,
+repeats and teacher gaps can all be zero, but the load-balance term
+cannot, because 18 periods do not divide evenly into five days. P1 lands
+**8.2 above that floor**; v2 sits **2245.4** above it.
+
+| Metric (10 seeds) | v2 greedy | P1 SA |
+|---|---:|---:|
+| Late-start days (of 200) | 80.80 ± 5.56 | **0.90 ± 1.22** |
+| Idle gaps inside days | 223.00 ± 11.44 | **0.00 ± 0.00** |
+| Subject repeats in a day | 138.50 ± 7.06 | **0.20 ± 0.40** |
+| Teacher idle gaps | 322.00 ± 11.30 | **3.90 ± 1.76** |
+| Daily-load σ | 1.01 ± 0.04 | **0.49 ± 0.00** |
+| Objective | 2441.3 ± 42.0 | **204.2 ± 5.3** |
+| Placement rate / hard conflicts | 1.000 / 0 | 1.000 / 0 |
+| Solve time | 163 ms | 1960–5646 ms |
+
+**The zero is largely construction, not search, and is reported that
+way.** The seed lays each section out as periods 0..load−1 on every day,
+so it is gap-free before a single annealing step runs; gaps appear only
+where a teacher conflict forces an overflow. A solver built to produce
+compact days producing compact days is not a finding, and per CLAUDE.md
+it is not headlined. The informative quantity is the 8.2-point residual —
+0.90 late starts, 0.20 repeats, 3.90 teacher gaps the search could not
+remove.
+
+**A trade-off the frozen objective does not price.** Compaction raises
+the longest unbroken run from 2.63 to 3.60 periods. With 18 periods over
+five gap-free days that is arithmetic rather than a choice, but nothing
+in the objective charges for it — so if four back-to-back classes are
+worse than one mid-morning gap, this objective cannot say so.
+
+**A defect in the objective, found by optimising it.** The frozen metric
+divides by the number of *non-empty* section-days, so a solver that
+empties a Friday shrinks the denominator and scores better without
+scheduling better. The metric is frozen, so it was not patched; the
+solver instead carries a hard invariant that every section-day keeps at
+least one class, which blocks the exploit, preserves comparability with
+v2 (whose 200 section-days are all occupied), and keeps the incremental
+cost exactly equal to the frozen one. Recorded in §11 of PROTOCOL as an
+instrument limitation.
+
+**Ablation.** Every weight is load-bearing — zeroing one and re-scoring
+with the *full* objective shows the damage it was preventing: idle_gap →
+247 gaps, late_start → 140.7 late starts, subject_repeat → 141.7
+repeats, faculty_gap → 143.3 teacher gaps, load_sigma → objective 373.1.
+
+**No significance test.** v2's per-seed objectives were never stored at
+P0, only the band, so a rank test would require inventing them. The
+ranges are disjoint — v2 [2394, 2531] against P1 [198.0, 215.0] — and
+that is reported instead.
+
+**Timing is not a clean measurement on this host.** Identical 120 000-step
+workloads ranged 1960–5646 ms with a 25 ms seed phase and one attempt, so
+the spread is host contention, not the algorithm. The minimum is quoted
+as the least-contaminated estimate (12× the v2 solve time). Measured with
+a 2 GB Ollama model resident, per the CLAUDE.md condition.
+
+**Still not a contribution.** §4.4's retraction stands: simulated
+annealing for timetabling is decades old. This is applied engineering
+with a measured before/after on a real defect.
+
 ### 4.4 ITC-2007 — approved, but re-scoped
 
 **Decision: yes, as a separate benchmark harness sharing the annealing
@@ -563,7 +633,7 @@ Net tool-surface change: 13 → 12 (`get_admissions_funnel` removed). The
 |---|---|---|
 | **P0** | Cut `v3-research`. Freeze v2 (§4.1–4.2). RQ1 instrumentation (§4.3). Write `PROTOCOL.md` + distractor tool list. Preserve v2 lexicon + greedy as executable baselines. | baseline frozen **and reviewed** |
 | **P0.5** | Router viability gate (§3.5) — simulation primary, AUC descriptive. | **may cancel P4** |
-| **P1** | Scheduler: objective + greedy seed + SA. Keep greedy runnable. E4 + weight ablation, 10 seeds. | before/after + convergence reproduce |
+| **P1** | Scheduler: objective + greedy seed + SA. Keep greedy runnable. E4 + weight ablation, 10 seeds. **Done — §4.3.1.** | before/after + convergence reproduce |
 | **P1b** | ITC-2007 harness (§4.4), separate from production scheduler. E4b. | official validator passes |
 | **P2** | Agent reduction 10 → 4 (§7), tool surface held per §7.1. | tool count verified 13→12 |
 | **P3** | PCN-style provenance gate. E3. | false-block rate acceptable |

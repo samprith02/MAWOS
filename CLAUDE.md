@@ -77,6 +77,8 @@ python evaluation/gate_p05.py             # P0.5 router viability gate
 python evaluation/capture_llm.py          # frozen-protocol LLM capture (live Ollama)
 python evaluation/analyze_sweep.py        # P6 model selection, PROTOCOL 9.2
 python evaluation/tune_router.py          # P4 threshold selection, PROTOCOL 9.3
+python evaluation/scheduler_eval.py       # E4: P1 solver vs frozen v2 greedy
+python evaluation/freeze_manifest.py      # verify the frozen instrument (PROTOCOL 1.5)
 python evaluation/evaluate.py             # v2 harness: both routing tiers
 python evaluation/evaluate.py --no-llm    # skip the 108 live LLM calls
 python evaluation/ablation.py             # is the architecture load-bearing?

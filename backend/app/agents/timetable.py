@@ -1,27 +1,47 @@
-"""Timetable Agent — constraint-based weekly timetable generation.
+"""Timetable Agent — objective-driven weekly timetable generation.
 
-Constraints enforced:
-  * a faculty member cannot be in two sections at the same (day, period)
-    — checked GLOBALLY across all 40 sections;
+Hard constraints (never violated):
+  * a faculty member cannot be in two sections at the same (day, period),
+    checked GLOBALLY across all 40 sections and against any bookings
+    outside the scope being regenerated;
   * one section has at most one class per (day, period);
-  * a subject appears at most twice per day per section (and the solver
-    prefers once);
-  * each subject receives exactly `credits` periods per week.
+  * each subject receives exactly `credits` periods per week — placement
+    rate is 1.000 or the solve is rejected.
 
-Algorithm: randomized greedy with restarts (subjects placed hardest-first),
-which is the standard practical approach for school timetabling at this
-scale. Solver metrics (placement rate, restarts, wall time) are reported —
-this is a measurable research component, not a black box.
+Soft objective (minimised): idle gaps inside a day, days that do not
+start at first period, uneven daily load, a subject taught twice in one
+day, and teacher idle gaps. Weights and definitions live in
+`evaluation/benchmark/schedule_metrics`, frozen at P0.
+
+Algorithm: compact greedy seed + simulated annealing (`app/scheduler.py`).
+
+**This replaces the v2 randomised-greedy solver**, which enforced the hard
+constraints and nothing else — it had no objective function, so a
+timetable with holes at 09:00 and 12:15 scored exactly as well as a
+compact one. Measured over 10 seeds on the shipped institution, v2 left
+80.8 of 200 section-days starting after first period and 223 idle gaps
+inside days. The before/after is `evaluation/scheduler_eval.py` and
+`results/v3_scheduler/e4.md`; the v2 solver is preserved verbatim and
+still runnable at `evaluation/baselines/scheduler_v2.py`.
+
+Scheduling is **not** claimed as a research contribution — simulated
+annealing for timetabling is decades old and the plan (§4.4) retracted
+it. What is claimed is a measured before/after on a real defect.
 """
-import random
 import time
 
+from .. import scheduler
 from ..models import Department, TeachingAssignment, TimetableSlot
 from .base import BaseAgent
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"]
 PERIODS = ["9:00", "10:00", "11:15", "12:15", "14:00", "15:00"]
 N_DAYS, N_PERIODS = 5, 6
+
+#: Annealing budget. 120k steps lands ~4 objective points above the
+#: instance floor and costs ~1.8 s; see the convergence trace in
+#: results/v3_scheduler/e4.json. Below ~60k the schedule is visibly worse.
+SOLVER_ITERS = 120_000
 
 
 class TimetableAgent(BaseAgent):
@@ -30,7 +50,8 @@ class TimetableAgent(BaseAgent):
                    "(global teacher constraints), CSV/print export")
 
     def generate(self, db, dept_code: str | None = None,
-                 max_restarts: int = 40, seed: int = 7) -> dict:
+                 max_restarts: int = 3, seed: int = 7,
+                 iters: int = SOLVER_ITERS) -> dict:
         """(Re)generate timetables for one department or the whole institution."""
         q = db.query(TeachingAssignment)
         if dept_code:
@@ -39,59 +60,31 @@ class TimetableAgent(BaseAgent):
         if not assignments:
             return {"ok": False, "error": "no teaching assignments found"}
 
-        # Existing bookings by faculty OUTSIDE the scope being regenerated
-        # must stay respected (global conflict-freedom).
-        outside = db.query(TimetableSlot)
+        # Bookings by faculty OUTSIDE the scope being regenerated must stay
+        # respected, or a scoped regeneration double-books a shared teacher.
+        blocked: dict[tuple[int, int], int] = {}
         if dept_code:
-            outside = outside.filter(TimetableSlot.dept_code != dept_code)
-        else:
-            outside = outside.filter(False)
-        busy_base: set[tuple[int, int, int]] = {
-            (s.faculty_id, s.day, s.period) for s in outside.all()}
+            outside = (db.query(TimetableSlot)
+                         .filter(TimetableSlot.dept_code != dept_code).all())
+            for s in outside:
+                key = (s.faculty_id, s.day)
+                blocked[key] = blocked.get(key, 0) | (1 << s.period)
 
-        sections: dict[tuple, list[TeachingAssignment]] = {}
+        demands = []
         for a in assignments:
-            sections.setdefault((a.dept_code, a.year, a.section), []).append(a)
+            for _ in range(a.subject.credits):
+                demands.append(((a.dept_code, a.year, a.section),
+                                a.subject_code, a.faculty_id))
 
-        rng = random.Random(seed)
         t0 = time.perf_counter()
-        best = None
-        for restart in range(max_restarts):
-            busy = set(busy_base)
-            placed: list[dict] = []
-            unplaced = 0
-            for key in sorted(sections):
-                sec_free = {(d, p) for d in range(N_DAYS) for p in range(N_PERIODS)}
-                # hardest-first: subjects needing more periods placed first
-                todo = sorted(sections[key],
-                              key=lambda a: -a.subject.credits)
-                for a in todo:
-                    per_day = {d: 0 for d in range(N_DAYS)}
-                    need = a.subject.credits
-                    slots = sorted(sec_free, key=lambda s: rng.random())
-                    for (d, p) in slots:
-                        if need == 0:
-                            break
-                        if per_day[d] >= 2:
-                            continue
-                        if (a.faculty_id, d, p) in busy:
-                            continue
-                        busy.add((a.faculty_id, d, p))
-                        sec_free.discard((d, p))
-                        per_day[d] += 1
-                        placed.append(dict(dept_code=a.dept_code, year=a.year,
-                                           section=a.section, day=d, period=p,
-                                           subject_code=a.subject_code,
-                                           faculty_id=a.faculty_id,
-                                           room=f"{a.dept_code}-{a.year}{a.section}"))
-                        need -= 1
-                    unplaced += need
-            if best is None or unplaced < best[0]:
-                best = (unplaced, placed, restart + 1)
-            if best[0] == 0:
-                break
+        try:
+            sched, info = scheduler.solve(demands, seed=seed, iters=iters,
+                                          restarts=max_restarts,
+                                          blocked=blocked)
+        except scheduler.Unplaceable as exc:
+            return {"ok": False, "error": f"no feasible timetable: {exc}"}
+        placed = sched.slots()
 
-        unplaced, placed, restarts = best
         # replace scope atomically
         dq = db.query(TimetableSlot)
         if dept_code:
@@ -99,18 +92,21 @@ class TimetableAgent(BaseAgent):
         dq.delete()
         db.bulk_insert_mappings(TimetableSlot, placed)
         db.commit()
-        elapsed = round((time.perf_counter() - t0) * 1000, 1)
 
-        total_needed = sum(a.subject.credits for a in assignments)
-        result = {
+        total_needed = len(demands)
+        return {
             "ok": True, "scope": dept_code or "ALL",
-            "sections": len(sections), "slots_placed": len(placed),
-            "slots_required": total_needed, "unplaced": unplaced,
+            "sections": len(sched.sections), "slots_placed": len(placed),
+            "slots_required": total_needed,
+            "unplaced": total_needed - len(placed),
             "placement_rate": round(100 * len(placed) / total_needed, 2),
             "teacher_conflicts": 0,  # guaranteed by construction
-            "restarts_used": restarts, "solve_ms": elapsed,
+            "solver": "greedy+annealing",
+            "objective": round(info["final_cost"], 1),
+            "objective_at_seed": round(info["seed_cost"], 1),
+            "annealing_steps": info["iterations"],
+            "solve_ms": round((time.perf_counter() - t0) * 1000, 1),
         }
-        return result
 
     async def generate_and_announce(self, db, dept_code: str | None,
                                     triggered_by: str) -> dict:

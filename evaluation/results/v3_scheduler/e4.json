@@ -1,0 +1,1565 @@
+{
+  "generated": "2026-08-15T23:34:37",
+  "instance": {
+    "periods": 720,
+    "sections": 40,
+    "faculty": 75
+  },
+  "solver": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "iterations": 120000,
+    "weights": {
+      "idle_gap": 5.0,
+      "late_start": 4.0,
+      "load_sigma": 2.0,
+      "subject_repeat": 2.0,
+      "faculty_gap": 1.0
+    },
+    "t0": 2.5,
+    "t1": 0.02
+  },
+  "comparator": "results/v2_frozen/baseline.json (frozen at P0)",
+  "v2_bands": {
+    "late_start_days": {
+      "mean": 80.8,
+      "std": 5.5641710972974225,
+      "min": 74,
+      "max": 90
+    },
+    "late_start_rate": {
+      "mean": 0.404,
+      "std": 0.027820855486487113,
+      "min": 0.37,
+      "max": 0.45
+    },
+    "idle_gaps_total": {
+      "mean": 223,
+      "std": 11.436782764396638,
+      "min": 207,
+      "max": 250
+    },
+    "idle_gaps_per_section_day": {
+      "mean": 1.115,
+      "std": 0.05718391382198319,
+      "min": 1.035,
+      "max": 1.25
+    },
+    "daily_load_sigma_mean": {
+      "mean": 1.0102784757594514,
+      "std": 0.04348256886869606,
+      "min": 0.957010873563909,
+      "max": 1.094442644141726
+    },
+    "longest_block_mean": {
+      "mean": 2.6325,
+      "std": 0.04148795005781797,
+      "min": 2.565,
+      "max": 2.695
+    },
+    "subject_repeat_days": {
+      "mean": 138.5,
+      "std": 7.060453243241541,
+      "min": 123,
+      "max": 149
+    },
+    "faculty_idle_gaps": {
+      "mean": 322,
+      "std": 11.296016997154352,
+      "min": 304,
+      "max": 338
+    },
+    "placement_rate": {
+      "mean": 1.0,
+      "std": 0.0,
+      "min": 1.0,
+      "max": 1.0
+    },
+    "unplaced": {
+      "mean": 0,
+      "std": 0.0,
+      "min": 0,
+      "max": 0
+    },
+    "faculty_conflicts": {
+      "mean": 0,
+      "std": 0.0,
+      "min": 0,
+      "max": 0
+    },
+    "section_conflicts": {
+      "mean": 0,
+      "std": 0.0,
+      "min": 0,
+      "max": 0
+    },
+    "objective": {
+      "mean": 2441.3113903037806,
+      "std": 42.02728446609724,
+      "min": 2394.3498328268665,
+      "max": 2530.8043494255635
+    },
+    "solve_ms": {
+      "mean": 162.9292099999475,
+      "std": 17.977951675105786,
+      "min": 141.41169999993508,
+      "max": 192.2858000002634
+    }
+  },
+  "p1_bands": {
+    "late_start_days": {
+      "mean": 0.9,
+      "median": 0.0,
+      "std": 1.2206555615733703,
+      "min": 0,
+      "max": 3
+    },
+    "idle_gaps_total": {
+      "mean": 0,
+      "median": 0.0,
+      "std": 0.0,
+      "min": 0,
+      "max": 0
+    },
+    "daily_load_sigma_mean": {
+      "mean": 0.49067320368524403,
+      "median": 0.4898979485566356,
+      "std": 0.002325765385825229,
+      "min": 0.4898979485566356,
+      "max": 0.4976504998427197
+    },
+    "subject_repeat_days": {
+      "mean": 0.2,
+      "median": 0.0,
+      "std": 0.4,
+      "min": 0,
+      "max": 1
+    },
+    "faculty_idle_gaps": {
+      "mean": 3.9,
+      "median": 4.0,
+      "std": 1.7578395831246947,
+      "min": 1,
+      "max": 6
+    },
+    "longest_block_mean": {
+      "mean": 3.6,
+      "median": 3.6,
+      "std": 0.0,
+      "min": 3.6,
+      "max": 3.6
+    },
+    "placement_rate": {
+      "mean": 1.0,
+      "median": 1.0,
+      "std": 0.0,
+      "min": 1.0,
+      "max": 1.0
+    },
+    "faculty_conflicts": {
+      "mean": 0,
+      "median": 0.0,
+      "std": 0.0,
+      "min": 0,
+      "max": 0
+    },
+    "section_conflicts": {
+      "mean": 0,
+      "median": 0.0,
+      "std": 0.0,
+      "min": 0,
+      "max": 0
+    },
+    "objective": {
+      "mean": 204.1692814740976,
+      "median": 201.45917942265424,
+      "std": 5.327014336877616,
+      "min": 197.95917942265424,
+      "max": 214.95917942265424
+    },
+    "solve_ms": {
+      "mean": 5002.18,
+      "median": 5288.0,
+      "std": 1024.8811568177064,
+      "min": 1960.3,
+      "max": 5646.1
+    },
+    "seed_ms": {
+      "mean": 22.64,
+      "median": 24.85,
+      "std": 5.827726829562278,
+      "min": 11.0,
+      "max": 27.1
+    },
+    "seed_attempts": {
+      "mean": 1,
+      "median": 1.0,
+      "std": 0.0,
+      "min": 1,
+      "max": 1
+    }
+  },
+  "objective_floor": 195.95917942265424,
+  "separation": {
+    "v2_range": [
+      2394.3498328268665,
+      2530.8043494255635
+    ],
+    "p1_range": [
+      197.95917942265424,
+      214.95917942265424
+    ],
+    "v2_best_vs_p1_worst_ratio": 11.138625664917893,
+    "ranges_disjoint": true,
+    "test_omitted_because": "v2 per-seed objectives were not stored at P0, only the band; a rank test would require fabricating them, and the ranges are disjoint by roughly an order of magnitude regardless"
+  },
+  "ablation": {
+    "idle_gap": {
+      "late_start_days": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "idle_gaps_total": {
+        "mean": 247,
+        "median": 248,
+        "std": 9.41629792788369,
+        "min": 235,
+        "max": 258
+      },
+      "daily_load_sigma_mean": {
+        "mean": 0.4898979485566356,
+        "median": 0.4898979485566356,
+        "std": 0.0,
+        "min": 0.4898979485566356,
+        "max": 0.4898979485566356
+      },
+      "subject_repeat_days": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "faculty_idle_gaps": {
+        "mean": 0.3333333333333333,
+        "median": 0,
+        "std": 0.4714045207910317,
+        "min": 0,
+        "max": 1
+      },
+      "longest_block_mean": {
+        "mean": 2.5783333333333336,
+        "median": 2.6,
+        "std": 0.08106924338010199,
+        "min": 2.47,
+        "max": 2.665
+      },
+      "placement_rate": {
+        "mean": 1.0,
+        "median": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "faculty_conflicts": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "section_conflicts": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "objective": {
+        "mean": 1431.2925127559874,
+        "median": 1435.9591794226542,
+        "std": 47.471628954098,
+        "min": 1370.9591794226542,
+        "max": 1486.9591794226542
+      }
+    },
+    "late_start": {
+      "late_start_days": {
+        "mean": 140.66666666666666,
+        "median": 140,
+        "std": 4.9216076867444665,
+        "min": 135,
+        "max": 147
+      },
+      "idle_gaps_total": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "daily_load_sigma_mean": {
+        "mean": 0.4898979485566356,
+        "median": 0.4898979485566356,
+        "std": 0.0,
+        "min": 0.4898979485566356,
+        "max": 0.4898979485566356
+      },
+      "subject_repeat_days": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "faculty_idle_gaps": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "longest_block_mean": {
+        "mean": 3.6,
+        "median": 3.6,
+        "std": 0.0,
+        "min": 3.6,
+        "max": 3.6
+      },
+      "placement_rate": {
+        "mean": 1.0,
+        "median": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "faculty_conflicts": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "section_conflicts": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "objective": {
+        "mean": 758.6258460893208,
+        "median": 755.9591794226542,
+        "std": 19.686430746977866,
+        "min": 735.9591794226542,
+        "max": 783.9591794226542
+      }
+    },
+    "load_sigma": {
+      "late_start_days": {
+        "mean": 0.3333333333333333,
+        "median": 0,
+        "std": 0.4714045207910317,
+        "min": 0,
+        "max": 1
+      },
+      "idle_gaps_total": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "daily_load_sigma_mean": {
+        "mean": 0.899348069227034,
+        "median": 0.8891186547563719,
+        "std": 0.029466021043353975,
+        "min": 0.8694786528649157,
+        "max": 0.9394469000598147
+      },
+      "subject_repeat_days": {
+        "mean": 3.6666666666666665,
+        "median": 4,
+        "std": 2.0548046676563256,
+        "min": 1,
+        "max": 6
+      },
+      "faculty_idle_gaps": {
+        "mean": 4.666666666666667,
+        "median": 6,
+        "std": 1.8856180831641267,
+        "min": 2,
+        "max": 6
+      },
+      "longest_block_mean": {
+        "mean": 3.6,
+        "median": 3.6,
+        "std": 0.0,
+        "min": 3.6,
+        "max": 3.6
+      },
+      "placement_rate": {
+        "mean": 1.0,
+        "median": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "faculty_conflicts": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "section_conflicts": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "objective": {
+        "mean": 373.072561024147,
+        "median": 369.64746190254874,
+        "std": 12.479529945570851,
+        "min": 359.79146114596625,
+        "max": 389.7787600239259
+      }
+    },
+    "subject_repeat": {
+      "late_start_days": {
+        "mean": 1.3333333333333333,
+        "median": 1,
+        "std": 0.4714045207910317,
+        "min": 1,
+        "max": 2
+      },
+      "idle_gaps_total": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "daily_load_sigma_mean": {
+        "mean": 0.4924821323186636,
+        "median": 0.4898979485566356,
+        "std": 0.00365458772392437,
+        "min": 0.4898979485566356,
+        "max": 0.4976504998427197
+      },
+      "subject_repeat_days": {
+        "mean": 141.66666666666666,
+        "median": 142,
+        "std": 1.247219128924647,
+        "min": 140,
+        "max": 143
+      },
+      "faculty_idle_gaps": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "longest_block_mean": {
+        "mean": 3.6,
+        "median": 3.6,
+        "std": 0.0,
+        "min": 3.6,
+        "max": 3.6
+      },
+      "placement_rate": {
+        "mean": 1.0,
+        "median": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "faculty_conflicts": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "section_conflicts": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "objective": {
+        "mean": 485.6595195941321,
+        "median": 483.95917942265424,
+        "std": 2.4046441311518065,
+        "min": 483.95917942265424,
+        "max": 489.0601999370879
+      }
+    },
+    "faculty_gap": {
+      "late_start_days": {
+        "mean": 7,
+        "median": 7,
+        "std": 0.816496580927726,
+        "min": 6,
+        "max": 8
+      },
+      "idle_gaps_total": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "daily_load_sigma_mean": {
+        "mean": 0.4924821323186636,
+        "median": 0.4898979485566356,
+        "std": 0.00365458772392437,
+        "min": 0.4898979485566356,
+        "max": 0.4976504998427197
+      },
+      "subject_repeat_days": {
+        "mean": 0.3333333333333333,
+        "median": 0,
+        "std": 0.4714045207910317,
+        "min": 0,
+        "max": 1
+      },
+      "faculty_idle_gaps": {
+        "mean": 143.33333333333334,
+        "median": 146,
+        "std": 6.79869268479038,
+        "min": 134,
+        "max": 150
+      },
+      "longest_block_mean": {
+        "mean": 3.6,
+        "median": 3.6,
+        "std": 0.0,
+        "min": 3.6,
+        "max": 3.6
+      },
+      "placement_rate": {
+        "mean": 1.0,
+        "median": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "faculty_conflicts": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "section_conflicts": {
+        "mean": 0,
+        "median": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "objective": {
+        "mean": 368.99285292746544,
+        "median": 367.0601999370879,
+        "std": 3.540372926299484,
+        "min": 365.95917942265424,
+        "max": 373.95917942265424
+      }
+    }
+  },
+  "ablation_reference": {
+    "late_start_days": {
+      "mean": 0,
+      "median": 0,
+      "std": 0.0,
+      "min": 0,
+      "max": 0
+    },
+    "idle_gaps_total": {
+      "mean": 0,
+      "median": 0,
+      "std": 0.0,
+      "min": 0,
+      "max": 0
+    },
+    "daily_load_sigma_mean": {
+      "mean": 0.4924821323186636,
+      "median": 0.4898979485566356,
+      "std": 0.00365458772392437,
+      "min": 0.4898979485566356,
+      "max": 0.4976504998427197
+    },
+    "subject_repeat_days": {
+      "mean": 0,
+      "median": 0,
+      "std": 0.0,
+      "min": 0,
+      "max": 0
+    },
+    "faculty_idle_gaps": {
+      "mean": 5.333333333333333,
+      "median": 6,
+      "std": 0.9428090415820634,
+      "min": 4,
+      "max": 6
+    },
+    "longest_block_mean": {
+      "mean": 3.6,
+      "median": 3.6,
+      "std": 0.0,
+      "min": 3.6,
+      "max": 3.6
+    },
+    "placement_rate": {
+      "mean": 1.0,
+      "median": 1.0,
+      "std": 0.0,
+      "min": 1.0,
+      "max": 1.0
+    },
+    "faculty_conflicts": {
+      "mean": 0,
+      "median": 0,
+      "std": 0.0,
+      "min": 0,
+      "max": 0
+    },
+    "section_conflicts": {
+      "mean": 0,
+      "median": 0,
+      "std": 0.0,
+      "min": 0,
+      "max": 0
+    },
+    "objective": {
+      "mean": 202.32618626079878,
+      "median": 201.95917942265424,
+      "std": 2.0985904931011543,
+      "min": 199.95917942265424,
+      "max": 205.06019993708787
+    }
+  },
+  "ablation_seeds": [
+    0,
+    1,
+    2
+  ],
+  "convergence_trace": {
+    "0": [
+      {
+        "step": 0,
+        "temp": 2.4999,
+        "cost": 565.96,
+        "best": 565.96
+      },
+      {
+        "step": 1000,
+        "temp": 2.4013,
+        "cost": 535.57,
+        "best": 530.36
+      },
+      {
+        "step": 4000,
+        "temp": 2.1283,
+        "cost": 672.52,
+        "best": 530.36
+      },
+      {
+        "step": 5000,
+        "temp": 2.0443,
+        "cost": 682.27,
+        "best": 530.36
+      },
+      {
+        "step": 6000,
+        "temp": 1.9637,
+        "cost": 671.66,
+        "best": 530.36
+      },
+      {
+        "step": 7000,
+        "temp": 1.8863,
+        "cost": 712.76,
+        "best": 530.36
+      },
+      {
+        "step": 8000,
+        "temp": 1.8119,
+        "cost": 752.1,
+        "best": 530.36
+      },
+      {
+        "step": 10000,
+        "temp": 1.6718,
+        "cost": 712.32,
+        "best": 530.36
+      },
+      {
+        "step": 11000,
+        "temp": 1.6059,
+        "cost": 684.51,
+        "best": 530.36
+      },
+      {
+        "step": 12000,
+        "temp": 1.5425,
+        "cost": 668.36,
+        "best": 530.36
+      },
+      {
+        "step": 13000,
+        "temp": 1.4817,
+        "cost": 626.26,
+        "best": 530.36
+      },
+      {
+        "step": 14000,
+        "temp": 1.4233,
+        "cost": 658.73,
+        "best": 530.36
+      },
+      {
+        "step": 15000,
+        "temp": 1.3671,
+        "cost": 653.13,
+        "best": 530.36
+      },
+      {
+        "step": 16000,
+        "temp": 1.3132,
+        "cost": 624.53,
+        "best": 530.36
+      },
+      {
+        "step": 17000,
+        "temp": 1.2614,
+        "cost": 624.26,
+        "best": 530.36
+      },
+      {
+        "step": 18000,
+        "temp": 1.2117,
+        "cost": 632.17,
+        "best": 530.36
+      },
+      {
+        "step": 19000,
+        "temp": 1.1639,
+        "cost": 625.03,
+        "best": 530.36
+      },
+      {
+        "step": 20000,
+        "temp": 1.118,
+        "cost": 569.66,
+        "best": 530.36
+      },
+      {
+        "step": 21000,
+        "temp": 1.0739,
+        "cost": 540.46,
+        "best": 530.36
+      },
+      {
+        "step": 22000,
+        "temp": 1.0315,
+        "cost": 524.46,
+        "best": 506.26
+      },
+      {
+        "step": 23000,
+        "temp": 0.9909,
+        "cost": 522.06,
+        "best": 506.26
+      },
+      {
+        "step": 24000,
+        "temp": 0.9518,
+        "cost": 495.16,
+        "best": 494.16
+      },
+      {
+        "step": 25000,
+        "temp": 0.9143,
+        "cost": 480.36,
+        "best": 480.36
+      },
+      {
+        "step": 29000,
+        "temp": 0.7783,
+        "cost": 416.26,
+        "best": 412.36
+      },
+      {
+        "step": 30000,
+        "temp": 0.7476,
+        "cost": 410.26,
+        "best": 404.26
+      },
+      {
+        "step": 32000,
+        "temp": 0.6898,
+        "cost": 387.16,
+        "best": 381.16
+      },
+      {
+        "step": 33000,
+        "temp": 0.6626,
+        "cost": 374.16,
+        "best": 373.16
+      },
+      {
+        "step": 34000,
+        "temp": 0.6365,
+        "cost": 374.16,
+        "best": 373.16
+      },
+      {
+        "step": 36000,
+        "temp": 0.5873,
+        "cost": 347.16,
+        "best": 344.16
+      },
+      {
+        "step": 37000,
+        "temp": 0.5641,
+        "cost": 339.16,
+        "best": 336.16
+      },
+      {
+        "step": 38000,
+        "temp": 0.5419,
+        "cost": 338.06,
+        "best": 335.16
+      },
+      {
+        "step": 39000,
+        "temp": 0.5205,
+        "cost": 324.06,
+        "best": 323.06
+      },
+      {
+        "step": 40000,
+        "temp": 0.5,
+        "cost": 320.06,
+        "best": 313.06
+      },
+      {
+        "step": 41000,
+        "temp": 0.4803,
+        "cost": 318.06,
+        "best": 313.06
+      },
+      {
+        "step": 42000,
+        "temp": 0.4613,
+        "cost": 319.96,
+        "best": 313.06
+      },
+      {
+        "step": 43000,
+        "temp": 0.4431,
+        "cost": 311.96,
+        "best": 311.96
+      },
+      {
+        "step": 44000,
+        "temp": 0.4257,
+        "cost": 307.96,
+        "best": 305.96
+      },
+      {
+        "step": 45000,
+        "temp": 0.4089,
+        "cost": 304.06,
+        "best": 302.06
+      },
+      {
+        "step": 46000,
+        "temp": 0.3927,
+        "cost": 303.06,
+        "best": 302.06
+      },
+      {
+        "step": 47000,
+        "temp": 0.3773,
+        "cost": 296.06,
+        "best": 296.06
+      },
+      {
+        "step": 48000,
+        "temp": 0.3624,
+        "cost": 287.06,
+        "best": 287.06
+      },
+      {
+        "step": 49000,
+        "temp": 0.3481,
+        "cost": 283.06,
+        "best": 283.06
+      },
+      {
+        "step": 50000,
+        "temp": 0.3344,
+        "cost": 278.16,
+        "best": 278.16
+      },
+      {
+        "step": 51000,
+        "temp": 0.3212,
+        "cost": 278.16,
+        "best": 275.16
+      },
+      {
+        "step": 53000,
+        "temp": 0.2963,
+        "cost": 273.16,
+        "best": 273.16
+      },
+      {
+        "step": 54000,
+        "temp": 0.2847,
+        "cost": 267.16,
+        "best": 267.16
+      },
+      {
+        "step": 55000,
+        "temp": 0.2734,
+        "cost": 266.06,
+        "best": 265.06
+      },
+      {
+        "step": 56000,
+        "temp": 0.2626,
+        "cost": 267.06,
+        "best": 265.06
+      },
+      {
+        "step": 57000,
+        "temp": 0.2523,
+        "cost": 257.06,
+        "best": 257.06
+      },
+      {
+        "step": 58000,
+        "temp": 0.2423,
+        "cost": 254.06,
+        "best": 254.06
+      },
+      {
+        "step": 59000,
+        "temp": 0.2328,
+        "cost": 251.06,
+        "best": 251.06
+      },
+      {
+        "step": 61000,
+        "temp": 0.2148,
+        "cost": 246.06,
+        "best": 246.06
+      },
+      {
+        "step": 62000,
+        "temp": 0.2063,
+        "cost": 245.06,
+        "best": 245.06
+      },
+      {
+        "step": 63000,
+        "temp": 0.1982,
+        "cost": 243.06,
+        "best": 243.06
+      },
+      {
+        "step": 64000,
+        "temp": 0.1904,
+        "cost": 243.06,
+        "best": 243.06
+      },
+      {
+        "step": 66000,
+        "temp": 0.1756,
+        "cost": 238.06,
+        "best": 238.06
+      },
+      {
+        "step": 67000,
+        "temp": 0.1687,
+        "cost": 238.06,
+        "best": 238.06
+      },
+      {
+        "step": 68000,
+        "temp": 0.1621,
+        "cost": 238.06,
+        "best": 238.06
+      },
+      {
+        "step": 69000,
+        "temp": 0.1557,
+        "cost": 237.06,
+        "best": 237.06
+      },
+      {
+        "step": 70000,
+        "temp": 0.1495,
+        "cost": 237.06,
+        "best": 237.06
+      },
+      {
+        "step": 71000,
+        "temp": 0.1436,
+        "cost": 237.06,
+        "best": 237.06
+      },
+      {
+        "step": 72000,
+        "temp": 0.138,
+        "cost": 237.06,
+        "best": 237.06
+      },
+      {
+        "step": 73000,
+        "temp": 0.1325,
+        "cost": 237.06,
+        "best": 237.06
+      },
+      {
+        "step": 74000,
+        "temp": 0.1273,
+        "cost": 234.96,
+        "best": 234.96
+      },
+      {
+        "step": 75000,
+        "temp": 0.1223,
+        "cost": 234.96,
+        "best": 234.96
+      },
+      {
+        "step": 77000,
+        "temp": 0.1128,
+        "cost": 232.96,
+        "best": 232.96
+      },
+      {
+        "step": 78000,
+        "temp": 0.1084,
+        "cost": 227.96,
+        "best": 227.96
+      },
+      {
+        "step": 79000,
+        "temp": 0.1041,
+        "cost": 226.96,
+        "best": 226.96
+      },
+      {
+        "step": 81000,
+        "temp": 0.0961,
+        "cost": 224.96,
+        "best": 224.96
+      },
+      {
+        "step": 82000,
+        "temp": 0.0923,
+        "cost": 224.96,
+        "best": 224.96
+      },
+      {
+        "step": 83000,
+        "temp": 0.0886,
+        "cost": 222.96,
+        "best": 222.96
+      },
+      {
+        "step": 84000,
+        "temp": 0.0851,
+        "cost": 221.96,
+        "best": 221.96
+      },
+      {
+        "step": 85000,
+        "temp": 0.0818,
+        "cost": 221.96,
+        "best": 221.96
+      },
+      {
+        "step": 86000,
+        "temp": 0.0785,
+        "cost": 220.96,
+        "best": 220.96
+      },
+      {
+        "step": 87000,
+        "temp": 0.0755,
+        "cost": 220.96,
+        "best": 220.96
+      },
+      {
+        "step": 88000,
+        "temp": 0.0725,
+        "cost": 220.96,
+        "best": 220.96
+      },
+      {
+        "step": 89000,
+        "temp": 0.0696,
+        "cost": 220.96,
+        "best": 220.96
+      },
+      {
+        "step": 90000,
+        "temp": 0.0669,
+        "cost": 220.96,
+        "best": 220.96
+      },
+      {
+        "step": 91000,
+        "temp": 0.0642,
+        "cost": 220.96,
+        "best": 220.96
+      },
+      {
+        "step": 92000,
+        "temp": 0.0617,
+        "cost": 220.96,
+        "best": 220.96
+      },
+      {
+        "step": 93000,
+        "temp": 0.0593,
+        "cost": 220.06,
+        "best": 220.06
+      },
+      {
+        "step": 94000,
+        "temp": 0.0569,
+        "cost": 220.06,
+        "best": 220.06
+      },
+      {
+        "step": 95000,
+        "temp": 0.0547,
+        "cost": 220.06,
+        "best": 220.06
+      },
+      {
+        "step": 96000,
+        "temp": 0.0525,
+        "cost": 219.06,
+        "best": 219.06
+      },
+      {
+        "step": 98000,
+        "temp": 0.0485,
+        "cost": 219.06,
+        "best": 219.06
+      },
+      {
+        "step": 99000,
+        "temp": 0.0466,
+        "cost": 219.06,
+        "best": 219.06
+      },
+      {
+        "step": 100000,
+        "temp": 0.0447,
+        "cost": 219.06,
+        "best": 219.06
+      },
+      {
+        "step": 101000,
+        "temp": 0.043,
+        "cost": 219.06,
+        "best": 219.06
+      },
+      {
+        "step": 102000,
+        "temp": 0.0413,
+        "cost": 218.06,
+        "best": 218.06
+      },
+      {
+        "step": 104000,
+        "temp": 0.0381,
+        "cost": 218.06,
+        "best": 218.06
+      },
+      {
+        "step": 105000,
+        "temp": 0.0366,
+        "cost": 217.06,
+        "best": 217.06
+      },
+      {
+        "step": 106000,
+        "temp": 0.0351,
+        "cost": 216.06,
+        "best": 216.06
+      },
+      {
+        "step": 107000,
+        "temp": 0.0337,
+        "cost": 216.06,
+        "best": 216.06
+      },
+      {
+        "step": 108000,
+        "temp": 0.0324,
+        "cost": 214.06,
+        "best": 214.06
+      },
+      {
+        "step": 109000,
+        "temp": 0.0311,
+        "cost": 213.06,
+        "best": 213.06
+      },
+      {
+        "step": 110000,
+        "temp": 0.0299,
+        "cost": 212.06,
+        "best": 212.06
+      },
+      {
+        "step": 111000,
+        "temp": 0.0287,
+        "cost": 208.06,
+        "best": 208.06
+      },
+      {
+        "step": 112000,
+        "temp": 0.0276,
+        "cost": 207.06,
+        "best": 207.06
+      },
+      {
+        "step": 113000,
+        "temp": 0.0265,
+        "cost": 207.06,
+        "best": 207.06
+      },
+      {
+        "step": 114000,
+        "temp": 0.0255,
+        "cost": 207.06,
+        "best": 207.06
+      },
+      {
+        "step": 115000,
+        "temp": 0.0245,
+        "cost": 207.06,
+        "best": 207.06
+      },
+      {
+        "step": 117000,
+        "temp": 0.0226,
+        "cost": 205.06,
+        "best": 205.06
+      },
+      {
+        "step": 118000,
+        "temp": 0.0217,
+        "cost": 205.06,
+        "best": 205.06
+      },
+      {
+        "step": 119000,
+        "temp": 0.0208,
+        "cost": 205.06,
+        "best": 205.06
+      }
+    ]
+  },
+  "per_seed": [
+    {
+      "section_days": 200,
+      "slots_placed": 720,
+      "late_start_days": 0,
+      "late_start_rate": 0.0,
+      "idle_gaps_total": 0,
+      "idle_gaps_per_section_day": 0.0,
+      "idle_gap_distribution": {
+        "0": 200
+      },
+      "daily_load_sigma_mean": 0.4898979485566356,
+      "daily_load_min": 3,
+      "daily_load_max": 4,
+      "longest_block_mean": 3.6,
+      "subject_repeat_days": 0,
+      "faculty_idle_gaps": 6,
+      "faculty_conflicts": 0,
+      "section_conflicts": 0,
+      "placement_rate": 1.0,
+      "unplaced": 0,
+      "objective": 201.95917942265424,
+      "solve_ms": 1960.3,
+      "seed_ms": 11.0,
+      "seed_attempts": 1,
+      "seed_cost": 565.9591794226541,
+      "acceptance_rate": 0.20695
+    },
+    {
+      "section_days": 200,
+      "slots_placed": 720,
+      "late_start_days": 0,
+      "late_start_rate": 0.0,
+      "idle_gaps_total": 0,
+      "idle_gaps_per_section_day": 0.0,
+      "idle_gap_distribution": {
+        "0": 200
+      },
+      "daily_load_sigma_mean": 0.4898979485566356,
+      "daily_load_min": 3,
+      "daily_load_max": 4,
+      "longest_block_mean": 3.6,
+      "subject_repeat_days": 0,
+      "faculty_idle_gaps": 4,
+      "faculty_conflicts": 0,
+      "section_conflicts": 0,
+      "placement_rate": 1.0,
+      "unplaced": 0,
+      "objective": 199.95917942265424,
+      "solve_ms": 5070.7,
+      "seed_ms": 11.5,
+      "seed_attempts": 1,
+      "seed_cost": 551.9591794226541,
+      "acceptance_rate": 0.20905833333333335
+    },
+    {
+      "section_days": 200,
+      "slots_placed": 720,
+      "late_start_days": 0,
+      "late_start_rate": 0.0,
+      "idle_gaps_total": 0,
+      "idle_gaps_per_section_day": 0.0,
+      "idle_gap_distribution": {
+        "0": 200
+      },
+      "daily_load_sigma_mean": 0.4976504998427197,
+      "daily_load_min": 3,
+      "daily_load_max": 5,
+      "longest_block_mean": 3.6,
+      "subject_repeat_days": 0,
+      "faculty_idle_gaps": 6,
+      "faculty_conflicts": 0,
+      "section_conflicts": 0,
+      "placement_rate": 1.0,
+      "unplaced": 0,
+      "objective": 205.06019993708787,
+      "solve_ms": 5362.0,
+      "seed_ms": 27.1,
+      "seed_attempts": 1,
+      "seed_cost": 564.9591794226541,
+      "acceptance_rate": 0.20691666666666667
+    },
+    {
+      "section_days": 200,
+      "slots_placed": 720,
+      "late_start_days": 0,
+      "late_start_rate": 0.0,
+      "idle_gaps_total": 0,
+      "idle_gaps_per_section_day": 0.0,
+      "idle_gap_distribution": {
+        "0": 200
+      },
+      "daily_load_sigma_mean": 0.4898979485566356,
+      "daily_load_min": 3,
+      "daily_load_max": 4,
+      "longest_block_mean": 3.6,
+      "subject_repeat_days": 1,
+      "faculty_idle_gaps": 3,
+      "faculty_conflicts": 0,
+      "section_conflicts": 0,
+      "placement_rate": 1.0,
+      "unplaced": 0,
+      "objective": 200.95917942265424,
+      "solve_ms": 5393.0,
+      "seed_ms": 26.9,
+      "seed_attempts": 1,
+      "seed_cost": 583.9591794226541,
+      "acceptance_rate": 0.20553333333333335
+    },
+    {
+      "section_days": 200,
+      "slots_placed": 720,
+      "late_start_days": 3,
+      "late_start_rate": 0.015,
+      "idle_gaps_total": 0,
+      "idle_gaps_per_section_day": 0.0,
+      "idle_gap_distribution": {
+        "0": 200
+      },
+      "daily_load_sigma_mean": 0.4898979485566356,
+      "daily_load_min": 3,
+      "daily_load_max": 4,
+      "longest_block_mean": 3.6,
+      "subject_repeat_days": 1,
+      "faculty_idle_gaps": 5,
+      "faculty_conflicts": 0,
+      "section_conflicts": 0,
+      "placement_rate": 1.0,
+      "unplaced": 0,
+      "objective": 214.95917942265424,
+      "solve_ms": 5515.5,
+      "seed_ms": 23.3,
+      "seed_attempts": 1,
+      "seed_cost": 547.9591794226541,
+      "acceptance_rate": 0.20535833333333334
+    },
+    {
+      "section_days": 200,
+      "slots_placed": 720,
+      "late_start_days": 0,
+      "late_start_rate": 0.0,
+      "idle_gaps_total": 0,
+      "idle_gaps_per_section_day": 0.0,
+      "idle_gap_distribution": {
+        "0": 200
+      },
+      "daily_load_sigma_mean": 0.4898979485566356,
+      "daily_load_min": 3,
+      "daily_load_max": 4,
+      "longest_block_mean": 3.6,
+      "subject_repeat_days": 0,
+      "faculty_idle_gaps": 2,
+      "faculty_conflicts": 0,
+      "section_conflicts": 0,
+      "placement_rate": 1.0,
+      "unplaced": 0,
+      "objective": 197.95917942265424,
+      "solve_ms": 5297.4,
+      "seed_ms": 26.5,
+      "seed_attempts": 1,
+      "seed_cost": 549.9591794226541,
+      "acceptance_rate": 0.205375
+    },
+    {
+      "section_days": 200,
+      "slots_placed": 720,
+      "late_start_days": 0,
+      "late_start_rate": 0.0,
+      "idle_gaps_total": 0,
+      "idle_gaps_per_section_day": 0.0,
+      "idle_gap_distribution": {
+        "0": 200
+      },
+      "daily_load_sigma_mean": 0.4898979485566356,
+      "daily_load_min": 3,
+      "daily_load_max": 4,
+      "longest_block_mean": 3.6,
+      "subject_repeat_days": 0,
+      "faculty_idle_gaps": 4,
+      "faculty_conflicts": 0,
+      "section_conflicts": 0,
+      "placement_rate": 1.0,
+      "unplaced": 0,
+      "objective": 199.95917942265424,
+      "solve_ms": 5278.6,
+      "seed_ms": 23.9,
+      "seed_attempts": 1,
+      "seed_cost": 588.9591794226541,
+      "acceptance_rate": 0.20478333333333334
+    },
+    {
+      "section_days": 200,
+      "slots_placed": 720,
+      "late_start_days": 2,
+      "late_start_rate": 0.01,
+      "idle_gaps_total": 0,
+      "idle_gaps_per_section_day": 0.0,
+      "idle_gap_distribution": {
+        "0": 200
+      },
+      "daily_load_sigma_mean": 0.4898979485566356,
+      "daily_load_min": 3,
+      "daily_load_max": 4,
+      "longest_block_mean": 3.6,
+      "subject_repeat_days": 0,
+      "faculty_idle_gaps": 6,
+      "faculty_conflicts": 0,
+      "section_conflicts": 0,
+      "placement_rate": 1.0,
+      "unplaced": 0,
+      "objective": 209.95917942265424,
+      "solve_ms": 5646.1,
+      "seed_ms": 24.4,
+      "seed_attempts": 1,
+      "seed_cost": 603.9591794226541,
+      "acceptance_rate": 0.20674166666666666
+    },
+    {
+      "section_days": 200,
+      "slots_placed": 720,
+      "late_start_days": 1,
+      "late_start_rate": 0.005,
+      "idle_gaps_total": 0,
+      "idle_gaps_per_section_day": 0.0,
+      "idle_gap_distribution": {
+        "0": 200
+      },
+      "daily_load_sigma_mean": 0.4898979485566356,
+      "daily_load_min": 3,
+      "daily_load_max": 4,
+      "longest_block_mean": 3.6,
+      "subject_repeat_days": 0,
+      "faculty_idle_gaps": 1,
+      "faculty_conflicts": 0,
+      "section_conflicts": 0,
+      "placement_rate": 1.0,
+      "unplaced": 0,
+      "objective": 200.95917942265424,
+      "solve_ms": 5260.1,
+      "seed_ms": 26.5,
+      "seed_attempts": 1,
+      "seed_cost": 553.9591794226541,
+      "acceptance_rate": 0.207
+    },
+    {
+      "section_days": 200,
+      "slots_placed": 720,
+      "late_start_days": 3,
+      "late_start_rate": 0.015,
+      "idle_gaps_total": 0,
+      "idle_gaps_per_section_day": 0.0,
+      "idle_gap_distribution": {
+        "0": 200
+      },
+      "daily_load_sigma_mean": 0.4898979485566356,
+      "daily_load_min": 3,
+      "daily_load_max": 4,
+      "longest_block_mean": 3.6,
+      "subject_repeat_days": 0,
+      "faculty_idle_gaps": 2,
+      "faculty_conflicts": 0,
+      "section_conflicts": 0,
+      "placement_rate": 1.0,
+      "unplaced": 0,
+      "objective": 209.95917942265424,
+      "solve_ms": 5238.1,
+      "seed_ms": 25.3,
+      "seed_attempts": 1,
+      "seed_cost": 567.9591794226541,
+      "acceptance_rate": 0.20371666666666666
+    }
+  ]
+}
