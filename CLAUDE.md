@@ -13,9 +13,17 @@ python run.py                              # -> http://localhost:8000
 ```
 
 `llm.py` caches the Ollama availability check at startup, so the header badge
-only flips to `AI · LLM` if Ollama was already serving when MAWOS booted.
-Without it the system still works — the deterministic tier takes over and the
-badge says so.
+only flips to `AI · hybrid router` if Ollama was already serving when MAWOS
+booted. Without it the system still works — the lexicon answers everything,
+including the low-margin queries it would normally escalate, and the badge
+says `AI · lexicon only`.
+
+**Routing is v3 now.** `backend/app/router.py` gates on the lexicon's own
+confidence (margin ≤ τ, τ = 0 frozen in `router_config.json`), not on whether
+Ollama is reachable. ~90% of queries never touch the LLM by design, so the
+lexicon is the *primary* tier — do not call it a "fallback" in code, UI or
+docs. Config is hashed; hand-editing τ makes it a different experiment
+(PROTOCOL §9.3).
 
 Logins: `4MT23AI049`/`student123`, `aiml.f02`/`faculty123`, `hod.aiml`/
 `faculty123`, `principal`/`principal123`, `admin`/`admin123`.
@@ -24,10 +32,16 @@ Logins: `4MT23AI049`/`student123`, `aiml.f02`/`faculty123`, `hod.aiml`/
 
 - **Never headline a 100% figure.** Anywhere. This project was rebuilt
   specifically because v1 looked too clean to be real.
-- **Report results in the direction the data points.** The LLM currently
-  *loses* the routing comparison (70.4% vs 89.8%). That is written up as
-  measured in README, ARCHITECTURE and RESULTS.md. Do not quietly re-frame it
-  as a win, and do not delete the losing configuration from the report.
+- **Report results in the direction the data points.** The LLM tier *loses*
+  the routing comparison. Under v3's controlled conditions that is **76.9%
+  vs 89.8%, −12.9 points** (3 seeds, `results/v3_llm/`). v2's −19.4 is
+  superseded, **not corrected** — the two runs failed an equivalence check
+  and must never be differenced (`v3_llm/CONDITIONS.md`, PROTOCOL §10.1).
+  Do not re-frame the loss as a win, and do not delete the losing
+  configuration from the report.
+- **Cite v2 and v3 numbers separately.** README, ARCHITECTURE and RESULTS.md
+  still carry v2 figures; P8 rewrites them. Until then, say which run a
+  number came from.
 - **Never present a number you cannot regenerate** from `evaluation/`.
 - Label attendance accuracy as *deterministic verification*, never "AI
   accuracy"; label the manual-workflow comparison as a *modeled estimate*.
@@ -58,8 +72,12 @@ Logins: `4MT23AI049`/`student123`, `aiml.f02`/`faculty123`, `hod.aiml`/
 ## Evaluation
 
 ```bash
-python -m pytest tests -q                 # 12 tests
-python evaluation/evaluate.py             # both routing tiers when Ollama is up
+python -m pytest tests -q                 # 16 tests
+python evaluation/gate_p05.py             # P0.5 router viability gate
+python evaluation/capture_llm.py          # frozen-protocol LLM capture (live Ollama)
+python evaluation/analyze_sweep.py        # P6 model selection, PROTOCOL 9.2
+python evaluation/tune_router.py          # P4 threshold selection, PROTOCOL 9.3
+python evaluation/evaluate.py             # v2 harness: both routing tiers
 python evaluation/evaluate.py --no-llm    # skip the 108 live LLM calls
 python evaluation/ablation.py             # is the architecture load-bearing?
 python evaluation/failure_injection.py    # fault isolation + replay
@@ -76,8 +94,15 @@ Keep it that way.
   written by the same project, so the lexicon is tuned to these phrasings.
   It is evidence about this classifier on this benchmark, not a general
   claim. A held-out set written outside the team is the fix.
-- The LLM tier is one model (`qwen2.5:3b-instruct`), one temperature, one
-  pass — no seed sweep, no confidence intervals. A 7B/14B model may reverse
-  the result; `MAWOS_OLLAMA_MODEL` switches it with no code change.
+- The model sweep is **done** (P6: 1.5B/3B/7B × 3 seeds) and the 3B was
+  selected under a pre-registered rule. It is still one family, one
+  temperature, three seeds. The 7B **could not stay GPU-resident** on this
+  6 GB laptop (81.7%) and is reported out-of-competition — its accuracy is
+  valid, its latency is not comparable, and it must never share a Pareto
+  frontier with an eligible model.
+- **τ = 0 was selected on dev, and dev is contaminated by construction** —
+  the lexicon was tuned on those 108 queries. The +4.9-point hybrid gain has
+  a CI whose lower bound sits on zero and McNemar p = 0.070. It is not a
+  result yet; the held-out set (P5) decides.
 - Data is synthetic (UCI-calibrated, copula, 3% label noise), the bus is
   in-process and at-most-once, and replay recovery is manual.

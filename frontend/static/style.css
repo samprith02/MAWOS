@@ -89,7 +89,7 @@ nav button.active { background: var(--ink); color: var(--gold-soft); }
 .ai-badge { font-size: .7rem; font-weight: 700; letter-spacing: .5px;
   padding: 4px 11px; border-radius: 999px; border: 1px solid var(--border); }
 .ai-badge.llm { background: #e7f0e9; color: var(--good); border-color: #bcd8c6; }
-.ai-badge.fallback { background: var(--panel2); color: var(--muted); }
+.ai-badge.lexicon { background: var(--panel2); color: var(--muted); }
 .user-chip { font-size: .82rem; color: var(--muted); max-width: 260px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 main { padding: 26px; max-width: 1320px; margin: 0 auto; min-height: calc(100vh - 130px); }

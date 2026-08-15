@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import config, llm
+from . import router as hybrid_router
 from .agents import get_agents
 from .api.routes import router
 from .database import Base, SessionLocal, engine
@@ -45,8 +46,9 @@ async def lifespan(app: FastAPI):
                   f"{result['solve_ms']} ms")
     finally:
         db.close()
-    mode = "LLM (" + config.OLLAMA_MODEL + ")" if llm.check_ollama() else \
-        "deterministic fallback (install Ollama + qwen2.5 to enable LLM)"
+    mode = (f"hybrid router, tau {hybrid_router.TAU:.2f}, escalating to "
+            f"{config.OLLAMA_MODEL}") if llm.check_ollama() else \
+        "lexicon only (install Ollama + qwen2.5 to enable escalation)"
     print(f"[MAWOS] {len(agents)} agents online · AI mode: {mode}")
     task = asyncio.create_task(_proactive_loop(agents))
     yield

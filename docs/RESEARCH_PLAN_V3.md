@@ -258,6 +258,103 @@ seed, one model. The AUC and the oracle ceiling depend only on frozen
 artefacts and will not move; the realised curve must be recomputed against
 the frozen LLM baseline.
 
+### 3.5.2 P6 result (run 2026-08-15) — 3B selected, and v2 is not comparable
+
+`evaluation/analyze_sweep.py` → `results/v3_gates/p6_sweep.json`. Rule
+§9.2, committed before the sweep. 324 records per model, three seeds,
+**zero call failures**.
+
+| Model | Solo | Hybrid | Net headroom recovery | fix/break | Median |
+|---|---|---|---|---|---|
+| **qwen2.5:3b-instruct** | 76.9% | **94.8%** | **48.5%** | 6.7 / 1.3 | 3414 ms |
+| qwen2.5:1.5b-instruct | 64.8% | 91.4% | 15.2% | 2.7 / 1.0 | 3600 ms |
+| *qwen2.5:7b-instruct* | *80.6%* | *95.1%* | *51.5%* | *6.7 / 1.0* | *ineligible* |
+
+**Selected: `qwen2.5:3b-instruct`**, outright on the primary metric — no
+tie-break needed. McNemar 3B vs 1.5B: b01=11, b10=24, **p = 0.041**.
+
+Three things worth stating carefully.
+
+**The 7B is out of competition, not merely slower.** It runs 81.7%
+GPU-resident on a 6141 MiB GPU (`results/v3_llm/ELIGIBILITY.md`), so it is
+in a different computational regime and is excluded from selection, from
+every Pareto plot and from every paired test. Its accuracy is unaffected
+by offload and is reported. What it licenses is a hedged statement, not a
+headline: *under this configuration, increasing model size alone did not
+obviously buy a large additional headroom recovery* — 51.5% against the
+3B's 48.5%. It does **not** license "the hardware ceiling costs nothing",
+because the comparison is not on a common axis.
+
+**The 1.5B is slower than the 3B, and the mechanism is behavioural.** It
+abstains 30.2% of the time against the 3B's 9.3%, and an abstention emits
+a text reply (median 38 tokens) instead of a compact tool call (29). So:
+*a smaller parameter count does not imply lower end-to-end agent latency
+when model behaviour changes the execution path.* That is a more useful
+observation than the raw latency ordering and is kept as one.
+
+**The v2 equivalence check failed** — `results/v3_llm/CONDITIONS.md`. The
+standard tier reproduces (83.3% → 83.8%) but the colloquial tier moves
+44.4% → 62.9% and no-tool answers drop 23 → 10. A divergence confined to
+abstention is the signature of a change in the runtime's tool-emission
+path, and v2 did not record its Ollama version, so it cannot be tested.
+Consequences: v2 and v3 numbers are **never differenced**; §10.1 now makes
+runtime capture mandatory; and the LLM-vs-lexicon gap is restated
+**within v3** as 76.9% vs 89.8%, **−12.9 points**, superseding v2's −19.4
+as an estimate while leaving the direction — the LLM tier loses on
+routing — unchanged.
+
+### 3.6 P4 result (run 2026-08-15) — router built, τ = 0, effect not yet established
+
+`evaluation/tune_router.py` → `results/v3_gates/p4_router.{json,md}`.
+Rule §9.3, committed in `49be6dd` before the script was run. The complete
+τ curve is published, not only the selected point.
+
+The curve has one dominant feature. **Every lexicon error the 3B can
+repair sits at margin 0** — `fixed` is 6.7 at every threshold from τ = 0
+to τ = 8. Escalating anything above margin 0 repairs nothing further and
+only breaks answers the lexicon had right (`broken` climbs 1.3 → 20.7).
+So the argmax and the 1-SE selection coincide at the cheapest feasible
+point:
+
+> **τ = 0** — escalate exactly the queries where the keyword classifier
+> matched nothing at all and silently defaulted to `profile_query`.
+
+That is a structural threshold rather than a fitted one, which is the
+best case for a tuned parameter: it would have been selected under
+argmax, under the 1-SE rule, and under a rule that never saw the curve.
+
+| | dev |
+|---|---|
+| lexicon | 89.8% |
+| hybrid at τ = 0 | **94.8%** (95.4 / 94.4 / 94.4) |
+| delta | **+4.9** points, 95% bootstrap CI **[+0.0, +10.2]** |
+| bootstrap resamples with no gain | 3.8% |
+| McNemar vs lexicon | b01 = 7, b10 = 1, **p = 0.070** |
+| escalation | 10.2%, i.e. 11 of 108 queries |
+| expected cost | **348 ms/query** vs 3414 ms for LLM-on-everything (9.8×) |
+
+**What is not established.** Neither the CI nor McNemar clears
+conventional significance at n = 108, and the CI's lower bound sits on
+zero. More importantly **dev is contaminated by construction** (§11) —
+the lexicon was tuned on these very queries. These numbers select τ.
+They are not the result. The held-out set (P5) is, and it runs once
+against the hashed config.
+
+**Scope.** P4 as written in §8 also listed multi-tool composition and
+conversational memory. Neither was built. Both change what the agent
+*does* rather than how it *routes*, so folding them in here would confound
+the router evaluation with two new capabilities; and neither is required
+by any research question. They are dropped rather than deferred, and the
+work order is corrected to say so.
+
+**System change.** `backend/app/router.py` replaces v2's tier switch. v2
+chose the LLM on Ollama *reachability* — an availability check — so with
+the daemon running every query paid full LLM cost, including the ~90% the
+lexicon answered correctly and ~60 000× faster. The UI, the metrics
+endpoint and the startup banner previously called the lexicon a
+"fallback"; under a confidence gate it is the primary tier, and they now
+say so.
+
 ---
 
 ## 4. Baseline freeze — before any code changes
@@ -464,9 +561,9 @@ Net tool-surface change: 13 → 12 (`get_admissions_funnel` removed). The
 | **P1b** | ITC-2007 harness (§4.4), separate from production scheduler. E4b. | official validator passes |
 | **P2** | Agent reduction 10 → 4 (§7), tool surface held per §7.1. | tool count verified 13→12 |
 | **P3** | PCN-style provenance gate. E3. | false-block rate acceptable |
-| **P4** | Hybrid router + multi-tool composition + memory. τ on dev only. E1. | τ never touched test |
+| **P4** | Hybrid router, τ on dev only, complete curve published. E1. **Done — §3.6.** Multi-tool composition and memory are *not* included; see §3.6. | τ never touched test |
 | **P5** | Held-out set → dual annotation → κ → **single** test run of E1/E2/E5. | test touched exactly once |
-| **P6** | Model sweep 1.5B/3B/7B × 3 seeds. | all three GPU-resident, verified |
+| **P6** | Model sweep 1.5B/3B/7B × 3 seeds. **Done — §3.5.2.** | all three GPU-resident, verified |
 | **P7** | Figures F1–F9. | every figure regenerable by one command |
 | **P8** | Rewrite README / ARCHITECTURE / RESULTS to match the evidence. | §9 threats written |
 

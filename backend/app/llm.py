@@ -105,11 +105,16 @@ _LEXICON: dict[str, list[tuple[str, float]]] = {
 
 
 class IntentResult:
-    def __init__(self, intent, method, latency_ms, tool=None):
+    def __init__(self, intent, method, latency_ms, tool=None, margin=0.0):
         self.intent = intent
         self.method = method
         self.latency_ms = latency_ms
         self.tool = tool or INTENT_TOOL.get(intent)
+        #: Top-1 minus top-2 intent score — the classifier's own confidence,
+        #: and the signal the hybrid router escalates on (see router.py).
+        #: Zero means nothing matched at all and `intent` is the
+        #: `profile_query` default rather than a decision.
+        self.margin = margin
 
 
 def classify_keyword(query: str) -> IntentResult:
@@ -121,9 +126,12 @@ def classify_keyword(query: str) -> IntentResult:
             if re.search(pattern, q):
                 scores[intent] += weight
     best = max(scores, key=scores.get)
+    ranked = sorted(scores.values(), reverse=True)
+    margin = ranked[0] - ranked[1]
     if scores[best] <= 0:
         best = "profile_query"
-    return IntentResult(best, "keyword", (time.perf_counter() - start) * 1000)
+    return IntentResult(best, "keyword", (time.perf_counter() - start) * 1000,
+                        margin=margin)
 
 
 _ollama_available: bool | None = None

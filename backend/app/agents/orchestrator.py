@@ -1,19 +1,30 @@
-"""Orchestrator Agent v2 — the LLM-driven brain of MAWOS.
+"""Orchestrator Agent v3 — the confidence-gated hybrid brain of MAWOS.
 
-LLM mode (Ollama reachable): agentic tool-calling loop —
-    conversation -> LLM picks tools (role-filtered schemas) ->
-    tools execute under hard permission checks -> results fed back ->
-    LLM writes the final grounded answer. Up to 3 tool rounds.
+Every query is classified by the weighted-keyword lexicon first. The
+lexicon's margin (top-1 minus top-2 intent score) is its confidence, and
+only queries at or below τ escalate to the LLM's agentic tool-calling
+loop — conversation -> LLM picks tools (role-filtered schemas) -> tools
+execute under hard permission checks -> results fed back -> LLM writes
+the final grounded answer, up to 3 tool rounds. Everything else is
+answered by the lexicon and a deterministic formatter at ~0.06 ms.
 
-Fallback mode (offline): weighted-keyword classifier -> single mapped tool
--> deterministic formatter. Same tools, same permissions — only the
-language understanding degrades. The mode is reported on every response
-and logged (fallback-trigger rate is a first-class metric).
+**This is the v3 change.** v2 switched tiers on Ollama *reachability*, so
+with the daemon up every query paid the full LLM cost — including the
+~90% the lexicon already answered correctly and ~60 000× faster (0.06 ms
+against a 3414 ms median). The gate
+replaces that availability switch with a measured one: see `router.py`
+and `evaluation/results/v3_gates/p4_router.md`.
+
+Escalation can still fail — Ollama absent, or the loop exhausting its
+rounds. It then degrades to the lexicon answer, which was computed first
+precisely so that path always exists. Same tools, same permissions; only
+the language understanding degrades. Tier and margin are reported on
+every response and logged.
 """
 import json
 import time
 
-from .. import llm
+from .. import llm, router
 from ..models import IntentLog
 from . import tools as toolreg
 from .base import BaseAgent
@@ -34,8 +45,9 @@ return."""
 
 class OrchestratorAgent(BaseAgent):
     name = "orchestrator_agent"
-    description = ("LLM tool-calling brain with role-scoped tools and a "
-                   "deterministic offline fallback")
+    description = ("confidence-gated hybrid brain: deterministic lexicon "
+                   "first, low-confidence queries escalated to role-scoped "
+                   "LLM tool calling")
 
     def __init__(self, bus, agents: dict):
         super().__init__(bus)
@@ -93,8 +105,8 @@ class OrchestratorAgent(BaseAgent):
         f = _FORMATTERS.get(tool_name)
         return f(result) if f else json.dumps(result, indent=1, default=str)[:1200]
 
-    async def _handle_fallback(self, db, user, message: str) -> dict:
-        r = llm.classify_keyword(message)
+    async def _handle_lexicon(self, db, user, message: str,
+                              r: llm.IntentResult) -> dict:
         t0 = time.perf_counter()
         result = toolreg.execute(db, self.agents, user, r.tool, {})
         tool_ms = (time.perf_counter() - t0) * 1000
@@ -102,17 +114,28 @@ class OrchestratorAgent(BaseAgent):
                          method="keyword", latency_ms=round(r.latency_ms, 3)))
         db.commit()
         return {"text": self._format(r.tool, result),
-                "mode": "fallback", "intent": r.intent,
+                "mode": "lexicon", "intent": r.intent,
                 "tools_used": [{"name": r.tool, "ms": round(tool_ms, 1)}],
                 "latency_ms": round(r.latency_ms + tool_ms, 1),
                 "data": result}
 
+    # ------------------------------------------------------------------ router
     async def handle_chat(self, db, user, message: str) -> dict:
-        if llm.check_ollama():
+        r, decision = router.decide(message)
+        router.stats.record(decision)
+        if decision.escalated:
             response = await self._handle_llm(db, user, message)
             if response is not None:
+                response["routing"] = decision.as_dict()
                 return response
-        return await self._handle_fallback(db, user, message)
+            # The loop gave up mid-flight. The lexicon answer already
+            # exists; use it rather than failing, and say so.
+            decision.tier = "lexicon"
+            decision.fallback_from = "llm"
+            decision.reason += " — escalation failed, degraded to lexicon"
+        response = await self._handle_lexicon(db, user, message, r)
+        response["routing"] = decision.as_dict()
+        return response
 
 
 # ---------------------------------------------------------------- formatters

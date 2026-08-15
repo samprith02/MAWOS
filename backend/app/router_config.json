@@ -1,0 +1,12 @@
+{
+  "_": "Frozen by evaluation/tune_router.py under PROTOCOL.md \u00a79.3. Edited by hand = a different experiment. P5 verifies sha256.",
+  "tau": 0.0,
+  "model": "qwen2.5:3b-instruct",
+  "temperature": 0.1,
+  "margin": "top1 - top2 over the frozen lexicon's intent scores",
+  "escalate_when": "margin <= tau",
+  "selected_on": "dev, 108 tasks, seeds 0/1/2",
+  "dev_accuracy_mean": 0.9475308641975309,
+  "dev_escalation_rate": 0.10185185185185185,
+  "provenance": "evaluation/results/v3_gates/p4_router.json"
+}

@@ -104,6 +104,33 @@ def gpu_residency(model: str) -> dict:
     return {"error": "model not listed by /api/ps"}
 
 
+def runtime_fingerprint(model: str) -> dict:
+    """PROTOCOL.md §10.1 — mandatory on every result file.
+
+    Added because the v2↔v3 equivalence check failed with the divergence
+    concentrated entirely in *whether a tool call was emitted at all* —
+    the signature of a change in the runtime's tool-calling path. v2 had
+    not recorded its Ollama version, so the hypothesis could not be
+    tested and the two runs cannot be differenced. Never again.
+    """
+    out = {"ollama_version": None, "model_digest": None,
+           "num_ctx": "ollama default, unmodified"}
+    try:
+        out["ollama_version"] = httpx.get(
+            f"{config.OLLAMA_HOST}/api/version", timeout=5).json().get("version")
+    except Exception as exc:
+        out["ollama_version"] = f"unavailable: {exc}"
+    try:
+        r = httpx.post(f"{config.OLLAMA_HOST}/api/show",
+                       json={"model": model}, timeout=10).json()
+        out["model_digest"] = (r.get("details") or {}).get("quantization_level")
+        out["parameter_size"] = (r.get("details") or {}).get("parameter_size")
+        out["model_family"] = (r.get("details") or {}).get("family")
+    except Exception as exc:
+        out["model_digest"] = f"unavailable: {exc}"
+    return out
+
+
 def one_call(model: str, task, user, seed: int) -> TrialRecord:
     """A single tool-selection trial. Never executes the selected tool."""
     detail = f"USN {user.usn}" if user.usn else f"dept {user.dept_code or 'ALL'}"
@@ -217,6 +244,7 @@ def _package(model: str, records: list, residency: dict, load_ms: list) -> dict:
         "model": model, "seeds": SEEDS, "temperature": TEMPERATURE,
         "condition": "v2-role-scoped",
         "gpu_residency": residency,
+        "runtime": runtime_fingerprint(model),   # §10.1, mandatory
         "call_failures": errors,
         # reported separately, never inside per-query latency (§10)
         "warmup_load_ms": {"mean": statistics.mean(load_ms),

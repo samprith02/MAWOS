@@ -32,14 +32,14 @@ def login(body: LoginRequest, db: Session = Depends(get_session)):
             "user": {"username": user.username, "role": user.role,
                      "name": user.display_name, "usn": user.usn,
                      "dept": user.dept_code},
-            "ai_mode": "llm" if llm.check_ollama() else "fallback"}
+            "ai_mode": "llm" if llm.check_ollama() else "lexicon"}
 
 
 @router.get("/me")
 def me(user: User = Depends(get_current_user)):
     return {"username": user.username, "role": user.role,
             "name": user.display_name, "usn": user.usn, "dept": user.dept_code,
-            "ai_mode": "llm" if llm.check_ollama() else "fallback"}
+            "ai_mode": "llm" if llm.check_ollama() else "lexicon"}
 
 
 # ---------- assistant ---------------------------------------------------------
@@ -296,7 +296,7 @@ def departments(user: User = Depends(get_current_user),
 def list_agents(user: User = Depends(get_current_user)):
     return {"agents": [{"name": a.name, "description": a.description}
                        for a in get_agents().values()],
-            "ai_mode": "llm" if llm.check_ollama() else "fallback"}
+            "ai_mode": "llm" if llm.check_ollama() else "lexicon"}
 
 
 @router.get("/metrics/summary")

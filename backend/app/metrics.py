@@ -1,7 +1,10 @@
 """System metrics — the numbers that make MAWOS evaluable.
 
   * intent routing accuracy (on evaluation-labelled queries)
-  * fallback-trigger rate (keyword path vs LLM path)
+  * escalation rate (lexicon path vs LLM path) — under v3's confidence
+    gate this is a *policy* outcome, not a failure rate: the lexicon
+    answering is the intended behaviour for ~90% of queries. Compare the
+    live rate against the dev rate the threshold was tuned for.
   * cross-agent propagation latency (per workflow cascade, from the
     workflow_events audit log)
   * cascade depth / completion statistics
@@ -18,7 +21,7 @@ def intent_metrics(db) -> dict:
     total = db.query(func.count(IntentLog.id)).scalar() or 0
     if total == 0:
         return {"total_classifications": 0}
-    fallback = db.query(func.count(IntentLog.id)).filter(
+    kept = db.query(func.count(IntentLog.id)).filter(
         IntentLog.method == "keyword").scalar() or 0
     labelled = db.query(IntentLog).filter(IntentLog.correct.isnot(None)).all()
     accuracy = (sum(1 for l in labelled if l.correct) / len(labelled)
@@ -26,8 +29,8 @@ def intent_metrics(db) -> dict:
     avg_latency = db.query(func.avg(IntentLog.latency_ms)).scalar() or 0.0
     return {
         "total_classifications": total,
-        "fallback_rate": round(fallback / total, 4),
-        "llm_rate": round(1 - fallback / total, 4),
+        "lexicon_rate": round(kept / total, 4),
+        "escalation_rate": round(1 - kept / total, 4),
         "routing_accuracy": round(accuracy, 4) if accuracy is not None else None,
         "evaluated_queries": len(labelled),
         "avg_classify_latency_ms": round(avg_latency, 3),
@@ -65,8 +68,10 @@ def propagation_metrics(db) -> dict:
 
 
 def summary(db) -> dict:
+    from . import router
     return {
         "intent": intent_metrics(db),
+        "router": router.stats.as_dict(),
         "propagation": propagation_metrics(db),
         "notifications_generated": db.query(func.count(Notification.id)).scalar() or 0,
         "bus_events_logged": db.query(func.count(WorkflowEvent.id)).scalar() or 0,

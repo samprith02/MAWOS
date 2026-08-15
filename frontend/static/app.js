@@ -1,10 +1,10 @@
-/* MAWOS v2 — university portal SPA (no build step).
+/* MAWOS v3 — university portal SPA (no build step).
  * Trust model: single-institution research prototype on localhost; rendered
  * values originate from the server's own seeded DB. Chat/LLM text is
  * rendered via textContent. */
 let TOKEN = localStorage.getItem("mawos_token") || null;
 let USER = JSON.parse(localStorage.getItem("mawos_user") || "null");
-let AI_MODE = localStorage.getItem("mawos_ai") || "fallback";
+let AI_MODE = localStorage.getItem("mawos_ai") || "lexicon";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
@@ -63,11 +63,11 @@ function showApp() {
   $("app-view").classList.remove("hidden");
   $("user-name").textContent = `${USER.name}`;
   const badge = $("ai-badge");
-  badge.textContent = AI_MODE === "llm" ? "AI · LLM" : "AI · fallback mode";
+  badge.textContent = AI_MODE === "llm" ? "AI · hybrid router" : "AI · lexicon only";
   badge.className = "ai-badge " + AI_MODE;
   badge.title = AI_MODE === "llm"
-    ? "Orchestrator is using the local LLM with tool calling"
-    : "Local LLM not detected — deterministic fallback. Install Ollama + qwen2.5 to enable.";
+    ? "Confidence-gated router: the lexicon answers, and only low-confidence queries escalate to the local LLM"
+    : "Local LLM not detected — the lexicon answers everything, including the queries it is least sure about.";
   const nav = $("nav-tabs");
   nav.innerHTML = "";
   for (const [key, label] of TABS[USER.role]) {
@@ -467,8 +467,9 @@ RENDER.assistant = async (main) => {
     <div class="chat-head">
       <div><h2 class="serif">MAWOS Assistant</h2>
         <p class="muted">Orchestrator Agent · ${AI_MODE === "llm"
-          ? "local LLM with tool calling" : "deterministic fallback (install Ollama for the LLM brain)"}</p></div>
-      <span class="ai-badge ${AI_MODE}">${AI_MODE === "llm" ? "LLM" : "fallback"}</span>
+          ? "confidence-gated hybrid — the lexicon answers, uncertain queries escalate to the local LLM"
+          : "lexicon only (install Ollama to enable escalation)"}</p></div>
+      <span class="ai-badge ${AI_MODE}">${AI_MODE === "llm" ? "hybrid" : "lexicon"}</span>
     </div>
     <div id="chat-log" class="chat-log">
       <div class="msg agent"><div class="msg-meta">orchestrator_agent</div>Good day, ${esc(USER.name.split(" ")[0])}. Ask me anything about your ${USER.role === "student" ? "studies — attendance, fees, marks, timetable, exams, scholarship, placements" : "institution data"}.</div>
@@ -511,7 +512,10 @@ async function sendChat() {
     thinking.querySelector(".msg-body").textContent = r.text;
     const tools = (r.tools_used || []).map(t => t.name).join(" → ") || "no tools";
     thinking.querySelector(".msg-meta").textContent =
-      `${r.mode === "llm" ? "LLM (" + (r.model || "local") + ")" : "fallback · intent: " + r.intent} · tools: ${tools} · ${r.latency_ms} ms`;
+      `${r.mode === "llm" ? "LLM (" + (r.model || "local") + ")" : "lexicon · intent: " + r.intent}`
+      + (r.routing ? ` · margin ${r.routing.margin.toFixed(2)} vs τ ${r.routing.tau.toFixed(2)}`
+                     + (r.routing.fallback_from ? " · escalation failed" : "") : "")
+      + ` · tools: ${tools} · ${r.latency_ms} ms`;
   } catch (e) { thinking.querySelector(".msg-body").textContent = "Error: " + e.message; }
 }
 
@@ -523,9 +527,10 @@ RENDER.system = async (main) => {
   main.innerHTML = `<div class="grid">
     <div class="card"><h3>Intent decisions</h3><div class="stat">${i.total_classifications || 0}</div>
       <div class="stat-label">avg ${i.avg_classify_latency_ms ?? "—"} ms</div></div>
-    <div class="card"><h3>LLM share</h3>
-      <div class="stat">${i.llm_rate != null ? Math.round(i.llm_rate * 100) + "%" : "—"}</div>
-      <div class="stat-label">fallback ${i.fallback_rate != null ? Math.round(i.fallback_rate * 100) + "%" : "—"}</div></div>
+    <div class="card"><h3>Escalation rate</h3>
+      <div class="stat">${i.escalation_rate != null ? Math.round(i.escalation_rate * 100) + "%" : "—"}</div>
+      <div class="stat-label">${m.router ? "τ " + m.router.tau.toFixed(2) + " · tuned for "
+        + Math.round(m.router.escalation_rate_dev * 100) + "% on dev" : "lexicon answers the rest"}</div></div>
     <div class="card"><h3>Cascades measured</h3>
       <div class="stat">${p.cascades_measured || 0}</div>
       <div class="stat-label">avg ${p.avg_cascade_ms ?? "—"} ms · p95 ${p.p95_cascade_ms ?? "—"} ms</div></div>
