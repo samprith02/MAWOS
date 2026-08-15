@@ -4,7 +4,12 @@ __pycache__/
 mawos.db
 ml/models/*.joblib
 ml/data/*.csv
-evaluation/results/
+evaluation/results/*
+# The frozen v2 baseline is the comparator for every v3 result. A
+# comparator that is not version-controlled is not frozen -- it is just a
+# file that happens to exist on one laptop. Tracked deliberately.
+!evaluation/results/v2_frozen/
+evaluation/results/v2_frozen/_scratch.db
 fl/results/
 .venv/
 venv/
