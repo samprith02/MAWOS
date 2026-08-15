@@ -1,0 +1,1371 @@
+{
+  "generated_at": "2026-08-03T23:01:28",
+  "llm_available": true,
+  "intent_routing": {
+    "queries": 108,
+    "n_standard": 72,
+    "n_hard": 36,
+    "accuracy": 0.8981,
+    "accuracy_standard": 1.0,
+    "accuracy_hard": 0.6944,
+    "fallback_rate": 1.0,
+    "per_intent_accuracy": {
+      "admission_query": 1.0,
+      "analytics_query": 0.778,
+      "attendance_query": 0.889,
+      "exam_query": 1.0,
+      "exam_schedule_query": 0.778,
+      "fees_query": 0.889,
+      "marks_query": 0.889,
+      "notification_query": 0.889,
+      "placement_query": 1.0,
+      "profile_query": 1.0,
+      "scholarship_query": 0.889,
+      "timetable_query": 0.778
+    },
+    "confusion_matrix": {
+      "attendance_query": {
+        "attendance_query": 8,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 1
+      },
+      "fees_query": {
+        "attendance_query": 0,
+        "fees_query": 8,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 1
+      },
+      "scholarship_query": {
+        "attendance_query": 0,
+        "fees_query": 1,
+        "scholarship_query": 8,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "exam_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 9,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "exam_schedule_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 7,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 2
+      },
+      "marks_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 8,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 1
+      },
+      "timetable_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 7,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 2
+      },
+      "placement_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 9,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "admission_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 9,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "analytics_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 1,
+        "analytics_query": 7,
+        "notification_query": 0,
+        "profile_query": 1
+      },
+      "notification_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 8,
+        "profile_query": 1
+      },
+      "profile_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 9
+      }
+    },
+    "misrouted": [
+      {
+        "query": "How many more classes can I afford to miss?",
+        "expected": "attendance_query",
+        "got": "profile_query",
+        "tier": "hard"
+      },
+      {
+        "query": "The accounts office is asking for money again, what's pending?",
+        "expected": "fees_query",
+        "got": "profile_query",
+        "tier": "hard"
+      },
+      {
+        "query": "Will the college waive my fees given my family situation?",
+        "expected": "scholarship_query",
+        "got": "fees_query",
+        "tier": "hard"
+      },
+      {
+        "query": "How far away are the semester finals?",
+        "expected": "exam_schedule_query",
+        "got": "profile_query",
+        "tier": "hard"
+      },
+      {
+        "query": "When do we write our papers?",
+        "expected": "exam_schedule_query",
+        "got": "profile_query",
+        "tier": "hard"
+      },
+      {
+        "query": "How did the ML test go for me?",
+        "expected": "marks_query",
+        "got": "profile_query",
+        "tier": "hard"
+      },
+      {
+        "query": "What's my day looking like tomorrow?",
+        "expected": "timetable_query",
+        "got": "profile_query",
+        "tier": "hard"
+      },
+      {
+        "query": "Where should I be for the first class on Monday?",
+        "expected": "timetable_query",
+        "got": "profile_query",
+        "tier": "hard"
+      },
+      {
+        "query": "Which section is struggling the most?",
+        "expected": "analytics_query",
+        "got": "profile_query",
+        "tier": "hard"
+      },
+      {
+        "query": "How does our branch compare this semester?",
+        "expected": "analytics_query",
+        "got": "admission_query",
+        "tier": "hard"
+      },
+      {
+        "query": "Did the college send me anything?",
+        "expected": "notification_query",
+        "got": "profile_query",
+        "tier": "hard"
+      }
+    ]
+  },
+  "intent_routing_llm": {
+    "model": "qwen2.5:3b-instruct",
+    "role_mode": "matched",
+    "roles_used": {
+      "attendance_query": "student",
+      "fees_query": "student",
+      "scholarship_query": "student",
+      "exam_query": "student",
+      "exam_schedule_query": "student",
+      "marks_query": "student",
+      "timetable_query": "student",
+      "placement_query": "student",
+      "admission_query": "admin",
+      "analytics_query": "hod",
+      "notification_query": "student",
+      "profile_query": "student"
+    },
+    "queries": 108,
+    "n_standard": 72,
+    "n_hard": 36,
+    "accuracy": 0.7037,
+    "accuracy_standard": 0.8333,
+    "accuracy_hard": 0.4444,
+    "accuracy_lenient": 0.7037,
+    "lenient_note": "counts get_institution_analytics as correct for analytics_query; headline number is strict",
+    "no_tool_selected": 23,
+    "off_map_tool_selected": 24,
+    "llm_errors": 0,
+    "avg_latency_ms": 4474.2,
+    "p95_latency_ms": 4903.1,
+    "per_intent_accuracy": {
+      "admission_query": 0.444,
+      "analytics_query": 0.889,
+      "attendance_query": 0.667,
+      "exam_query": 0.667,
+      "exam_schedule_query": 0.667,
+      "fees_query": 1.0,
+      "marks_query": 0.667,
+      "notification_query": 0.889,
+      "placement_query": 0.778,
+      "profile_query": 0.778,
+      "scholarship_query": 0.444,
+      "timetable_query": 0.556
+    },
+    "confusion_matrix": {
+      "attendance_query": {
+        "attendance_query": 6,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "fees_query": {
+        "attendance_query": 0,
+        "fees_query": 9,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "scholarship_query": {
+        "attendance_query": 0,
+        "fees_query": 4,
+        "scholarship_query": 4,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "exam_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 6,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "exam_schedule_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 6,
+        "marks_query": 0,
+        "timetable_query": 1,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "marks_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 6,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "timetable_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 5,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "placement_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 7,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "admission_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 4,
+        "analytics_query": 2,
+        "notification_query": 1,
+        "profile_query": 0
+      },
+      "analytics_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 8,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "notification_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 8,
+        "profile_query": 0
+      },
+      "profile_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 7
+      }
+    },
+    "misrouted": [
+      {
+        "query": "Am I short of attendance?",
+        "expected": "attendance_query",
+        "expected_tool": "get_attendance",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "Any update on my financial aid application?",
+        "expected": "scholarship_query",
+        "expected_tool": "get_scholarship",
+        "got_tool": "get_fees",
+        "tier": "standard"
+      },
+      {
+        "query": "Will I receive the stipend this year?",
+        "expected": "scholarship_query",
+        "expected_tool": "get_scholarship",
+        "got_tool": "get_fees",
+        "tier": "standard"
+      },
+      {
+        "query": "Do I qualify for a fee waiver?",
+        "expected": "scholarship_query",
+        "expected_tool": "get_scholarship",
+        "got_tool": "get_fees",
+        "tier": "standard"
+      },
+      {
+        "query": "Am I eligible to write the exam?",
+        "expected": "exam_query",
+        "expected_tool": "get_hall_ticket",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "Exam timetable please",
+        "expected": "exam_schedule_query",
+        "expected_tool": "get_exam_schedule",
+        "got_tool": "get_timetable",
+        "tier": "standard"
+      },
+      {
+        "query": "What did I score in CIE 2?",
+        "expected": "marks_query",
+        "expected_tool": "get_marks",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "Which subject is in the first period tomorrow?",
+        "expected": "timetable_query",
+        "expected_tool": "get_timetable",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "weekly routine",
+        "expected": "timetable_query",
+        "expected_tool": "get_timetable",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "Has the merit list been prepared?",
+        "expected": "admission_query",
+        "expected_tool": "get_admissions_funnel",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "How many seats are left in CSE?",
+        "expected": "admission_query",
+        "expected_tool": "get_admissions_funnel",
+        "got_tool": "get_dept_analytics",
+        "tier": "standard"
+      },
+      {
+        "query": "How many students enrolled this year?",
+        "expected": "admission_query",
+        "expected_tool": "get_admissions_funnel",
+        "got_tool": "get_institution_analytics",
+        "tier": "standard"
+      },
+      {
+        "query": "The professor marked me absent even though I came",
+        "expected": "attendance_query",
+        "expected_tool": "get_attendance",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "How many more classes can I afford to miss?",
+        "expected": "attendance_query",
+        "expected_tool": "get_attendance",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Will the college waive my fees given my family situation?",
+        "expected": "scholarship_query",
+        "expected_tool": "get_scholarship",
+        "got_tool": "get_fees",
+        "tier": "hard"
+      },
+      {
+        "query": "Is there money help for students like me?",
+        "expected": "scholarship_query",
+        "expected_tool": "get_scholarship",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Is anything blocking me from writing my papers?",
+        "expected": "exam_query",
+        "expected_tool": "get_hall_ticket",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Can I sit for the finals?",
+        "expected": "exam_query",
+        "expected_tool": "get_hall_ticket",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "How far away are the semester finals?",
+        "expected": "exam_schedule_query",
+        "expected_tool": "get_exam_schedule",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "When do we write our papers?",
+        "expected": "exam_schedule_query",
+        "expected_tool": "get_exam_schedule",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "How did I do in the second internals?",
+        "expected": "marks_query",
+        "expected_tool": "get_marks",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "How did the ML test go for me?",
+        "expected": "marks_query",
+        "expected_tool": "get_marks",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "What's my first period tomorrow?",
+        "expected": "timetable_query",
+        "expected_tool": "get_timetable",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Where should I be for the first class on Monday?",
+        "expected": "timetable_query",
+        "expected_tool": "get_timetable",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Do I meet the cutoff for the next drive?",
+        "expected": "placement_query",
+        "expected_tool": "get_placements",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "What are my chances of getting hired?",
+        "expected": "placement_query",
+        "expected_tool": "get_placements",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "How many candidates cleared verification?",
+        "expected": "admission_query",
+        "expected_tool": "get_admissions_funnel",
+        "got_tool": "get_notifications",
+        "tier": "hard"
+      },
+      {
+        "query": "How full are the branches this year?",
+        "expected": "admission_query",
+        "expected_tool": "get_admissions_funnel",
+        "got_tool": "get_dept_analytics",
+        "tier": "hard"
+      },
+      {
+        "query": "How does our branch compare this semester?",
+        "expected": "analytics_query",
+        "expected_tool": "get_dept_analytics",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Anything I should know about?",
+        "expected": "notification_query",
+        "expected_tool": "get_notifications",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Give me a rundown of where I stand",
+        "expected": "profile_query",
+        "expected_tool": "get_student_overview",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Summarise my academics",
+        "expected": "profile_query",
+        "expected_tool": "get_student_overview",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      }
+    ]
+  },
+  "intent_routing_llm_single_role": {
+    "model": "qwen2.5:3b-instruct",
+    "role_mode": "single",
+    "roles_used": {
+      "attendance_query": "admin",
+      "fees_query": "admin",
+      "scholarship_query": "admin",
+      "exam_query": "admin",
+      "exam_schedule_query": "admin",
+      "marks_query": "admin",
+      "timetable_query": "admin",
+      "placement_query": "admin",
+      "admission_query": "admin",
+      "analytics_query": "admin",
+      "notification_query": "admin",
+      "profile_query": "admin"
+    },
+    "queries": 108,
+    "n_standard": 72,
+    "n_hard": 36,
+    "accuracy": 0.5556,
+    "accuracy_standard": 0.5972,
+    "accuracy_hard": 0.4722,
+    "accuracy_lenient": 0.5556,
+    "lenient_note": "counts get_institution_analytics as correct for analytics_query; headline number is strict",
+    "no_tool_selected": 35,
+    "off_map_tool_selected": 38,
+    "llm_errors": 0,
+    "avg_latency_ms": 4376.8,
+    "p95_latency_ms": 4697.9,
+    "per_intent_accuracy": {
+      "admission_query": 0.444,
+      "analytics_query": 0.778,
+      "attendance_query": 0.333,
+      "exam_query": 0.222,
+      "exam_schedule_query": 0.556,
+      "fees_query": 0.889,
+      "marks_query": 0.444,
+      "notification_query": 0.889,
+      "placement_query": 0.778,
+      "profile_query": 0.444,
+      "scholarship_query": 0.333,
+      "timetable_query": 0.556
+    },
+    "confusion_matrix": {
+      "attendance_query": {
+        "attendance_query": 3,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 2
+      },
+      "fees_query": {
+        "attendance_query": 0,
+        "fees_query": 8,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "scholarship_query": {
+        "attendance_query": 0,
+        "fees_query": 2,
+        "scholarship_query": 3,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 1,
+        "profile_query": 0
+      },
+      "exam_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 2,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "exam_schedule_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 5,
+        "marks_query": 0,
+        "timetable_query": 1,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "marks_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 4,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "timetable_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 5,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "placement_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 7,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "admission_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 4,
+        "analytics_query": 2,
+        "notification_query": 1,
+        "profile_query": 0
+      },
+      "analytics_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 7,
+        "notification_query": 0,
+        "profile_query": 0
+      },
+      "notification_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 0,
+        "notification_query": 8,
+        "profile_query": 0
+      },
+      "profile_query": {
+        "attendance_query": 0,
+        "fees_query": 0,
+        "scholarship_query": 0,
+        "exam_query": 0,
+        "exam_schedule_query": 0,
+        "marks_query": 0,
+        "timetable_query": 0,
+        "placement_query": 0,
+        "admission_query": 0,
+        "analytics_query": 1,
+        "notification_query": 0,
+        "profile_query": 4
+      }
+    },
+    "misrouted": [
+      {
+        "query": "Am I short of attendance?",
+        "expected": "attendance_query",
+        "expected_tool": "get_attendance",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "Do I have attendance shortage in any subject?",
+        "expected": "attendance_query",
+        "expected_tool": "get_attendance",
+        "got_tool": "get_student_overview",
+        "tier": "standard"
+      },
+      {
+        "query": "Is my attendance above 75%?",
+        "expected": "attendance_query",
+        "expected_tool": "get_attendance",
+        "got_tool": "get_student_overview",
+        "tier": "standard"
+      },
+      {
+        "query": "attendance status",
+        "expected": "attendance_query",
+        "expected_tool": "get_attendance",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "Show the fee defaulter list",
+        "expected": "fees_query",
+        "expected_tool": "get_fees",
+        "got_tool": "get_institution_analytics",
+        "tier": "standard"
+      },
+      {
+        "query": "Am I eligible for the scholarship?",
+        "expected": "scholarship_query",
+        "expected_tool": "get_scholarship",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "Any update on my financial aid application?",
+        "expected": "scholarship_query",
+        "expected_tool": "get_scholarship",
+        "got_tool": "get_notifications",
+        "tier": "standard"
+      },
+      {
+        "query": "Do I qualify for a fee waiver?",
+        "expected": "scholarship_query",
+        "expected_tool": "get_scholarship",
+        "got_tool": "get_fees",
+        "tier": "standard"
+      },
+      {
+        "query": "Will I get my hall ticket?",
+        "expected": "exam_query",
+        "expected_tool": "get_hall_ticket",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "Am I eligible to write the exam?",
+        "expected": "exam_query",
+        "expected_tool": "get_hall_ticket",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "Is my admit card released?",
+        "expected": "exam_query",
+        "expected_tool": "get_hall_ticket",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "Why is my hall ticket blocked?",
+        "expected": "exam_query",
+        "expected_tool": "get_hall_ticket",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "Can I sit for the exams?",
+        "expected": "exam_query",
+        "expected_tool": "get_hall_ticket",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "What are the exam dates?",
+        "expected": "exam_schedule_query",
+        "expected_tool": "get_exam_schedule",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "Exam timetable please",
+        "expected": "exam_schedule_query",
+        "expected_tool": "get_exam_schedule",
+        "got_tool": "get_timetable",
+        "tier": "standard"
+      },
+      {
+        "query": "What did I score in CIE 2?",
+        "expected": "marks_query",
+        "expected_tool": "get_marks",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "My DBMS internal marks",
+        "expected": "marks_query",
+        "expected_tool": "get_marks",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "How much did I get in the internals?",
+        "expected": "marks_query",
+        "expected_tool": "get_marks",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "internal marks please",
+        "expected": "marks_query",
+        "expected_tool": "get_marks",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "Show my timetable",
+        "expected": "timetable_query",
+        "expected_tool": "get_timetable",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "My class schedule please",
+        "expected": "timetable_query",
+        "expected_tool": "get_timetable",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "weekly routine",
+        "expected": "timetable_query",
+        "expected_tool": "get_timetable",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "Has the merit list been prepared?",
+        "expected": "admission_query",
+        "expected_tool": "get_admissions_funnel",
+        "got_tool": "get_institution_analytics",
+        "tier": "standard"
+      },
+      {
+        "query": "How many seats are left in CSE?",
+        "expected": "admission_query",
+        "expected_tool": "get_admissions_funnel",
+        "got_tool": "get_dept_analytics",
+        "tier": "standard"
+      },
+      {
+        "query": "How many students enrolled this year?",
+        "expected": "admission_query",
+        "expected_tool": "get_admissions_funnel",
+        "got_tool": "get_institution_analytics",
+        "tier": "standard"
+      },
+      {
+        "query": "Give me an overview of the department",
+        "expected": "analytics_query",
+        "expected_tool": "get_dept_analytics",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "What is my CGPA?",
+        "expected": "profile_query",
+        "expected_tool": "get_student_overview",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "How many backlogs do I have?",
+        "expected": "profile_query",
+        "expected_tool": "get_student_overview",
+        "got_tool": "get_dept_analytics",
+        "tier": "standard"
+      },
+      {
+        "query": "Who am I logged in as?",
+        "expected": "profile_query",
+        "expected_tool": "get_student_overview",
+        "got_tool": "no_tool",
+        "tier": "standard"
+      },
+      {
+        "query": "The professor marked me absent even though I came",
+        "expected": "attendance_query",
+        "expected_tool": "get_attendance",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "How many more classes can I afford to miss?",
+        "expected": "attendance_query",
+        "expected_tool": "get_attendance",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Any chance of getting financial support this semester?",
+        "expected": "scholarship_query",
+        "expected_tool": "get_scholarship",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Will the college waive my fees given my family situation?",
+        "expected": "scholarship_query",
+        "expected_tool": "get_scholarship",
+        "got_tool": "get_fees",
+        "tier": "hard"
+      },
+      {
+        "query": "Is there money help for students like me?",
+        "expected": "scholarship_query",
+        "expected_tool": "get_scholarship",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Is anything blocking me from writing my papers?",
+        "expected": "exam_query",
+        "expected_tool": "get_hall_ticket",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Can I sit for the finals?",
+        "expected": "exam_query",
+        "expected_tool": "get_hall_ticket",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "How far away are the semester finals?",
+        "expected": "exam_schedule_query",
+        "expected_tool": "get_exam_schedule",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "When do we write our papers?",
+        "expected": "exam_schedule_query",
+        "expected_tool": "get_exam_schedule",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Are my CIE scores decent?",
+        "expected": "marks_query",
+        "expected_tool": "get_marks",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Where should I be for the first class on Monday?",
+        "expected": "timetable_query",
+        "expected_tool": "get_timetable",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Do I meet the cutoff for the next drive?",
+        "expected": "placement_query",
+        "expected_tool": "get_placements",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "What are my chances of getting hired?",
+        "expected": "placement_query",
+        "expected_tool": "get_placements",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "How many candidates cleared verification?",
+        "expected": "admission_query",
+        "expected_tool": "get_admissions_funnel",
+        "got_tool": "get_notifications",
+        "tier": "hard"
+      },
+      {
+        "query": "How full are the branches this year?",
+        "expected": "admission_query",
+        "expected_tool": "get_admissions_funnel",
+        "got_tool": "get_dept_analytics",
+        "tier": "hard"
+      },
+      {
+        "query": "How does our branch compare this semester?",
+        "expected": "analytics_query",
+        "expected_tool": "get_dept_analytics",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Anything I should know about?",
+        "expected": "notification_query",
+        "expected_tool": "get_notifications",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Give me a rundown of where I stand",
+        "expected": "profile_query",
+        "expected_tool": "get_student_overview",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      },
+      {
+        "query": "Summarise my academics",
+        "expected": "profile_query",
+        "expected_tool": "get_student_overview",
+        "got_tool": "no_tool",
+        "tier": "hard"
+      }
+    ]
+  },
+  "attendance_accuracy": {
+    "summaries_checked": 1000,
+    "mismatches": 0,
+    "accuracy": 1.0,
+    "meets_99_target": true
+  },
+  "cascades": {
+    "cascades_run": 10,
+    "records_per_cascade": 50,
+    "avg_cascade_ms": 466.1,
+    "p95_cascade_ms": 478.7,
+    "max_cascade_ms": 541.4,
+    "avg_wall_ms_incl_upload": 663.4,
+    "avg_agents_involved": 5,
+    "topics_in_cascade": [
+      "attendance.updated",
+      "attendance.uploaded",
+      "exam.updated",
+      "notification.sent",
+      "placement.updated",
+      "scholarship.updated"
+    ],
+    "meets_2s_propagation_target": true,
+    "meets_5s_end_to_end_target": true
+  },
+  "manual_comparison": {
+    "assumption_note": "Modeled estimate from stated per-step assumptions, not a field measurement.",
+    "steps": [
+      {
+        "step": "Faculty compiles and submits attendance register",
+        "minutes": 15
+      },
+      {
+        "step": "Office clerk enters records into the register/spreadsheet",
+        "minutes": 20
+      },
+      {
+        "step": "Exam cell cross-checks hall-ticket eligibility",
+        "minutes": 240
+      },
+      {
+        "step": "Scholarship cell re-verifies eligibility",
+        "minutes": 240
+      },
+      {
+        "step": "Placement cell updates candidate lists",
+        "minutes": 240
+      },
+      {
+        "step": "Notices prepared and circulated to affected students",
+        "minutes": 120
+      }
+    ],
+    "manual_total_minutes": 875,
+    "manual_human_touchpoints": 6,
+    "mawos_avg_ms": 466.1,
+    "mawos_human_touchpoints": 1
+  },
+  "ml": {
+    "scholarship_cart": {
+      "test_accuracy": 0.9,
+      "precision": 0.8958,
+      "recall": 0.8958,
+      "f1": 0.8958,
+      "cv5_mean_accuracy": 0.8525,
+      "cv5_std": 0.033,
+      "confusion_matrix": [
+        [
+          47,
+          5
+        ],
+        [
+          5,
+          43
+        ]
+      ],
+      "n_train": 400,
+      "n_test": 100,
+      "features": [
+        "cgpa",
+        "attendance_pct",
+        "family_income",
+        "backlogs",
+        "fees_cleared"
+      ]
+    },
+    "placement_rf": {
+      "test_accuracy": 0.82,
+      "precision": 0.7959,
+      "recall": 0.8298,
+      "f1": 0.8125,
+      "cv5_mean_accuracy": 0.8083,
+      "cv5_std": 0.0118,
+      "confusion_matrix": [
+        [
+          129,
+          30
+        ],
+        [
+          24,
+          117
+        ]
+      ],
+      "n_train": 1200,
+      "n_test": 300,
+      "features": [
+        "cgpa",
+        "backlogs",
+        "attendance_pct"
+      ]
+    }
+  }
+}

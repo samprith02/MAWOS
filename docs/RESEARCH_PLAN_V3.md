@@ -222,6 +222,42 @@ reported as description alongside the simulation, never as the decision.
 Both criteria are computed and reported **whatever the outcome**, including
 if they cancel P4.
 
+### 3.5.1 P0.5 result (run 2026-08-15) — passes, on weak evidence
+
+`evaluation/gate_p05.py`. Decision: **P4 proceeds** under the
+pre-registered rule. But the two halves of the gate disagree in a way that
+changes what P4 is actually testing.
+
+**The gate mechanism is excellent.** AUC(margin → lexicon error) = **0.983**.
+Median margin is 0.00 for the lexicon's errors and 3.00 for its correct
+answers — the lexicon fails almost exactly when no keyword matches at all
+and it silently dumps the query into `profile_query`. 9 of its 11 errors
+sit at margin 0. Confidence-gating can find the failures.
+
+**The fixer is weak.** A perfect LLM escalated on 18.5% of queries would
+reach 100%. The v2 3B model instead fixes only **4 of the 11** errors, and
+at the same threshold **breaks 2** queries the lexicon had right. Net
+**+1.9%** (91.7% vs 89.8%) at 10.2% escalation — two queries out of 108,
+with a 95% bootstrap CI of **[-2.8%, +6.5%]** that straddles zero.
+
+The pre-registered rule (`> lexicon + seed band`, band = 0.0 measured) is
+met, so P4 proceeds and the threshold is **not** revised. But the effect is
+not distinguishable from noise, and reporting the pass without the CI
+would be exactly the overclaiming this plan exists to prevent.
+
+**Consequence for the work order.** The router's bottleneck is not the
+gate, it is the model's competence on the colloquial tail the gate
+correctly identifies. That makes the model sweep the decisive experiment
+for RQ3 rather than a supporting one: **P6 should run before P4 is
+built out**, so the router is tuned against whichever local model can
+actually exploit the 18.5%-escalation headroom the oracle shows exists.
+
+Caveat on provenance: the realised curve uses per-query LLM correctness
+reconstructed from `results/v2_historical/RESULTS.md` §1.2 — one run, one
+seed, one model. The AUC and the oracle ceiling depend only on frozen
+artefacts and will not move; the realised curve must be recomputed against
+the frozen LLM baseline.
+
 ---
 
 ## 4. Baseline freeze — before any code changes

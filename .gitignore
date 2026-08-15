@@ -5,9 +5,13 @@ mawos.db
 ml/models/*.joblib
 ml/data/*.csv
 evaluation/results/*
-# The frozen v2 baseline is the comparator for every v3 result. A
-# comparator that is not version-controlled is not frozen -- it is just a
-# file that happens to exist on one laptop. Tracked deliberately.
+# Two directories are tracked deliberately, and must never be conflated:
+#   v2_historical/ - what v2 originally reported, preserved unmodified
+#   v2_frozen/     - the same system re-measured under PROTOCOL.md
+# A comparator that is not version-controlled is not frozen, and a
+# regenerated result that overwrites a historical one destroys the ability
+# to say which instrument produced which number.
+!evaluation/results/v2_historical/
 !evaluation/results/v2_frozen/
 evaluation/results/v2_frozen/_scratch.db
 fl/results/
