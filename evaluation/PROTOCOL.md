@@ -252,6 +252,50 @@ consistent with proceeding.
 
 Both are reported whatever the outcome, including if they cancel P4.
 
+### 9.2 P6 model selection rule — pre-registered 2026-08-15, before the sweep
+
+P0.5 showed the router's ceiling is set by the escalation model, not the
+gate (AUC 0.983, but the 3B recovers only part of the available headroom).
+That makes model choice an experimental variable, which in turn makes it a
+researcher degree of freedom unless the selection rule is fixed in advance.
+
+**This rule was written and committed before any model other than the 3B
+had been run.** It is not revisable after seeing the sweep.
+
+**Primary metric — net headroom recovery**, computed on **dev**:
+
+```
+        (lexicon errors fixed by the model)
+      - (lexicon-correct answers the model breaks)
+      ----------------------------------------------
+        (total lexicon errors)
+```
+
+evaluated at the escalation threshold maximising hybrid accuracy under the
+50% escalation cap. This normalises against the oracle ceiling, so it
+answers "how much of the available correction does this model actually
+recover?" rather than "which model has the higher raw accuracy?" — the
+latter is dominated by queries the lexicon already handles and where
+escalation never occurs.
+
+**Tie-break.** If two models fall within one seed-σ of each other on net
+headroom recovery, select the one with lower **median** per-query latency.
+RQ3 is explicitly about a fixed local compute budget; at indistinguishable
+competence the cheaper model wins.
+
+**Hard eligibility constraint.** A model is eligible only if it runs
+**fully GPU-resident**, verified via `ollama ps` reporting 100% GPU. A
+partially offloaded model measures the offload rather than the model (§10)
+and is excluded regardless of accuracy.
+
+**Frozen across the sweep.** Changing any of these between models would
+confound model size with implementation: system prompt, tool descriptions,
+temperature (0.1), seeds (0,1,2), the benchmark, the scoring rules, the
+margin definition, the escalation policy, and the 50% cap.
+
+**Split discipline.** The sweep runs on **dev**. The test split stays
+empty and untouched until P5.
+
 ---
 
 ## 10. Hardware and run conditions
@@ -303,3 +347,4 @@ Stated here so they are criticised as design, not discovered as defects.
 | Date | Change | Reason |
 |---|---|---|
 | 2026-08-15 | Protocol frozen at P0. | Initial. |
+| 2026-08-15 | Added §9.2, the P6 model selection rule. | P0.5 found the router's ceiling is set by the escalation model, promoting model choice to an experimental variable. Committed **before** any model beyond the 3B was run, so the rule cannot be fitted to the sweep. No existing clause changed. |
