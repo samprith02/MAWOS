@@ -146,25 +146,62 @@ def one_call(model: str, task, user, seed: int) -> TrialRecord:
     return score(rec)
 
 
-def run_model(model: str, db, users: dict, tasks) -> dict:
-    print(f"\n{model}")
-    print("-" * 62)
-    records, residency = [], None
-    for seed in SEEDS:
-        t0 = time.perf_counter()
-        for i, task in enumerate(tasks, 1):
-            user = users.get(task.asker_role) or users["student"]
-            records.append(one_call(model, task, user, seed))
-            if residency is None and i == 2:      # after the model is warm
-                residency = gpu_residency(model)
-            if i % 27 == 0:
-                print(f"  seed {seed}: {i}/{len(tasks)}", flush=True)
-        s = summarise([r for r in records if r.seed == seed])
-        print(f"  seed {seed} done in {(time.perf_counter()-t0)/60:.1f} min · "
-              f"selection {s['selection_accuracy']:.1%} · "
-              f"abstain {s['abstention_rate']:.1%} · "
-              f"{s['mean_latency_ms']:.0f} ms/query")
+def warm_up(model: str, task, user) -> float:
+    """One discarded call, so model-load time never lands in a measurement.
 
+    PROTOCOL.md §10 requires warm-ups be discarded and load time reported
+    separately. Ollama loads a model on first use and evicts it when
+    another is requested, so every (model, seed) block pays a load cost
+    that has nothing to do with the model's inference speed.
+    """
+    t0 = time.perf_counter()
+    one_call(model, task, user, seed=0)
+    return (time.perf_counter() - t0) * 1000
+
+
+def run_sweep(models: list[str], db, users: dict, tasks) -> dict:
+    """Interleave models within each seed, per PROTOCOL.md §10.
+
+    Running each model to completion in turn would put the last model on
+    the hottest chassis, confounding model size with thermal state on a
+    laptop. Cycling models inside the seed loop spreads thermal drift
+    across all of them instead. The cost is 9 model loads rather than 3,
+    which is exactly what the discarded warm-up above absorbs.
+    """
+    records: dict[str, list] = {m: [] for m in models}
+    residency: dict[str, dict] = {}
+    load_ms: dict[str, list] = {m: [] for m in models}
+
+    for seed in SEEDS:
+        for model in models:
+            first = tasks[0]
+            wu_user = users.get(first.asker_role) or users["student"]
+            load_ms[model].append(warm_up(model, first, wu_user))
+            if model not in residency:
+                residency[model] = gpu_residency(model)
+                res = residency[model]
+                flag = ("" if res.get("fully_resident")
+                        else f"  <-- only {res.get('gpu_fraction', 0):.0%} GPU")
+                print(f"\n{model} residency "
+                      f"{res.get('gpu_fraction', 0):.0%} GPU{flag}")
+
+            t0 = time.perf_counter()
+            for i, task in enumerate(tasks, 1):
+                user = users.get(task.asker_role) or users["student"]
+                records[model].append(one_call(model, task, user, seed))
+                if i % 36 == 0:
+                    print(f"  {model} seed {seed}: {i}/{len(tasks)}", flush=True)
+            s = summarise([r for r in records[model] if r.seed == seed])
+            print(f"  {model} seed {seed}: {(time.perf_counter()-t0)/60:.1f} min · "
+                  f"selection {s['selection_accuracy']:.1%} · "
+                  f"abstain {s['abstention_rate']:.1%} · "
+                  f"{s['mean_latency_ms']:.0f} ms/query", flush=True)
+
+    return {m: _package(m, records[m], residency[m], load_ms[m])
+            for m in models}
+
+
+def _package(model: str, records: list, residency: dict, load_ms: list) -> dict:
     per_seed = [summarise([r for r in records if r.seed == s]) for s in SEEDS]
 
     def band(key):
@@ -181,6 +218,10 @@ def run_model(model: str, db, users: dict, tasks) -> dict:
         "condition": "v2-role-scoped",
         "gpu_residency": residency,
         "call_failures": errors,
+        # reported separately, never inside per-query latency (§10)
+        "warmup_load_ms": {"mean": statistics.mean(load_ms),
+                           "runs": load_ms},
+        "interleaved": True,
         "bands": {k: band(k) for k in
                   ("selection_accuracy", "task_success_rate", "wrong_tool_rate",
                    "abstention_rate", "abstention_clarifying",
@@ -211,11 +252,11 @@ def main() -> None:
         if missing:
             sys.exit(f"no benchmark user for role(s): {missing}")
         print(f"MAWOS v3 LLM capture · {len(tasks)} dev tasks × "
-              f"{len(SEEDS)} seeds × {len(models)} model(s)")
+              f"{len(SEEDS)} seeds × {len(models)} model(s), interleaved")
         print(f"personas: " + ", ".join(f"{r}={u.username}"
                                         for r, u in sorted(users.items())))
-        for model in models:
-            result = run_model(model, db, users, tasks)
+        results = run_sweep(models, db, users, tasks)
+        for model, result in results.items():
             out = OUT_DIR / f"{model.replace(':', '_').replace('.', '-')}.json"
             result["generated"] = datetime.now().isoformat(timespec="seconds")
             out.write_text(json.dumps(result, indent=2), encoding="utf-8")
@@ -223,7 +264,7 @@ def main() -> None:
             res = result["gpu_residency"] or {}
             if res.get("fully_resident") is False:
                 print(f"  INELIGIBLE per PROTOCOL §9.2: only "
-                      f"{res['gpu_fraction']:.1%} GPU-resident")
+                      f"{res.get('gpu_fraction', 0):.1%} GPU-resident")
     finally:
         db.close()
 
