@@ -73,3 +73,15 @@ def test_unmatched_queries_escalate_and_confident_ones_do_not():
     assert router.should_escalate(unknown.margin)
     _, clear = router.decide("What is my attendance percentage?")
     assert not clear.escalated and clear.tier == "lexicon"
+
+
+def test_frozen_instrument_has_not_drifted():
+    """PROTOCOL §1.5 — the measuring instrument is hashed and enforced.
+
+    P1 rewrites the scheduler and P7 draws the figures; both are natural
+    places to quietly "fix" a metric definition, and a change to how an
+    idle gap is counted would move the very baseline P1 must beat. This
+    turns that from an invisible edit into a red test.
+    """
+    from evaluation.freeze_manifest import drift
+    assert not drift(), "\n".join(drift())

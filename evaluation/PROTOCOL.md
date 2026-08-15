@@ -18,7 +18,15 @@ design and says *why*; this says *exactly what is measured and how*.
 3. **Stochastic components run multi-seed**, reported mean ± std, never
    best-of-N. Scheduler: 10 seeds. LLM: 3 seeds.
 4. **Abstention is never merged into error.**
-5. **Baselines stay executable.** `evaluation/baselines/` is pinned.
+5. **Baselines stay executable, and the instrument is hashed.**
+   `evaluation/baselines/` is pinned. `evaluation/FROZEN.sha256` records
+   a digest of every file that defines *what is measured* — the task
+   set, gold labels, distractors, tool-space construction,
+   instrumentation fields, schedule metrics and both v2 baselines. A
+   test enforces it. Changing one of those files is permitted only as a
+   dated §12 entry that regenerates the manifest; changing one silently
+   is the failure mode this rule exists to prevent, and it matters most
+   while unrelated work (P1's scheduler, P7's figures) is in flight.
 6. **No number that `evaluation/` cannot regenerate. No 100% headline.**
 7. **Latency compares only within identical Ollama-residency conditions.**
 8. **A null result is a result.** No threshold in this document may be
@@ -352,6 +360,34 @@ loads that file and runs **once**. τ is never recomputed on test, and no
 test result may motivate a change to it — a revised τ makes it a new
 experiment reported as such, not a correction.
 
+### 9.4 P5 held-out run procedure — fixed in advance
+
+Written now, while the held-out set does not yet exist, so the procedure
+cannot be shaped by the data. Executed exactly once.
+
+1. Verify `backend/app/router_config.json` against
+   `results/v3_gates/p4_router_config.sha256`. A mismatch **aborts** the
+   run; it means τ moved after P4 and the pre-registration is void.
+2. Verify the frozen instrument against `evaluation/FROZEN.sha256`
+   (§1.5). Same consequence.
+3. Capture the held-out split under the §10/§10.1 conditions used at P6
+   — same prompt, schemas, temperature 0.1, seeds 0/1/2, GPU-resident,
+   runtime recorded.
+4. Score three arms on identical queries: **lexicon**, **LLM-only 3B**,
+   **hybrid at the frozen τ**.
+5. Report paired statistics: McNemar per pair with Holm correction across
+   the family, bootstrap CIs on each delta, effect sizes beside every
+   p-value.
+6. Report escalation rate and latency, and state whether the realised
+   escalation rate matches the dev 10.2%. A large divergence is a
+   finding about the benchmark and is reported as one.
+7. Report inter-annotator agreement (Cohen's κ) on the held-out gold
+   labels before any accuracy number.
+8. **Do not retune τ.** Do not add arms, drop arms, or change the
+   scoring rule after seeing the result.
+
+A null or negative held-out result is reported as the result (§1.8).
+
 ---
 
 ## 10. Hardware and run conditions
@@ -423,4 +459,5 @@ Stated here so they are criticised as design, not discovered as defects.
 | 2026-08-15 | Protocol frozen at P0. | Initial. |
 | 2026-08-15 | Added §9.2, the P6 model selection rule. | P0.5 found the router's ceiling is set by the escalation model, promoting model choice to an experimental variable. Committed **before** any model beyond the 3B was run, so the rule cannot be fitted to the sweep. No existing clause changed. |
 | 2026-08-15 | Added §10.1, mandatory runtime capture. | The v2↔v3 equivalence check failed on a shift confined to abstention, and v2 had not recorded its Ollama version, so the cause could not be established. Recording it is now a requirement. Retrospective only in the sense that it cannot repair v2. |
+| 2026-08-15 | Added §1.5 hashing, `FROZEN.sha256`, §9.4 the P5 run procedure. | P4 is done and P1/P7 now run in parallel with the research path. §1.5 makes silent edits to the instrument a failing test rather than an invisible one; §9.4 fixes the held-out procedure while the held-out set still does not exist, so it cannot be shaped by the data. |
 | 2026-08-15 | Added §9.3, the P4 threshold selection rule. | τ is the router's only free parameter and therefore the largest remaining degree of freedom. Committed **before** `tune_router.py` was run. Prior exposure to `A*` via §9.2 is disclosed inside the clause rather than denied. No existing clause changed. |

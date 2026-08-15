@@ -319,9 +319,15 @@ point:
 > **τ = 0** — escalate exactly the queries where the keyword classifier
 > matched nothing at all and silently defaulted to `profile_query`.
 
-That is a structural threshold rather than a fitted one, which is the
-best case for a tuned parameter: it would have been selected under
-argmax, under the 1-SE rule, and under a rule that never saw the curve.
+τ = 0 is therefore **structurally motivated rather than meaningfully
+tuned**: it would have been selected under argmax, under the 1-SE rule,
+and by anyone reasoning from the mechanism without seeing the curve at
+all. That **greatly reduces** the threshold-overfitting concern — several
+independent selection rules converge, and the resulting threshold has an
+interpretable meaning ("the lexicon matched nothing"). It does not
+*eliminate* the degree of freedom: the curve that makes τ = 0 look
+structural is itself a dev curve, and only held-out data can confirm the
+same failure class dominates there.
 
 | | dev |
 |---|---|

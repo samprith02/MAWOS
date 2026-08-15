@@ -72,9 +72,11 @@ def mcnemar(a_ok: dict, b_ok: dict) -> dict:
 def bootstrap_p_no_better(marg, lex_ok, llm_ok, tau, iters=10000, seed=0):
     """Share of bootstrap resamples where the hybrid does not beat the lexicon.
 
-    Reported alongside the CI because at n=108 with a 5-point delta the 2.5%
-    percentile can land exactly on zero, which a bound alone renders as an
-    uninformative "+0.0%". This says how much of the resample mass is there.
+    **Supplementary description, not a test.** It does not replace the CI or
+    McNemar and must never be quoted in their place. It exists because at
+    n=108 with a 5-point delta the 2.5% percentile can land exactly on zero,
+    which a bound alone renders as an uninformative "+0.0%"; this says how
+    much resample mass actually sits there.
     """
     rng = random.Random(seed)
     ids = [t.id for t in DEV_TASKS]
@@ -301,19 +303,24 @@ def main() -> None:
         "",
         f"- hybrid {chosen['accuracy_mean']:.1%} vs lexicon {lex_acc:.1%} = "
         f"**{delta:+.1%}**",
-        f"- 95% bootstrap CI {lo:+.1%} to {hi:+.1%}; "
-        f"{p_null:.1%} of resamples show no gain",
+        f"- 95% bootstrap CI {lo:+.1%} to {hi:+.1%} — **includes zero**",
+        f"- supplementary description only, not a test: {p_null:.1%} of "
+        f"resamples show no gain",
         f"- McNemar vs lexicon (majority vote): b01={mc['b01']}, "
         f"b10={mc['b10']}, p = {mc['p']:.3f}",
         f"- expected cost {exp_ms:.0f} ms/query vs {llm_ms:.0f} ms for "
         f"LLM-on-everything",
         "",
-        "The point estimate favours the router and the direction is "
-        "consistent across all three seeds, but neither the CI nor McNemar "
-        "clears conventional significance on 108 queries. **Dev is "
-        "contaminated by construction** (§11) — the lexicon was tuned on it. "
-        "These numbers select τ; they are not the result. The held-out set "
-        "(P5) is.",
+        "**How to state this.** *The confidence-gated hybrid showed a "
+        f"{delta * 100:+.1f}-point improvement on the development set, "
+        "motivating "
+        "held-out evaluation.* Not *\"significantly improves\"* — the paired "
+        "McNemar test does not reach conventional significance "
+        f"(p = {mc['p']:.3f}) and the bootstrap CI includes zero. The point "
+        "estimate favours the router and the direction is consistent across "
+        "all three seeds, but **dev is contaminated by construction** (§11): "
+        "the lexicon was tuned on these queries. These numbers select τ. "
+        "They are not the result. The held-out set (P5) is.",
     ]
     (OUT_DIR / "p4_router.md").write_text("\n".join(md) + "\n",
                                           encoding="utf-8")

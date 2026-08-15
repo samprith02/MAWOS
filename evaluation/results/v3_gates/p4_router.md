@@ -31,8 +31,9 @@ The complete curve is published, not only the selected point, so the selection i
 ## Effect at the selected threshold
 
 - hybrid 94.8% vs lexicon 89.8% = **+4.9%**
-- 95% bootstrap CI +0.0% to +10.2%; 3.8% of resamples show no gain
+- 95% bootstrap CI +0.0% to +10.2% — **includes zero**
+- supplementary description only, not a test: 3.8% of resamples show no gain
 - McNemar vs lexicon (majority vote): b01=7, b10=1, p = 0.070
 - expected cost 348 ms/query vs 3414 ms for LLM-on-everything
 
-The point estimate favours the router and the direction is consistent across all three seeds, but neither the CI nor McNemar clears conventional significance on 108 queries. **Dev is contaminated by construction** (§11) — the lexicon was tuned on it. These numbers select τ; they are not the result. The held-out set (P5) is.
+**How to state this.** *The confidence-gated hybrid showed a +4.9-point improvement on the development set, motivating held-out evaluation.* Not *"significantly improves"* — the paired McNemar test does not reach conventional significance (p = 0.070) and the bootstrap CI includes zero. The point estimate favours the router and the direction is consistent across all three seeds, but **dev is contaminated by construction** (§11): the lexicon was tuned on these queries. These numbers select τ. They are not the result. The held-out set (P5) is.

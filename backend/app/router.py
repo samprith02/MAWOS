@@ -22,8 +22,10 @@ Two measurements motivate the change, both in `evaluation/results/`:
   3B can repair sits at **margin 0**. Escalating anything above that
   fixes nothing further and only breaks answers the lexicon had right.
 
-So τ = 0 is not a tuned number so much as a structural one: escalate
-exactly the queries where the keyword classifier matched nothing.
+So τ = 0 is structurally motivated rather than meaningfully tuned:
+escalate exactly the queries where the keyword classifier matched
+nothing. Several independent selection rules converge on it. That is not
+the same as being verified — the curve it comes from is a dev curve.
 
 Honesty about what is established
 ---------------------------------
