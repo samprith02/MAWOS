@@ -1,0 +1,945 @@
+{
+  "n": 108,
+  "lexicon_accuracy": 0.8981481481481481,
+  "llm_accuracy": 0.7037037037037037,
+  "llm_provenance": "reconstructed from v2_historical/RESULTS.md \u00a71.2 (32 misroutes, single run, single seed, qwen2.5:3b-instruct)",
+  "auc_margin_predicts_error": 0.9831302717900656,
+  "auc_band": "consistent with proceeding",
+  "margin_median_error": 0,
+  "margin_median_correct": 3,
+  "oracle_best_under_cap": {
+    "tau": 1.5,
+    "escalation_rate": 0.18518518518518517,
+    "accuracy": 1.0
+  },
+  "oracle_full_fix_escalation": 0.18518518518518517,
+  "realised_best_under_cap": {
+    "tau": 0.0,
+    "escalation_rate": 0.10185185185185185,
+    "accuracy": 0.9166666666666666
+  },
+  "delta_vs_lexicon": 0.01851851851851849,
+  "delta_ci95": [
+    -0.027777777777777776,
+    0.06481481481481481
+  ],
+  "decision": "proceed",
+  "thresholds": {
+    "max_escalation": 0.5,
+    "auc_no_signal": 0.6,
+    "auc_strong": 0.7,
+    "lexicon_seed_band": 0.0
+  },
+  "oracle_curve": [
+    {
+      "tau": -1.0,
+      "escalation_rate": 0.0,
+      "accuracy": 0.8981481481481481
+    },
+    {
+      "tau": 0.0,
+      "escalation_rate": 0.10185185185185185,
+      "accuracy": 0.9814814814814815
+    },
+    {
+      "tau": 0.5,
+      "escalation_rate": 0.12037037037037036,
+      "accuracy": 0.9907407407407407
+    },
+    {
+      "tau": 1.0,
+      "escalation_rate": 0.12962962962962962,
+      "accuracy": 0.9907407407407407
+    },
+    {
+      "tau": 1.5,
+      "escalation_rate": 0.18518518518518517,
+      "accuracy": 1.0
+    },
+    {
+      "tau": 2,
+      "escalation_rate": 0.28703703703703703,
+      "accuracy": 1.0
+    },
+    {
+      "tau": 2.5,
+      "escalation_rate": 0.4166666666666667,
+      "accuracy": 1.0
+    },
+    {
+      "tau": 3,
+      "escalation_rate": 0.6018518518518519,
+      "accuracy": 1.0
+    },
+    {
+      "tau": 3.5,
+      "escalation_rate": 0.7407407407407407,
+      "accuracy": 1.0
+    },
+    {
+      "tau": 4.0,
+      "escalation_rate": 0.7685185185185185,
+      "accuracy": 1.0
+    },
+    {
+      "tau": 4.5,
+      "escalation_rate": 0.8148148148148148,
+      "accuracy": 1.0
+    },
+    {
+      "tau": 5,
+      "escalation_rate": 0.8888888888888888,
+      "accuracy": 1.0
+    },
+    {
+      "tau": 5.5,
+      "escalation_rate": 0.9444444444444444,
+      "accuracy": 1.0
+    },
+    {
+      "tau": 6,
+      "escalation_rate": 0.9814814814814815,
+      "accuracy": 1.0
+    },
+    {
+      "tau": 8.0,
+      "escalation_rate": 1.0,
+      "accuracy": 1.0
+    }
+  ],
+  "realised_curve": [
+    {
+      "tau": -1.0,
+      "escalation_rate": 0.0,
+      "accuracy": 0.8981481481481481
+    },
+    {
+      "tau": 0.0,
+      "escalation_rate": 0.10185185185185185,
+      "accuracy": 0.9166666666666666
+    },
+    {
+      "tau": 0.5,
+      "escalation_rate": 0.12037037037037036,
+      "accuracy": 0.9166666666666666
+    },
+    {
+      "tau": 1.0,
+      "escalation_rate": 0.12962962962962962,
+      "accuracy": 0.9074074074074074
+    },
+    {
+      "tau": 1.5,
+      "escalation_rate": 0.18518518518518517,
+      "accuracy": 0.8981481481481481
+    },
+    {
+      "tau": 2,
+      "escalation_rate": 0.28703703703703703,
+      "accuracy": 0.8518518518518519
+    },
+    {
+      "tau": 2.5,
+      "escalation_rate": 0.4166666666666667,
+      "accuracy": 0.8148148148148148
+    },
+    {
+      "tau": 3,
+      "escalation_rate": 0.6018518518518519,
+      "accuracy": 0.7685185185185185
+    },
+    {
+      "tau": 3.5,
+      "escalation_rate": 0.7407407407407407,
+      "accuracy": 0.7592592592592593
+    },
+    {
+      "tau": 4.0,
+      "escalation_rate": 0.7685185185185185,
+      "accuracy": 0.7407407407407407
+    },
+    {
+      "tau": 4.5,
+      "escalation_rate": 0.8148148148148148,
+      "accuracy": 0.7314814814814815
+    },
+    {
+      "tau": 5,
+      "escalation_rate": 0.8888888888888888,
+      "accuracy": 0.7222222222222222
+    },
+    {
+      "tau": 5.5,
+      "escalation_rate": 0.9444444444444444,
+      "accuracy": 0.7222222222222222
+    },
+    {
+      "tau": 6,
+      "escalation_rate": 0.9814814814814815,
+      "accuracy": 0.7037037037037037
+    },
+    {
+      "tau": 8.0,
+      "escalation_rate": 1.0,
+      "accuracy": 0.7037037037037037
+    }
+  ],
+  "per_task": [
+    {
+      "id": "att-s01",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "att-s02",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "standard"
+    },
+    {
+      "id": "att-s03",
+      "margin": 5.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "att-s04",
+      "margin": 2,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "att-s05",
+      "margin": 5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "att-s06",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "fee-s01",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "fee-s02",
+      "margin": 8.0,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "fee-s03",
+      "margin": 1.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "fee-s04",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "fee-s05",
+      "margin": 5.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "fee-s06",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "sch-s01",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "sch-s02",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "sch-s03",
+      "margin": 1.0,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "standard"
+    },
+    {
+      "id": "sch-s04",
+      "margin": 2.5,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "standard"
+    },
+    {
+      "id": "sch-s05",
+      "margin": 4.0,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "standard"
+    },
+    {
+      "id": "sch-s06",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "exm-s01",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "exm-s02",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "standard"
+    },
+    {
+      "id": "exm-s03",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "exm-s04",
+      "margin": 5.0,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "exm-s05",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "exm-s06",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "esc-s01",
+      "margin": 8,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "esc-s02",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "esc-s03",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "esc-s04",
+      "margin": 0.0,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "standard"
+    },
+    {
+      "id": "esc-s05",
+      "margin": 5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "esc-s06",
+      "margin": 5.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "mrk-s01",
+      "margin": 5.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "mrk-s02",
+      "margin": 5.0,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "standard"
+    },
+    {
+      "id": "mrk-s03",
+      "margin": 5.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "mrk-s04",
+      "margin": 5.0,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "mrk-s05",
+      "margin": 2.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "mrk-s06",
+      "margin": 5.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "tt-s01",
+      "margin": 6,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "tt-s02",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "tt-s03",
+      "margin": 6,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "standard"
+    },
+    {
+      "id": "tt-s04",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "tt-s05",
+      "margin": 6,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "tt-s06",
+      "margin": 2,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "standard"
+    },
+    {
+      "id": "plc-s01",
+      "margin": 5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "plc-s02",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "plc-s03",
+      "margin": 2,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "plc-s04",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "plc-s05",
+      "margin": 2.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "plc-s06",
+      "margin": 5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "adm-s01",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "adm-s02",
+      "margin": 2.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "adm-s03",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "standard"
+    },
+    {
+      "id": "adm-s04",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "standard"
+    },
+    {
+      "id": "adm-s05",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "adm-s06",
+      "margin": 2,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "standard"
+    },
+    {
+      "id": "ana-s01",
+      "margin": 4.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "ana-s02",
+      "margin": 1.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "ana-s03",
+      "margin": 1.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "ana-s04",
+      "margin": 4.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "ana-s05",
+      "margin": 2.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "ana-s06",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "ntf-s01",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "ntf-s02",
+      "margin": 2.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "ntf-s03",
+      "margin": 2.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "ntf-s04",
+      "margin": 2,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "ntf-s05",
+      "margin": 2,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "ntf-s06",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "prf-s01",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "prf-s02",
+      "margin": 2.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "prf-s03",
+      "margin": 2,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "prf-s04",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "prf-s05",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "prf-s06",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "standard"
+    },
+    {
+      "id": "att-h01",
+      "margin": 4.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "att-h02",
+      "margin": 2,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "att-h03",
+      "margin": 0,
+      "lexicon_correct": false,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "fee-h01",
+      "margin": 2.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "fee-h02",
+      "margin": 4.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "fee-h03",
+      "margin": 0,
+      "lexicon_correct": false,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "sch-h01",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "sch-h02",
+      "margin": 0.5,
+      "lexicon_correct": false,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "sch-h03",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "exm-h01",
+      "margin": 0.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "exm-h02",
+      "margin": 2.5,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "exm-h03",
+      "margin": 3,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "esc-h01",
+      "margin": 0,
+      "lexicon_correct": false,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "esc-h02",
+      "margin": 0,
+      "lexicon_correct": false,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "esc-h03",
+      "margin": 3.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "mrk-h01",
+      "margin": 2.5,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "mrk-h02",
+      "margin": 0,
+      "lexicon_correct": false,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "mrk-h03",
+      "margin": 5.0,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "tt-h01",
+      "margin": 6,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "tt-h02",
+      "margin": 0,
+      "lexicon_correct": false,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "tt-h03",
+      "margin": 0,
+      "lexicon_correct": false,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "plc-h01",
+      "margin": 2,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "plc-h02",
+      "margin": 4,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "plc-h03",
+      "margin": 2.5,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "adm-h01",
+      "margin": 2.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "adm-h02",
+      "margin": 2,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "adm-h03",
+      "margin": 1.5,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "ana-h01",
+      "margin": 4.0,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "ana-h02",
+      "margin": 0,
+      "lexicon_correct": false,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "ana-h03",
+      "margin": 1.5,
+      "lexicon_correct": false,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "ntf-h01",
+      "margin": 0,
+      "lexicon_correct": false,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "ntf-h02",
+      "margin": 2,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "ntf-h03",
+      "margin": 2.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "prf-h01",
+      "margin": 4.5,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "prf-h02",
+      "margin": 1.5,
+      "lexicon_correct": true,
+      "llm_correct": true,
+      "stratum": "colloquial"
+    },
+    {
+      "id": "prf-h03",
+      "margin": 0,
+      "lexicon_correct": true,
+      "llm_correct": false,
+      "stratum": "colloquial"
+    }
+  ]
+}
