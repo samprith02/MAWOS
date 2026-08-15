@@ -134,23 +134,48 @@ def main() -> None:
     results = [evaluate_model(f, marg, lex_ok) for f in files]
     results.sort(key=lambda r: -r["net_headroom_recovery"]["mean"])
 
-    print("P6 model sweep — PROTOCOL.md §9.2")
-    print("=" * 74)
-    print(f"lexicon {lex_acc:.1%} · {n_err} errors available · "
-          f"oracle ceiling 100% at 18.5% escalation\n")
-    hdr = (f"{'model':24} {'elig':5} {'solo':>7} {'hybrid':>8} "
-           f"{'recov':>8} {'fix/brk':>8} {'med ms':>8}")
-    print(hdr)
-    print("-" * len(hdr))
-    for r in results:
-        print(f"{r['model']:24} {'yes' if r['eligible'] else 'NO':5} "
-              f"{r['llm_solo_accuracy']['mean']:6.1%} "
-              f"{r['hybrid_accuracy']['mean']:7.1%} "
-              f"{r['net_headroom_recovery']['mean']:7.1%} "
-              f"{r['fixed']['mean']:.1f}/{r['broken']['mean']:.1f}".ljust(70)
-              + f"{r['latency_median_ms']:7.0f}")
-
+    # PROTOCOL 9.2 excludes an ineligible model "regardless of accuracy".
+    # That exclusion governs every primary analysis, not just the final
+    # pick: a partially offloaded model runs in a different computational
+    # regime (GPU->CPU RAM->GPU rather than GPU->GPU), so its latency does
+    # not lie on the same axis as an eligible model's and must never share
+    # a Pareto frontier or a paired significance test with one.
     eligible = [r for r in results if r["eligible"]]
+    diagnostic = [r for r in results if not r["eligible"]]
+
+    print("P6 model sweep — PROTOCOL.md §9.2")
+    print("=" * 78)
+    print(f"lexicon {lex_acc:.1%} · {n_err} errors available · "
+          f"oracle ceiling 100% at 18.5% escalation")
+
+    def table(rows, latency: bool):
+        hdr = (f"  {'model':24} {'solo':>7} {'hybrid':>8} {'recov':>8} "
+               f"{'fix/brk':>9}" + (f" {'med ms':>8}" if latency else ""))
+        print(hdr)
+        print("  " + "-" * (len(hdr) - 2))
+        for r in rows:
+            line = (f"  {r['model']:24} {r['llm_solo_accuracy']['mean']:6.1%} "
+                    f"{r['hybrid_accuracy']['mean']:7.1%} "
+                    f"{r['net_headroom_recovery']['mean']:7.1%} "
+                    f"{r['fixed']['mean']:4.1f}/{r['broken']['mean']:<4.1f}")
+            if latency:
+                line += f" {r['latency_median_ms']:7.0f}"
+            print(line)
+
+    print("\nPRIMARY — eligible under the fixed compute budget")
+    table(eligible, latency=True)
+
+    if diagnostic:
+        print("\nOUT-OF-COMPETITION — partially CPU-offloaded, NON-COMPARABLE")
+        print("  Excluded from selection, Pareto analysis and all paired")
+        print("  tests. Accuracy is unaffected by offload and is reported;")
+        print("  latency is a different regime and is withheld here.")
+        table(diagnostic, latency=False)
+        for r in diagnostic:
+            print(f"  {r['model']}: {r['gpu_fraction']:.1%} GPU-resident, "
+                  f"latency non-comparable "
+                  f"(median {r['latency_median_ms']:.0f} ms under offload)")
+
     selected = None
     if eligible:
         top = eligible[0]
@@ -166,9 +191,10 @@ def main() -> None:
             print(f"  tie-break on median latency over "
                   f"{top['model']} ({top['latency_median_ms']:.0f} ms)")
 
+    # Paired tests among eligible models only.
     pairs = {}
-    for i, a in enumerate(results):
-        for b in results[i + 1:]:
+    for i, a in enumerate(eligible):
+        for b in eligible[i + 1:]:
             pairs[f"{a['model']} vs {b['model']}"] = mcnemar(
                 a["_majority_ok"], b["_majority_ok"])
     for label, m in pairs.items():
@@ -176,12 +202,19 @@ def main() -> None:
 
     payload = {
         "rule": "PROTOCOL.md §9.2, pre-registered 2026-08-15",
+        "eligibility_record": "results/v3_llm/ELIGIBILITY.md — determined on "
+                              "hardware grounds before any accuracy was seen",
         "lexicon_accuracy": lex_acc, "lexicon_errors": n_err,
         "max_escalation": MAX_ESCALATION,
-        "models": [{k: v for k, v in r.items() if k != "_majority_ok"}
-                   for r in results],
+        "eligible_models": [{k: v for k, v in r.items() if k != "_majority_ok"}
+                            for r in eligible],
+        "out_of_competition": [
+            {**{k: v for k, v in r.items() if k != "_majority_ok"},
+             "latency_comparable": False,
+             "excluded_from": ["selection", "pareto", "paired_tests"]}
+            for r in diagnostic],
         "selected": selected["model"] if selected else None,
-        "mcnemar": pairs,
+        "mcnemar_eligible_only": pairs,
     }
     (OUT_DIR / "p6_sweep.json").write_text(json.dumps(payload, indent=2),
                                            encoding="utf-8")
