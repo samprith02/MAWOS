@@ -8,7 +8,7 @@ python evaluation/figures.py F6 F7    # just these
 python evaluation/figures.py --pdf    # vector copies as well
 ```
 
-Generated 2026-08-18T21:50:50. Do not hand-edit: this file is overwritten on every run.
+Generated 2026-08-18T23:46:42. Do not hand-edit: this file is overwritten on every run.
 
 A figure is listed as blocked when the experiment behind it has not been run. No illustrative or placeholder version of a blocked figure exists anywhere in this repository, and none should be made: every number that reaches a slide has to be regenerable from `evaluation/`.
 
@@ -35,9 +35,9 @@ A figure is listed as blocked when the experiment behind it has not been run. No
 
 ## What the blocked figures are waiting for
 
-* **F4** - RQ1 is a 2x2 (tool space x persona) and only cells A and D have ever been run - A here in v3, D in v2, and those two runs failed the equivalence check, so they cannot even be differenced. Cells B (full tool space, role-matched persona) and C (role-scoped, single admin persona) are the experiment. Needs P2. Plan 3.1.
+* **F4** - RQ1 is a 2x2 (tool space x persona) and only cells A and D have ever been run - A here in v3, D in v2, and those two runs failed the equivalence check, so they cannot even be differenced. Cells B (full tool space, role-matched persona) and C (role-scoped, single admin persona) are the experiment. Needs P2 for the conditions AND P5 for the data - E2 is specified on the held-out split (plan 5), so P2 alone does not unblock this. Plan 3.1.
 * **F5** - The PCN-style provenance gate does not exist yet. E3 measures its false-block rate and latency cost against the gate switched off; with no gate there is no on/off to plot. Needs P3. Plan 3.2.
-* **F9** - The dose-response sweep over tool-space size (5/9/13/20/30, composition frozen in benchmark/toolspace.py) has not been run. The harness exists and the distractors are frozen; the capture is the missing piece. Needs P2 plus one capture run. Plan 3.4.
+* **F9** - The dose-response sweep over tool-space size (5/9/13/20/30, composition frozen in benchmark/toolspace.py) has not been run. The harness exists and the distractors are frozen; the capture is the missing piece. Needs P2 plus a capture run, and E5 is specified on the held-out split (plan 5), so it needs P5 as well. Plan 3.4.
 
 ## Reading rules that travel with these figures
 

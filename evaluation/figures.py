@@ -921,7 +921,9 @@ def f4_rq1_factorial():
         "ever been run - A here in v3, D in v2, and those two runs failed "
         "the equivalence check, so they cannot even be differenced. Cells B "
         "(full tool space, role-matched persona) and C (role-scoped, single "
-        "admin persona) are the experiment. Needs P2. Plan 3.1.")
+        "admin persona) are the experiment. Needs P2 for the conditions "
+        "AND P5 for the data - E2 is specified on the held-out split "
+        "(plan 5), so P2 alone does not unblock this. Plan 3.1.")
 
 
 def f5_provenance_gate():
@@ -936,7 +938,9 @@ def f9_toolspace_dose_response():
         "The dose-response sweep over tool-space size (5/9/13/20/30, "
         "composition frozen in benchmark/toolspace.py) has not been run. "
         "The harness exists and the distractors are frozen; the capture is "
-        "the missing piece. Needs P2 plus one capture run. Plan 3.4.")
+        "the missing piece. Needs P2 plus a capture run, and E5 is "
+        "specified on the held-out split (plan 5), so it needs P5 as "
+        "well. Plan 3.4.")
 
 
 REGISTRY = {

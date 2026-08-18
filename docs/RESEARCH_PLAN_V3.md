@@ -634,7 +634,7 @@ Net tool-surface change: 13 → 12 (`get_admissions_funnel` removed). The
 | **P0** | Cut `v3-research`. Freeze v2 (§4.1–4.2). RQ1 instrumentation (§4.3). Write `PROTOCOL.md` + distractor tool list. Preserve v2 lexicon + greedy as executable baselines. | baseline frozen **and reviewed** |
 | **P0.5** | Router viability gate (§3.5) — simulation primary, AUC descriptive. | **may cancel P4** |
 | **P1** | Scheduler: objective + greedy seed + SA. Keep greedy runnable. E4 + weight ablation, 10 seeds. **Done — §4.3.1.** | before/after + convergence reproduce |
-| **P1b** | ITC-2007 harness (§4.4), separate from production scheduler. E4b. | official validator passes |
+| **P1b** | ITC-2007 harness (§4.4), separate from production scheduler. E4b. **Harness done and validated — §8.2**; blocked on instance files. | official validator passes |
 | **P2** | Agent reduction 10 → 4 (§7), tool surface held per §7.1. | tool count verified 13→12 |
 | **P3** | PCN-style provenance gate. E3. | false-block rate acceptable |
 | **P4** | Hybrid router, τ on dev only, complete curve published. E1. **Done — §3.6.** Multi-tool composition and memory are *not* included; see §3.6. | τ never touched test |
@@ -649,6 +649,50 @@ abstention** · F5 gate on/off · **F6 accuracy–latency Pareto over τ** ·
 F7 scheduler convergence + gap heatmap + ablation · F8 latency CDF ·
 **F9 RQ4 dose-response over tool-space size**. F4, F6 and F9 carry the
 claims; the rest are support.
+
+### 8.2 P1b — ITC-2007 harness
+
+`evaluation/itc2007/` holds the CB-CTT parser, cost model, annealer and
+E4b runner. §4.4 named the risk exactly — *"a wrong mapping produces a
+meaningless number, which is worse than no number"* — so the cost model
+was not written from the competition's prose. It is transcribed function
+by function from `validator.cc` v1.1 and then **differentially tested
+against the compiled official binary**.
+
+| Check | Result |
+|---|---|
+| `crosscheck.py`, two seeds | **1,900 random instance/solution pairs agree on all eight components**, not merely on the total |
+| Published toy example | our model reproduces the officially stated `Violations = 5, Total Cost = 30` |
+| Solver → official validator | toy instance solved to 0 violations from three seeds, confirmed by the binary with no warnings |
+| Incremental cost | equals a full rescore after random move sequences (`tests/test_itc2007.py`) |
+
+The validator is fetched, never vendored: `build.py` records its URL and
+sha256, so the binary E4b validates against has provenance instead of
+being a pasted-in file.
+
+**Two findings worth keeping.**
+
+* The official validator has an out-of-bounds read in
+  `CostsOnCurriculumCompactness` when `periods_per_day == 1`: every period
+  then satisfies `p % ppd == 0`, so the final period's lookahead reads one
+  past the end of its row. No competition instance has ppd = 1 (comp01–21
+  use 4–6), so `crosscheck.py` excludes that case and says why, rather
+  than treating undefined behaviour as ground truth or quietly matching
+  whatever the binary happened to return.
+* **E4b is blocked on the instance files, not on code.** QUB serves the
+  spec and the validator openly but puts the instances behind a login;
+  the Udine mirror fails TLS with `SEC_E_WRONG_PRINCIPAL` — a hostname
+  mismatch on a *currently valid* University of Udine certificate from a
+  real academic CA. It is very probably fine, and it was still not forced
+  with `--insecure`, because that is a call about the team's machine and
+  the benchmark's provenance. `INSTANCES.md` documents the three ways to
+  supply them; `run_e4b.py` hashes whatever it is given so the bytes
+  behind a reported penalty stay recoverable.
+
+No published-best table is hardcoded. `run_e4b.py` compares only against
+an `instances/BESTS.json` that cites its source, and otherwise reports our
+penalties and says the comparison is pending — a reference number nobody
+can point at a source for is exactly what §1 rule 6 forbids.
 
 ### 8.1 P7 — figure harness
 

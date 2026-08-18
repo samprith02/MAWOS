@@ -20,3 +20,9 @@ evaluation/results/**/_scratch.db
 fl/results/
 .venv/
 venv/
+
+# ITC-2007 harness: third-party validator source/binary is fetched, never
+# vendored (evaluation/itc2007/build.py records its URL and sha256), and
+# the competition instances are not ours to redistribute.
+evaluation/itc2007/vendor/
+evaluation/itc2007/instances/*.ctt
