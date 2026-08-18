@@ -72,7 +72,7 @@ Logins: `4MT23AI049`/`student123`, `aiml.f02`/`faculty123`, `hod.aiml`/
 ## Evaluation
 
 ```bash
-python -m pytest tests -q                 # 16 tests
+python -m pytest tests -q                 # 35 tests
 python evaluation/gate_p05.py             # P0.5 router viability gate
 python evaluation/capture_llm.py          # frozen-protocol LLM capture (live Ollama)
 python evaluation/analyze_sweep.py        # P6 model selection, PROTOCOL 9.2
@@ -84,6 +84,7 @@ python evaluation/evaluate.py --no-llm    # skip the 108 live LLM calls
 python evaluation/ablation.py             # is the architecture load-bearing?
 python evaluation/failure_injection.py    # fault isolation + replay
 python evaluation/scalability.py          # constant workload vs institution size
+python evaluation/figures.py              # P7: every figure, one command
 ```
 
 `evaluate.py::_verdict` derives §1.3's conclusion from the *sign* of the

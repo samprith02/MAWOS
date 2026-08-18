@@ -640,7 +640,7 @@ Net tool-surface change: 13 → 12 (`get_admissions_funnel` removed). The
 | **P4** | Hybrid router, τ on dev only, complete curve published. E1. **Done — §3.6.** Multi-tool composition and memory are *not* included; see §3.6. | τ never touched test |
 | **P5** | Held-out set → dual annotation → κ → **single** test run of E1/E2/E5. | test touched exactly once |
 | **P6** | Model sweep 1.5B/3B/7B × 3 seeds. **Done — §3.5.2.** | all three GPU-resident, verified |
-| **P7** | Figures F1–F9. | every figure regenerable by one command |
+| **P7** | Figures F1–F9. **Harness done — §8.1**; 6 drawn, 3 blocked on P2/P3. | every figure regenerable by one command |
 | **P8** | Rewrite README / ARCHITECTURE / RESULTS to match the evidence. | §9 threats written |
 
 **Figures.** F1 cascade DAG · F2 routing accuracy × system × model size ·
@@ -649,6 +649,45 @@ abstention** · F5 gate on/off · **F6 accuracy–latency Pareto over τ** ·
 F7 scheduler convergence + gap heatmap + ablation · F8 latency CDF ·
 **F9 RQ4 dose-response over tool-space size**. F4, F6 and F9 carry the
 claims; the rest are support.
+
+### 8.1 P7 — figure harness
+
+`python evaluation/figures.py` regenerates every figure that has data and
+writes `evaluation/results/figures/FIGURES.md`, which lists each figure,
+the JSON it was regenerated from, and what the blocked ones are waiting
+for. `--pdf` adds vector copies; naming a figure (`figures.py F6`) draws
+only that one.
+
+**Drawn (6).** F1 from the live bus and the agent sources, so it cannot
+drift from the wiring. F2, F3, F6, F8 from the frozen captures and the P0
+freeze. F7 from `v3_scheduler/e4.json`.
+
+**Blocked (3), and this is enforced rather than noted.** F4 needs RQ1
+cells B and C (P2); F5 needs the provenance gate (P3); F9 needs the
+tool-space dose-response capture (P2). Their builders raise `Blocked`
+with the experiment named, `tests/test_figures.py` asserts they keep
+raising, and no illustrative version of any of them exists in the
+repository. A placeholder figure is a number on a slide that
+`evaluation/` cannot regenerate, which rule 6 of §1 forbids.
+
+**Two things the figures forced into the open.**
+
+* F3's caption originally asserted that the lexicon's errors fall to
+  `profile_query` by a registry-order tie-break. They do not: L131 of
+  `lexicon_v2.py` assigns `profile_query` explicitly when nothing
+  matches. The distinction matters, because it is *why* 9 of the 11
+  errors carry margin exactly 0 — τ = 0 is structural, not fitted. The
+  caption is now computed from the lexicon rather than asserted.
+* The same structure caps the router. The other 2 errors score above 0
+  and are never escalated at τ = 0, so the reachable ceiling on dev is
+  98.1%, not 100%. F6 shows the whole curve, including that the argmax
+  never exceeds it.
+
+**One weakness the figures exposed.** E4 records a convergence trace for
+seed 0 only, so F7A is a single trace with the 10-seed band quoted beside
+it. Recording all ten is a one-line change to `scheduler_eval.py`, but it
+would re-run E4 and move numbers already reported, so it waits for the
+next E4 run rather than being slipped in here.
 
 ---
 
