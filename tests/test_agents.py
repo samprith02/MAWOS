@@ -59,20 +59,20 @@ def test_fee_fine_and_clearance(agents, db):
 
 
 def test_exam_eligibility(agents, db):
-    exam = agents["exam_agent"]
-    blocked = exam.evaluate(db, "4MT23AI002")   # 60% attendance + overdue fee
+    elig = agents["eligibility_agent"]
+    blocked = elig.evaluate_hall_ticket(db, "4MT23AI002")   # 60% attendance + overdue fee
     db.commit()
     assert blocked["eligible"] is False
     assert any("attendance" in r for r in blocked["reasons"])
     assert any("fees" in r for r in blocked["reasons"])
-    ok = exam.evaluate(db, "4MT23AI001")        # 100% attendance, paid
+    ok = elig.evaluate_hall_ticket(db, "4MT23AI001")        # 100% attendance, paid
     db.commit()
     assert ok["eligible"] is True
     assert db.query(HallTicket).filter_by(usn="4MT23AI001").first().eligible
 
 
 def test_scholarship_rule_prefilter(agents, db):
-    result = agents["scholarship_agent"].evaluate(db, "4MT23AI002")
+    result = agents["eligibility_agent"].evaluate_scholarship(db, "4MT23AI002")
     db.commit()
     assert result["status"] == "not_eligible"
     assert len(result["reasons"]) >= 2

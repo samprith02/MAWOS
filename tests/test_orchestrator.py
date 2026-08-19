@@ -17,7 +17,6 @@ def test_keyword_classifier_v2_intents():
         "Show my internal marks": "marks_query",
         "What classes do I have this week?": "timetable_query",
         "Which placement drives am I eligible for?": "placement_query",
-        "Show the admissions funnel": "admission_query",
         "Show my notifications": "notification_query",
     }
     for query, expected in cases.items():
@@ -44,12 +43,23 @@ def test_live_lexicon_matches_the_frozen_baseline():
     computed against it. If the live classifier ever disagrees, those
     numbers stop describing the running system, silently. This is the
     tripwire.
+
+    One documented exception: `admission_query` was retired live at P2
+    (`get_admissions_funnel` removed, docs/RESEARCH_PLAN_V3.md §7.1), but
+    `lexicon_v2.py` is a byte-pinned historical snapshot and still scores
+    it — e.g. ana-h03 ("branch") is a pre-existing lexicon error the frozen
+    baseline happens to mis-score into that bucket. Live falling through to
+    a different wrong answer there is the direct, intended consequence of
+    the removal, not drift, so it is the one case this test does not fail
+    on. It still fails on any *other* disagreement.
     """
     lexicon_v2 = pytest.importorskip("evaluation.baselines.lexicon_v2")
     from evaluation.benchmark.tasks import DEV_TASKS
     for task in DEV_TASKS:
-        assert (llm.classify_keyword(task.query).intent
-                == lexicon_v2.classify_keyword(task.query).intent), task.id
+        frozen_intent = lexicon_v2.classify_keyword(task.query).intent
+        if frozen_intent == "admission_query":
+            continue
+        assert llm.classify_keyword(task.query).intent == frozen_intent, task.id
 
 
 def test_margin_is_the_tuned_definition():

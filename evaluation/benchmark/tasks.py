@@ -15,9 +15,12 @@ tool-space experiment into an answerability experiment.
 
 Provenance
 ----------
-`source="v2-dev"` tasks are the 108 queries shipped in MAWOS v2. They are
-**development data only**. CLAUDE.md already records that the keyword
-lexicon was tuned to their phrasings, so they cannot support a headline
+`source="v2-dev"` tasks are the 108 queries shipped in MAWOS v2, of which
+99 remain after P2 (docs/RESEARCH_PLAN_V3.md §7.1): the 9 admission_query
+tasks were dropped when `get_admissions_funnel` was retired as a tool,
+documented in PROTOCOL.md §12. They are **development data only**.
+CLAUDE.md already records that the keyword lexicon was tuned to their
+phrasings, so they cannot support a headline
 number. They are exactly right for tuning tau, prompts and weights.
 
 `stratum_provenance` records how a task landed in its stratum:
@@ -50,7 +53,8 @@ def _v2(tid, query, intent, tool, stratum, role):
 
 
 # --------------------------------------------------------------- dev split
-# The 108 v2 queries. DEV ONLY — never a headline number.
+# The 108 v2 queries, minus 9 admission_query tasks dropped at P2 (99
+# remain). DEV ONLY — never a headline number.
 DEV_TASKS: list[Task] = [
     _v2("att-s01", "What is my attendance percentage?",
         "attendance_query", "get_attendance", "standard", "student"),
@@ -148,18 +152,6 @@ DEV_TASKS: list[Task] = [
         "placement_query", "get_placements", "standard", "student"),
     _v2("plc-s06", "placement drive list",
         "placement_query", "get_placements", "standard", "student"),
-    _v2("adm-s01", "Show the admissions funnel",
-        "admission_query", "get_admissions_funnel", "standard", "admin"),
-    _v2("adm-s02", "How many applications are pending?",
-        "admission_query", "get_admissions_funnel", "standard", "admin"),
-    _v2("adm-s03", "Has the merit list been prepared?",
-        "admission_query", "get_admissions_funnel", "standard", "admin"),
-    _v2("adm-s04", "How many seats are left in CSE?",
-        "admission_query", "get_admissions_funnel", "standard", "admin"),
-    _v2("adm-s05", "admission status report",
-        "admission_query", "get_admissions_funnel", "standard", "admin"),
-    _v2("adm-s06", "How many students enrolled this year?",
-        "admission_query", "get_admissions_funnel", "standard", "admin"),
     _v2("ana-s01", "Show department analytics",
         "analytics_query", "get_dept_analytics", "standard", "hod"),
     _v2("ana-s02", "How is my department performing?",
@@ -244,12 +236,6 @@ DEV_TASKS: list[Task] = [
         "placement_query", "get_placements", "colloquial", "student"),
     _v2("plc-h03", "What are my chances of getting hired?",
         "placement_query", "get_placements", "colloquial", "student"),
-    _v2("adm-h01", "Where does the counselling process stand?",
-        "admission_query", "get_admissions_funnel", "colloquial", "admin"),
-    _v2("adm-h02", "How many candidates cleared verification?",
-        "admission_query", "get_admissions_funnel", "colloquial", "admin"),
-    _v2("adm-h03", "How full are the branches this year?",
-        "admission_query", "get_admissions_funnel", "colloquial", "admin"),
     _v2("ana-h01", "Give me a health check of the department",
         "analytics_query", "get_dept_analytics", "colloquial", "hod"),
     _v2("ana-h02", "Which section is struggling the most?",

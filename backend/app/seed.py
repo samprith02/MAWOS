@@ -325,8 +325,8 @@ def bootstrap_evaluations(agents: dict) -> None:
         db.commit()
         agents["finance_agent"].refresh_status(db)
         for usn in usns:
-            agents["exam_agent"].evaluate(db, usn)
-            agents["scholarship_agent"].evaluate(db, usn)
+            agents["eligibility_agent"].evaluate_hall_ticket(db, usn)
+            agents["eligibility_agent"].evaluate_scholarship(db, usn)
         db.commit()
         # Placement: final-year students only (realistic + fast).
         finals = [u for (u,) in db.query(Student.usn)

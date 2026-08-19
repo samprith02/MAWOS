@@ -469,31 +469,40 @@ def f3_confusion():
     tool2intent = {t.gold_tool: t.gold_intent for t in DEV_TASKS}
     intents = sorted({t.gold_intent for t in DEV_TASKS})
     ix = {c: i for i, c in enumerate(intents)}
+    n = len(intents)
 
-    lex = np.zeros((len(intents), len(intents)))
+    # lexicon_v2.py is a byte-pinned historical snapshot (P0) and still
+    # scores "admission_query" -- get_admissions_funnel was retired live at
+    # P2 (docs/RESEARCH_PLAN_V3.md 7.1), so that intent no longer has a
+    # column of its own in the 99-task dev set. Give any such prediction a
+    # named column rather than dropping or crashing on it.
+    lex_cols = intents + ["(retired)"]
+    lex = np.zeros((n, n + 1))
     for t in DEV_TASKS:
-        lex[ix[t.gold_intent], ix[lexicon_v2.classify_keyword(t.query).intent]] += 1
+        pred = lexicon_v2.classify_keyword(t.query).intent
+        j = ix[pred] if pred in ix else n
+        lex[ix[t.gold_intent], j] += 1
 
     extra = ["(abstained)", "(off-registry)"]
     cols = intents + extra
-    llm = np.zeros((len(intents), len(cols)))
+    llm = np.zeros((n, len(cols)))
     for r in cap["records"]:
         tool = r["first_tool"]
         if tool is None:
-            j = len(intents)
+            j = n
         elif tool in tool2intent:
             j = ix[tool2intent[tool]]
         else:
-            j = len(intents) + 1
+            j = n + 1
         llm[ix[r["gold_intent"]], j] += 1
 
     fig, axes = plt.subplots(1, 2, figsize=(13.6, 5.4),
                              gridspec_kw={"width_ratios": [1, 1.17]})
     panels = [
-        (axes[0], lex, intents, "A " + chr(8212) + " lexicon: rows gold, columns routed to "
-         "(deterministic, n=108)", "%.0f"),
+        (axes[0], lex, lex_cols, "A " + chr(8212) + " lexicon: rows gold, columns routed to "
+         "(deterministic, n=99)", "%.0f"),
         (axes[1], llm, cols, "B " + chr(8212) + " LLM 3B, same axes (3 seeds pooled, "
-         "n=324)", "%.0f"),
+         "n=297)", "%.0f"),
     ]
     for ax, mat, colnames, title, fmt in panels:
         rows = mat.sum(axis=1, keepdims=True)
@@ -522,34 +531,42 @@ def f3_confusion():
             ax.axvline(k - 0.5, color="white", lw=1.2)
     axes[0].set_ylabel("gold intent")
 
+    col_sums = lex.sum(axis=0)
     lex_off = int(lex.sum() - np.trace(lex))
-    sink = intents[int(np.argmax(lex.sum(axis=0) - np.diag(lex)))]
-    n_sink = int((lex.sum(axis=0) - np.diag(lex))[ix[sink]])
+    retired_errors = int(col_sums[n])          # admission_query, see above
+    retired_gold = (intents[int(np.argmax(lex[:, n]))] if retired_errors
+                    else None)
+    sink_errors = col_sums[:n] - np.diag(lex)
+    sink = intents[int(np.argmax(sink_errors))]
+    n_sink = int(sink_errors[ix[sink]])
     zero_score = sum(1 for t in DEV_TASKS
                      if lexicon_v2.classify_keyword(t.query).intent != t.gold_intent
                      and fr["margins"][t.id] == 0)
     caption(fig,
-            "Red = misrouted. The lexicon makes %d errors in 108 and %d of "
+            "Red = misrouted. The lexicon makes %d errors in 99 and %d of "
             "them land in one column, %s: when no pattern matches at all, "
             "classify_keyword assigns profile_query explicitly (lexicon_v2.py "
-            "L131) rather than guessing. %d of the %d errors therefore carry "
-            "margin 0 exactly, which is what makes tau=0 a structural "
-            "threshold and not a fitted one — but it also caps what the "
-            "router can reach, since the other %d errors score above 0 and "
-            "are never escalated (F6). The LLM's two extra columns are "
-            "failure modes the lexicon cannot have: it abstained %d times "
-            "and called a real tool outside the benchmark's 12 on %d "
+            "L131) rather than guessing. %d more land in (retired) — the "
+            "frozen lexicon still scores admission_query, a capability "
+            "retired live at P2, on a %s query. %d of the %d errors "
+            "therefore carry margin 0 exactly, which is what makes tau=0 a "
+            "structural threshold and not a fitted one — but it also caps "
+            "what the router can reach, since the other errors score above "
+            "0 and are never escalated (F6). The LLM's two extra columns "
+            "are failure modes the lexicon cannot have: it abstained %d "
+            "times and called a real tool outside the benchmark's 12 on %d "
             "occasions, pooled over 3 seeds."
-            % (lex_off, n_sink, _short(sink), zero_score, lex_off,
-               lex_off - zero_score, int(llm[:, len(intents)].sum()),
-               int(llm[:, len(intents) + 1].sum())))
+            % (lex_off, n_sink, _short(sink), retired_errors,
+               _short(retired_gold) if retired_gold else "n/a",
+               zero_score, lex_off, int(llm[:, n].sum()),
+               int(llm[:, n + 1].sum())))
     return fig, {
         "sources": ["evaluation/baselines/lexicon_v2.py",
                     "evaluation/benchmark/tasks.py",
                     "evaluation/results/v3_llm/qwen2-5_3b-instruct.json"],
-        "note": "lexicon %d/108 misrouted; LLM abstained %d, off-registry %d "
-                "(3 seeds)" % (lex_off, int(llm[:, len(intents)].sum()),
-                               int(llm[:, len(intents) + 1].sum())),
+        "note": "lexicon %d/99 misrouted; LLM abstained %d, off-registry %d "
+                "(3 seeds)" % (lex_off, int(llm[:, n].sum()),
+                               int(llm[:, n + 1].sum())),
     }
 
 

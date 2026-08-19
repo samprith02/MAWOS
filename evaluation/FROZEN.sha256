@@ -3,9 +3,9 @@
 # Regenerate with: python evaluation/freeze_manifest.py --write
 # A regeneration needs a dated entry in PROTOCOL.md §12.
 
-64ffedc2fd833ff60cb1de77a1da388e576270bd5bf9d7b2cb15ccd048dbc62b  evaluation/benchmark/tasks.py
+4741dcef80653258b8ea221bdc0e8b4eaced03bf739232404a9530a34860c306  evaluation/benchmark/tasks.py
 066b0039fb37a6870076365cdaa7624270de629bb5bf557aaefa33fbc1c7450d  evaluation/benchmark/distractors.py
-a97bb092f1009f4dad7d3ce94b5d3136b1459791f2de1cfec88759d31ad4670b  evaluation/benchmark/toolspace.py
+b7f557af87bc257be81157a515228c576d0e614639b058ffb0917412b5d55785  evaluation/benchmark/toolspace.py
 f3177fc555a778791e353f23cc328bfe15f8e16785b2c5cedce7c74494c3597f  evaluation/benchmark/instrumentation.py
 75f7f13de70367854180a2b9cb46d47814c757947843ad341a25bcee0fb436b0  evaluation/benchmark/schedule_metrics.py
 251a45ca0b661d131c0df680644d9ffc0e053e008757e81d102848d59c77462b  evaluation/baselines/lexicon_v2.py

@@ -248,16 +248,6 @@ def _fmt_dept(r):
     return "\n".join(lines)
 
 
-def _fmt_admissions(r):
-    s = r["stages"]
-    lines = ["Admissions funnel: "
-             + " → ".join(f"{k} {v}" for k, v in s.items())]
-    for code, d in r["departments"].items():
-        lines.append(f"  {code}: {d['applications']} applications, "
-                     f"{d['allotted']}/{d['intake']} seats allotted")
-    return "\n".join(lines)
-
-
 _FORMATTERS = {
     "get_student_overview": _fmt_overview,
     "get_attendance": _fmt_attendance,
@@ -270,5 +260,4 @@ _FORMATTERS = {
     "get_marks": _fmt_marks,
     "get_notifications": _fmt_notifications,
     "get_dept_analytics": _fmt_dept,
-    "get_admissions_funnel": _fmt_admissions,
 }

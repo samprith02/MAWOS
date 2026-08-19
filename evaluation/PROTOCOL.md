@@ -92,7 +92,8 @@ than merely discouraged.
 `evaluation/benchmark/toolspace.py`. Three invariants, enforced in code:
 
 1. **The gold tool is always exposed.** Verified across all
-   108 × 6 × 3 = 1944 cells.
+   99 × 6 × 3 = 1782 cells (99 dev tasks after P2 dropped the 9
+   admission_query tasks, §12 2026-08-19).
 2. **Composition is tabulated, not sampled freely.** Free sampling keeps
    the expected distractor share constant but lets its variance explode at
    small N — a 5-tool space could come out all-real by chance, confounding
@@ -104,12 +105,14 @@ than merely discouraged.
    | 9 | 1 | 3 | 5 | 0.625 |
    | 13 | 1 | 5 | 7 | 0.583 |
    | 20 | 1 | 8 | 11 | 0.579 |
-   | 30 | 1 | 12 | 17 | 0.586 |
-   | **13-real** | 1 | 12 | 0 | 0.000 |
+   | 30 | 1 | 11 | 18 | 0.621 |
+   | **12-real** | 1 | 11 | 0 | 0.000 |
 
-   `13-real` is the **deployed-system reference**, reported separately and
-   never plotted on the dose-response curve — its composition differs from
-   every curve point, so it answers a different question.
+   `12-real` (renamed from `13-real` at P2, the registry lost
+   `get_admissions_funnel`) is the **deployed-system reference**, reported
+   separately and never plotted on the dose-response curve — its
+   composition differs from every curve point, so it answers a different
+   question.
 
 3. **Presentation order is shuffled per seed.** Models are position-
    sensitive over tool lists; fixed registry order would let position bias
@@ -472,3 +475,4 @@ Stated here so they are criticised as design, not discovered as defects.
 | 2026-08-15 | Added two scheduling limitations to §11. | Found at P1 while optimising the frozen objective: it can be gamed by emptying a section-day, and it does not price block length. Documented, **not** patched — the metric is the instrument and the P1 solver carries an invariant instead. |
 | 2026-08-15 | Added §1.5 hashing, `FROZEN.sha256`, §9.4 the P5 run procedure. | P4 is done and P1/P7 now run in parallel with the research path. §1.5 makes silent edits to the instrument a failing test rather than an invisible one; §9.4 fixes the held-out procedure while the held-out set still does not exist, so it cannot be shaped by the data. |
 | 2026-08-15 | Added §9.3, the P4 threshold selection rule. | τ is the router's only free parameter and therefore the largest remaining degree of freedom. Committed **before** `tune_router.py` was run. Prior exposure to `A*` via §9.2 is disclosed inside the clause rather than denied. No existing clause changed. |
+| 2026-08-19 | P2 executed: Exam+Scholarship merged into one Eligibility agent; Admission/Finance/Placement/Records/Notification reclassified as tool-backed components or a bus subscriber, not agents (docs/RESEARCH_PLAN_V3.md §7). `get_admissions_funnel` retired as a tool (§7.1), 12 tools remain. `evaluation/benchmark/tasks.py` **modified**: the 9 admission_query tasks removed, 108→99 dev tasks — this was the planned, documented consequence, not a metric-definition change. `evaluation/benchmark/toolspace.py` **modified**: `COMPOSITION[30]` moved from (12,17) to (11,18) and `DEPLOYMENT_REFERENCE` renamed `13-real`→`12-real`, because the real non-gold tool pool shrank from 12 to 11; re-verified the gold-tool-always-exposed invariant across all 99×6×3=1782 cells. `evaluation/baselines/lexicon_v2.py` **untouched** — it is a byte-pinned historical snapshot of what v2 measured and stays that way; it still scores `admission_query`, which is why `tests/test_orchestrator.py::test_live_lexicon_matches_the_frozen_baseline` carries one documented exception for it. This invalidates the dev-set-size-dependent P4/P6 numbers computed before this date (89.8%/76.9%/94.8%, τ=0 selection) — they must be recomputed against the 99-task set before being cited again; the pre-P2 numbers remain historically accurate for what was run, and are superseded, not corrected, per §10.1's own precedent. |

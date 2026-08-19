@@ -82,7 +82,7 @@ def student_dashboard(user: User = Depends(require_role("student")),
         "placements": agents["placement_agent"].student_view(db, user.usn),
         "timetable": agents["timetable_agent"].grid(db, s.dept_code, s.year,
                                                     s.section),
-        "exams": agents["exam_agent"].schedule_for(db, s.dept_code, s.semester),
+        "exams": agents["eligibility_agent"].schedule_for(db, s.dept_code, s.semester),
         "notifications": agents["notification_agent"].for_user(
             db, usn=user.usn),
     }

@@ -73,5 +73,5 @@ def test_tool_permissions_lock_students_to_self(agents, db):
                            {"usn": "4MT23AI002"})
     assert result.get("usn") == "4MT23AI001"
     # and role-gated tools refuse
-    denied = tools.execute(db, agents, student1, "get_admissions_funnel", {})
+    denied = tools.execute(db, agents, student1, "get_institution_analytics", {})
     assert "not permitted" in denied.get("error", "")

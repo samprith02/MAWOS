@@ -40,20 +40,23 @@ from . import distractors
 # N -> (real non-gold count, distractor count). Gold is always the +1.
 # Distractor share of the non-gold slots sits at 0.58 +/- 0.05 across the
 # range, except at N=5 where integer granularity forces 0.50. The real
-# pool caps at 12 non-gold tools, which fixes the N=30 row exactly.
+# pool caps at 11 non-gold tools (12 real tools after P2 minus the gold
+# slot), which fixes the N=30 row exactly.
 COMPOSITION: dict[int, tuple[int, int]] = {
     5:  (2, 2),
     9:  (3, 5),
     13: (5, 7),
     20: (8, 11),
-    30: (12, 17),
+    30: (11, 18),
 }
 
 #: The deployed system, kept as a separate labelled reference point rather
 #: than folded into the dose-response curve — its composition (all real, no
 #: distractors) differs from every curve condition, so plotting it on the
 #: same axis would compare two different things.
-DEPLOYMENT_REFERENCE = "13-real"
+#: Renamed from "13-real" at P2 (docs/RESEARCH_PLAN_V3.md §7.1): the
+#: registry lost get_admissions_funnel, so the deployed system is 12 tools.
+DEPLOYMENT_REFERENCE = "12-real"
 
 SIZES = tuple(sorted(COMPOSITION))
 
@@ -121,7 +124,7 @@ def conditions() -> list:
 
 def describe(condition) -> str:
     if condition == DEPLOYMENT_REFERENCE:
-        return "13 tools, all real (deployed system reference)"
+        return "12 tools, all real (deployed system reference)"
     n_real, n_distract = COMPOSITION[condition]
     return (f"{condition} tools = 1 gold + {n_real} real + {n_distract} "
             f"distractors (distractor share of non-gold slots "

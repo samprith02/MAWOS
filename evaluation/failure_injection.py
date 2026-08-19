@@ -1,11 +1,16 @@
 """Failure-injection experiment — is the cascade fault tolerant?
 
-Protocol: run one baseline cascade, then re-run with the Scholarship Agent's
-event handler replaced by one that raises. Verify from the workflow audit log
-that (a) sibling agents (Exam, Placement, Notification) still complete,
-(b) the failure is recorded as an `agent.error` event under the same
-workflow_id, and (c) recovery is possible by replaying the event after the
-agent is restored.
+Protocol: run one baseline cascade, then re-run with the Eligibility Agent's
+event handler replaced by one that raises. Exam and Scholarship merged into
+one Eligibility agent under P2 (docs/RESEARCH_PLAN_V3.md §7): they now share
+one subscription and one handler for attendance.updated, so this fault
+withholds exam.updated AND scholarship.updated together — that coupling is
+the direct, honest consequence of the merge, not a partial isolation
+failure. What the experiment verifies is isolation ACROSS agents: (a) sibling
+agents (Placement, Notification), reacting to the same attendance.updated
+event through independent subscriptions, still complete, (b) the failure is
+recorded as an `agent.error` event under the same workflow_id, and
+(c) recovery is possible by replaying the event after the agent is restored.
 
 Writes evaluation/results/FAILURE_INJECTION.md.
 Run:  python evaluation/failure_injection.py
@@ -63,16 +68,16 @@ async def run(db):
         db, UPLOADER, records(_fresh_day(db, 14)))
     baseline = trace(r1["workflow_id"])
 
-    # --- inject: scholarship agent raises -----------------------------------
-    scholarship = agents["scholarship_agent"]
+    # --- inject: eligibility agent raises ------------------------------------
+    eligibility = agents["eligibility_agent"]
     subs = bus._subscribers["attendance.updated"]
-    idx = next(i for i, (name, _) in enumerate(subs) if name == scholarship.name)
+    idx = next(i for i, (name, _) in enumerate(subs) if name == eligibility.name)
     original = subs[idx]
 
     async def broken(payload):
-        raise RuntimeError("injected fault: scholarship service unavailable")
+        raise RuntimeError("injected fault: eligibility service unavailable")
 
-    subs[idx] = (scholarship.name, broken)
+    subs[idx] = (eligibility.name, broken)
     try:
         r2 = await agents["attendance_agent"].upload_attendance(
             db, UPLOADER, records(_fresh_day(db, 21)))
@@ -94,8 +99,10 @@ async def run(db):
     results = {
         "baseline_topics": sorted({e["topic"] for e in baseline}),
         "injected_topics": sorted(inj_topics),
-        "siblings_survived": {"exam.updated", "placement.updated",
+        "siblings_survived": {"placement.updated",
                               "notification.sent"} <= inj_topics,
+        "coupled_reactions_withheld": not ({"exam.updated", "scholarship.updated"}
+                                           & inj_topics),
         "error_audited": "agent.error" in inj_topics,
         "recovery_replay_workflow": r3,
         "recovery_reassessed": bool(before and after and after > before),
@@ -104,16 +111,22 @@ async def run(db):
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     (RESULTS_DIR / "failure_injection.json").write_text(json.dumps(results, indent=2))
-    ok = "PASS" if (results["siblings_survived"] and results["error_audited"]
+    ok = "PASS" if (results["siblings_survived"]
+                    and results["coupled_reactions_withheld"]
+                    and results["error_audited"]
                     and results["recovery_reassessed"]) else "FAIL"
     md = f"""# Failure-Injection Experiment — {ok}
 
-Fault model: the Scholarship Agent's event handler raises
-("service unavailable") mid-cascade.
+Fault model: the Eligibility Agent's event handler raises
+("service unavailable") mid-cascade. Eligibility owns both hall-ticket and
+scholarship reactions (merged under P2), so this fault withholds
+exam.updated AND scholarship.updated together — a direct consequence of
+one agent, one handler, not a partial isolation failure.
 
 | Property | Result |
 |---|---|
-| Sibling agents (Exam, Placement, Notification) completed | {results['siblings_survived']} |
+| Sibling agents (Placement, Notification) completed | {results['siblings_survived']} |
+| Both coupled reactions (exam, scholarship) withheld together | {results['coupled_reactions_withheld']} |
 | Failure recorded as `agent.error` under the same workflow_id | {results['error_audited']} |
 | Recovery by event replay after agent restored | {results['recovery_reassessed']} |
 
@@ -127,6 +140,9 @@ Design note: the bus isolates each subscriber (backend/app/bus.py); a failed
 handler becomes an auditable `agent.error` event instead of an aborted
 cascade, and the audit log retains everything needed to replay the missed
 event once the agent recovers — which is exactly what this experiment does.
+Isolation is at agent granularity: Placement and Notification, independent
+subscribers to the same attendance.updated event, are unaffected by
+Eligibility's fault.
 """
     (RESULTS_DIR / "FAILURE_INJECTION.md").write_text(md, encoding="utf-8")
     print(f"{ok} — wrote {RESULTS_DIR / 'FAILURE_INJECTION.md'}")

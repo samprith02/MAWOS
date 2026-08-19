@@ -8,6 +8,10 @@ natural-language answer.
 Offline fallback: deterministic weighted-keyword classifier mapping a query
 to the single most likely tool. Always available; its share of traffic is
 the measured fallback-trigger rate.
+
+11 intents (P2): `admission_query` was retired with `get_admissions_funnel`
+(docs/RESEARCH_PLAN_V3.md §7.1) — Admission no longer meets the agent
+criterion and this was its only chat-facing capability.
 """
 import re
 import time
@@ -26,7 +30,6 @@ INTENT_TOOL = {
     "marks_query": "get_marks",
     "timetable_query": "get_timetable",
     "placement_query": "get_placements",
-    "admission_query": "get_admissions_funnel",
     "analytics_query": "get_dept_analytics",
     "notification_query": "get_notifications",
     "profile_query": "get_student_overview",
@@ -77,12 +80,6 @@ _LEXICON: dict[str, list[tuple[str, float]]] = {
         (r"job|recruit\w*|hired?", 2.5), (r"shortlist\w*", 2.5),
         (r"package|lpa", 2), (r"interview", 2), (r"cutoff", 2),
         (r"openings?", 2.5), (r"campus", 1.5),
-    ],
-    "admission_query": [
-        (r"admissions?", 3.5), (r"applicants?|applications?", 2.5),
-        (r"merit list", 3), (r"seats?\b.{0,12}\b(allot|left|fill|vacant|remain)", 3),
-        (r"intake", 2.5), (r"enroll?\w*", 2), (r"counsell?ing", 2.5),
-        (r"verificat\w*", 2), (r"branch(es)?\b", 1.5),
     ],
     "analytics_query": [
         (r"analytics|statistics|overview of (the )?(dept|department|branch)", 3),

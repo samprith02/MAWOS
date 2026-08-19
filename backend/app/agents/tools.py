@@ -4,6 +4,12 @@ Each tool: JSON-schema parameters (sent to the LLM), allowed roles,
 an executor, and a text formatter used by the offline fallback path.
 Role enforcement happens HERE, not in the prompt: a student physically
 cannot read another student's record regardless of what the LLM asks for.
+
+12 tools (P2, docs/RESEARCH_PLAN_V3.md §7.1): `get_admissions_funnel` was
+retired here because Admission no longer meets the agent criterion and
+this was its only chat-facing capability — the admissions funnel itself
+is unaffected and still served directly by the admin/principal REST
+routes (`AdmissionAgent.funnel`, `backend/app/api/routes.py`).
 """
 from ..models import Department, Student, User
 
@@ -106,7 +112,7 @@ def get_hall_ticket(db, agents, user, args):
     usn, err = _resolve_usn(db, user, args)
     if err:
         return {"error": err}
-    result = agents["exam_agent"].evaluate(db, usn)
+    result = agents["eligibility_agent"].evaluate_hall_ticket(db, usn)
     db.commit()
     return result
 
@@ -116,7 +122,7 @@ def get_scholarship(db, agents, user, args):
     usn, err = _resolve_usn(db, user, args)
     if err:
         return {"error": err}
-    result = agents["scholarship_agent"].evaluate(db, usn)
+    result = agents["eligibility_agent"].evaluate_scholarship(db, usn)
     db.commit()
     return result
 
@@ -159,7 +165,7 @@ def get_exam_schedule(db, agents, user, args):
         dept = str(args.get("dept") or "AIML").upper()
         sem = int(args.get("semester") or 5)
     return {"dept": dept, "semester": sem,
-            "exams": agents["exam_agent"].schedule_for(db, dept, sem)}
+            "exams": agents["eligibility_agent"].schedule_for(db, dept, sem)}
 
 
 @tool("get_notifications", "The caller's recent notifications.")
@@ -186,12 +192,6 @@ def get_institution_analytics(db, agents, user, args):
     return {"departments": agents["academic_agent"].institution_analytics(db),
             "fee_collection": agents["finance_agent"].collection_stats(db),
             "placements": agents["placement_agent"].stats(db)}
-
-
-@tool("get_admissions_funnel", "Admissions pipeline status: applications by "
-      "stage and department seat position.", roles=("admin", "principal"))
-def get_admissions_funnel(db, agents, user, args):
-    return agents["admission_agent"].funnel(db)
 
 
 def schemas_for_role(role: str) -> list[dict]:
