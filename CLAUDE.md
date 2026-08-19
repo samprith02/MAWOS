@@ -3,7 +3,29 @@
 B.E. final-year research prototype (Dept. of AI&ML, MITE, Group 12).
 Framing: **event-driven multi-agent workflow orchestration engine for
 universities**. The contribution is the orchestration engine, not the agent
-count. Ten agents, chosen by institutional function.
+count. Ten agents currently; four is a documented plan decision (§7 of
+`docs/RESEARCH_PLAN_V3.md`), not yet implemented — that's P2 below.
+
+## Status (updated 2026-08-19 — keep this current every session)
+
+| Phase | What | State |
+|---|---|---|
+| P0 | Freeze v2 baseline, RQ1 instrumentation, protocol | done |
+| P0.5 | Router viability gate | done |
+| P1 | Objective-driven scheduler (greedy seed + SA) | done |
+| P1b | ITC-2007 external benchmark harness | harness validated (1,900 cases vs official validator); **blocked on instance files**, see `evaluation/itc2007/INSTANCES.md` |
+| P2 | Agent reduction 10→4, tool surface held 13→12 | **pending** — not started |
+| P3 | PCN-style provenance gate | **pending** — not started |
+| P4 | Confidence-gated hybrid router, τ frozen on dev | done |
+| P5 | Held-out set → dual annotation → single test run | **blocked on external authors — the largest schedule risk** |
+| P6 | Model sweep, 1.5B/3B/7B × 3 seeds | done |
+| P7 | Figures F1–F9 | harness done; 6/9 drawn (`evaluation/results/figures/`), 3 blocked on P2/P3/P5 |
+| P8 | Rewrite ARCHITECTURE.md / RESULTS.md to match the evidence | pending — README.md was brought current 2026-08-19; those two still carry v2-era numbers by design until P8 |
+
+Next unstarted phase in work order: **P2**. It is a refactor of the running
+demo system (10→4 agents) and the RQ1 captures it unblocks additionally
+need P5, which is separately blocked — confirm before starting rather than
+assuming it's next just because it's next in the table.
 
 ## Run it
 
@@ -39,9 +61,10 @@ Logins: `4MT23AI049`/`student123`, `aiml.f02`/`faculty123`, `hod.aiml`/
   and must never be differenced (`v3_llm/CONDITIONS.md`, PROTOCOL §10.1).
   Do not re-frame the loss as a win, and do not delete the losing
   configuration from the report.
-- **Cite v2 and v3 numbers separately.** README, ARCHITECTURE and RESULTS.md
-  still carry v2 figures; P8 rewrites them. Until then, say which run a
-  number came from.
+- **Cite v2 and v3 numbers separately.** README.md was brought current to
+  v3 on 2026-08-19; `docs/ARCHITECTURE.md` and `evaluation/results/
+  v2_historical/RESULTS.md` still carry v2-era numbers on purpose — P8
+  rewrites those. Until then, say which run a number came from.
 - **Never present a number you cannot regenerate** from `evaluation/`.
 - Label attendance accuracy as *deterministic verification*, never "AI
   accuracy"; label the manual-workflow comparison as a *modeled estimate*.
