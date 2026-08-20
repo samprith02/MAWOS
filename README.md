@@ -147,6 +147,32 @@ paired tests. The 3B was selected under a pre-registered one-standard-error
 rule. That selection was made against the pre-P2, 108-task instrument and
 needs re-confirming against the 99-task set once GPU access is available.
 
+**CPU diagnostic capture (2026-08-20, not citable).** With GPU access
+blocked, a 3B capture ran on CPU against the current 99-task set as a
+sanity check only — `evaluation/results/v3_llm/qwen2-5_3b-instruct.json`,
+`gpu_residency.fully_resident: false`:
+
+| Seed | Selection accuracy | Abstention |
+|---|---|---|
+| 0 | 82.8% | 11.1% |
+| 1 | 80.8% | 11.1% |
+| 2 | 80.8% | 11.1% |
+| mean | 81.5% ± 1.0% | 11.1% |
+
+This does **not** update `router_config.json` — `tune_router.py` correctly
+hard-exits on non-GPU-resident data (PROTOCOL §9.2) rather than let a CPU
+timing masquerade as a real τ selection, and this table must never be read
+as a P4/P6 result or compared to the 76.9%/94.8% figures above (different
+task set, different compute, not the same experiment). One more thing to
+disclose about this specific run: it ended with an ABORT from the
+harness's own database-integrity check, because two unrelated scripts
+(`ablation.py`, `failure_injection.py`) were run concurrently with it and
+both write to `mawos.db`. `capture_llm.py` itself never executes tools
+during scoring, and the output was verified clean (297 records, 99 unique
+task IDs, 0 call failures) — but the process that produced it wasn't
+clean, and a real recapture needs to run with nothing else touching the
+database at the same time.
+
 ---
 
 ## The agents

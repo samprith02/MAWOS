@@ -32,12 +32,27 @@ falls back to `cpu`) — a sandboxing restriction, not a laptop problem
 (PROTOCOL.md's hardware section measured this same RTX 4050 on
 2026-08-15). `evaluation/tune_router.py` hard-exits on a non-GPU-resident
 capture by design (PROTOCOL §9.2) — that gate is correct and must not be
-weakened to force a number out of it. A CPU-only diagnostic 3B capture was
-run anyway for a sanity read (see `evaluation/results/v3_llm/` —
-`gpu_residency.fully_resident: false`, do not cite as a P4/P6 result). The
-real fix is running `capture_llm.py` + `tune_router.py` + `analyze_sweep.py`
-+ `figures.py` from an environment with real GPU access; nothing else
-about P2 is blocked.
+weakened to force a number out of it. The real fix is running
+`capture_llm.py` + `tune_router.py` + `analyze_sweep.py` + `figures.py`
+from an environment with real GPU access; nothing else about P2 is
+blocked.
+
+A CPU-only diagnostic 3B capture ran anyway (2026-08-20, 99 tasks, 3
+seeds) for a sanity read — `evaluation/results/v3_llm/
+qwen2-5_3b-instruct.json`, `gpu_residency.fully_resident: false`, **do not
+cite as a P4/P6 result**: selection accuracy 81.5% ± 1.0% (seeds 82.8% /
+80.8% / 80.8%), abstention 11.1%, latency not comparable to any GPU
+number. **This run ended with an ABORT its own integrity check raised**:
+`mawos.db`'s hash changed mid-run because `ablation.py` and
+`failure_injection.py` were run concurrently with it (both write to that
+DB; `capture_llm.py` doesn't, but checks the file anyway as a tripwire
+against the harness itself ever executing a tool). `one_call()` never
+calls `toolreg.execute`, so the recorded selections are not touched by
+those unrelated writes — verified: 297 records, 99 unique task IDs
+matching `DEV_TASKS` exactly, 0 call failures. The data is very likely
+clean; the process that produced it wasn't, and that's disclosed rather
+than quietly reconciled. A real GPU-resident recapture must be run
+without anything else touching `mawos.db` at the same time.
 
 Next unstarted phase in work order: **P3**, or the GPU-resident recapture
 above once available. P2's code is done; don't restart that work.
