@@ -32,6 +32,10 @@ FEE_GRACE_DAYS = 7
 LIBRARY_LOAN_DAYS = 14
 LIBRARY_FINE_PER_DAY = 5.0           # Rs per day overdue
 
+# Placement Agent
+PLACEMENT_ML_THRESHOLD = float(os.getenv("MAWOS_PLACEMENT_ML_THRESHOLD", "0.5"))
+PLACEMENT_MODEL_VERSION = os.getenv("MAWOS_PLACEMENT_MODEL_VERSION", "v1")
+
 # ML model artifacts
 ML_MODELS_DIR = BASE_DIR / "ml" / "models"
 ML_DATA_DIR = BASE_DIR / "ml" / "data"
