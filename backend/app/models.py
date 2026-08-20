@@ -225,6 +225,13 @@ class PlacementDrive(Base):
     min_attendance = Column(Float, nullable=False, default=75.0)
     drive_date = Column(Date, nullable=False)
     departments = Column(String(64), nullable=False, default="ALL")  # csv of codes
+    # New (Stage 1): drive lifecycle + optional fee-clearance requirement.
+    status = Column(String(20), nullable=False, default="OPEN")
+    # DRAFT | OPEN | SHORTLIST_GENERATED | CLOSED | CANCELLED
+    requires_fee_clearance = Column(Boolean, nullable=False, default=False)
+    application_deadline = Column(Date, nullable=True)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
 
 class PlacementShortlist(Base):
@@ -236,6 +243,26 @@ class PlacementShortlist(Base):
     eligible = Column(Boolean, nullable=False)
     ml_probability = Column(Float, nullable=True)
     reasons = Column(Text, nullable=False, default="")
+    # New (Stage 1): which model artifact produced this ml_probability, for
+    # auditability/reproducibility, per the original spec's explainability requirement.
+    model_version = Column(String(16), nullable=True)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    drive = relationship("PlacementDrive")
+
+
+class PlacementOutcome(Base):
+    """Final selection outcome for a student against a specific drive.
+    Separate from PlacementShortlist: the shortlist is the eligibility/ranking
+    stage, this is what actually happened after the company interviewed."""
+    __tablename__ = "placement_outcomes"
+    __table_args__ = (UniqueConstraint("drive_id", "usn", name="uq_outcome_entry"),)
+    id = Column(Integer, primary_key=True)
+    drive_id = Column(Integer, ForeignKey("placement_drives.id"), nullable=False, index=True)
+    usn = Column(String(16), ForeignKey("students.usn"), nullable=False, index=True)
+    # OFFER_MADE | OFFER_ACCEPTED | OFFER_DECLINED | REJECTED
+    outcome_status = Column(String(20), nullable=False, default="OFFER_MADE")
+    package_offered = Column(Float, nullable=True)
+    decided_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     drive = relationship("PlacementDrive")
 
