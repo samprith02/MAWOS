@@ -312,6 +312,24 @@ def dev_frame(model=SELECTED_MODEL):
     from evaluation.gate_p05 import margins
 
     cap = load(CAPTURES[model])
+    dev_ids = {t.id for t in DEV_TASKS}
+    cap_ids = {r["task_id"] for r in cap["records"]}
+    if cap_ids != dev_ids:
+        raise Blocked(
+            f"{CAPTURES[model].name} was captured against a different dev "
+            f"task set than the one currently frozen ({len(cap_ids)} task "
+            f"IDs in the capture vs {len(dev_ids)} in "
+            "evaluation/benchmark/tasks.py) -- most likely a pre-P2 "
+            "capture (108 tasks/13 tools) read against the post-P2 "
+            "instrument (99 tasks/12 tools). Needs a fresh capture: "
+            "capture_llm.py + tune_router.py against the current instrument.")
+    if not (cap.get("gpu_residency") or {}).get("fully_resident"):
+        raise Blocked(
+            f"{CAPTURES[model].name} is not GPU-resident "
+            f"(gpu_residency.fully_resident is not true) -- PROTOCOL Sec9.2 "
+            "makes this a hard ineligibility, and a figure drawn from it "
+            "would silently present a CPU-timing artifact as the real "
+            "result. Needs a GPU-resident recapture.")
     tau = json.loads((ROOT / "backend" / "app" / "router_config.json")
                      .read_text(encoding="utf-8"))["tau"]
     marg = margins()
@@ -584,6 +602,16 @@ def f6_pareto():
     p4 = load(GATES / "p4_router.json")
     sweep = load(GATES / "p6_sweep.json")
     v2 = load(V2 / "baseline.json")
+
+    from evaluation.benchmark.tasks import DEV_TASKS
+    if p4["n"] != len(DEV_TASKS):
+        raise Blocked(
+            f"p4_router.json was tuned against n={p4['n']} dev tasks, but "
+            f"evaluation/benchmark/tasks.py now has {len(DEV_TASKS)} -- a "
+            "pre-P2 tau selection (108 tasks/13 tools) read against the "
+            "post-P2 instrument (99 tasks/12 tools). Needs a fresh "
+            "tune_router.py run, which itself needs a GPU-resident "
+            "capture_llm.py run first.")
 
     model = next(m for m in sweep["eligible_models"]
                  if m["model"] == SELECTED_MODEL)
@@ -938,9 +966,9 @@ def f4_rq1_factorial():
         "ever been run - A here in v3, D in v2, and those two runs failed "
         "the equivalence check, so they cannot even be differenced. Cells B "
         "(full tool space, role-matched persona) and C (role-scoped, single "
-        "admin persona) are the experiment. Needs P2 for the conditions "
-        "AND P5 for the data - E2 is specified on the held-out split "
-        "(plan 5), so P2 alone does not unblock this. Plan 3.1.")
+        "admin persona) are the experiment. P2 is done (the 4-agent "
+        "conditions exist), but E2 is specified on the held-out split "
+        "(plan 5), so this still Needs P5 for the data. Plan 3.1.")
 
 
 def f5_provenance_gate():
@@ -954,10 +982,10 @@ def f9_toolspace_dose_response():
     raise Blocked(
         "The dose-response sweep over tool-space size (5/9/13/20/30, "
         "composition frozen in benchmark/toolspace.py) has not been run. "
-        "The harness exists and the distractors are frozen; the capture is "
-        "the missing piece. Needs P2 plus a capture run, and E5 is "
-        "specified on the held-out split (plan 5), so it needs P5 as "
-        "well. Plan 3.4.")
+        "The harness exists, P2 is done and the distractors are frozen; "
+        "the capture is the missing piece, and E5 is specified on the "
+        "held-out split (plan 5), so this Needs P5 as well as a capture "
+        "run. Plan 3.4.")
 
 
 REGISTRY = {
@@ -1051,28 +1079,43 @@ def manifest(rows):
     for key, stem, status, sources, note in rows:
         if status == "blocked":
             lines.append("* **%s** - %s" % (key, note))
-    lines += [
-        "",
-        "## Reading rules that travel with these figures",
-        "",
-        "1. Every accuracy number here is a **development-set** result "
-        "(F1 is structural and F7 is a scheduling instance). tau was "
-        "fitted on the same 108 queries the lexicon was tuned on. F6's "
-        "+4.9 points motivates held-out evaluation; it does not establish "
-        "generalisation. P5 decides.",
-        "2. The **LLM tier loses** the routing comparison (76.9% vs 89.8% "
-        "under v3 conditions). F2 and F6 are drawn to show that, not to "
-        "hide it.",
-        "3. **v2 and v3 LLM numbers are never differenced.** The two runs "
+    drawn = {key for key, _stem, status, _s, _n in rows if status == "ok"}
+    routing_drawn = {"F2", "F6"} <= drawn
+    rules = []
+    if routing_drawn:
+        rules.append(
+            "Every accuracy number here is a **development-set** result "
+            "(F1 is structural and F7 is a scheduling instance). tau was "
+            "fitted on the same dev tasks the lexicon was tuned on. F6's "
+            "hybrid gain motivates held-out evaluation; it does not "
+            "establish generalisation. P5 decides.")
+        rules.append(
+            "The **LLM tier loses** the routing comparison. F2 and F6 are "
+            "drawn to show that, not to hide it.")
+    else:
+        rules.append(
+            "**F2, F3, F6 and F8 are currently blocked, not just "
+            "development-set results** — see 'What the blocked figures "
+            "are waiting for' above. Do not substitute a number from an "
+            "older run of this repository; it was computed against a dev "
+            "task set that no longer exists.")
+    rules.append(
+        "**v2 and v3 LLM numbers are never differenced.** The two runs "
         "failed an equivalence check (PROTOCOL 10.1). The only v2 quantity "
         "reused here is the frozen lexicon and greedy scheduler, which are "
-        "the same instrument in both runs.",
-        "4. The **7B is out of competition** (81.7% GPU-resident). It is "
-        "hatched in F2, dashed in F8, and absent from F6's frontier.",
-        "5. F7's zero idle gaps are **construction, not search** - the "
-        "greedy seed is gap-free before annealing starts. The figure's real "
-        "quantity is the distance to the instance floor.",
-    ]
+        "the same instrument in both runs.")
+    if "F2" in drawn or "F8" in drawn:
+        rules.append(
+            "The **7B is out of competition** (measured GPU residency "
+            "below 100%). It is hatched in F2, dashed in F8, and absent "
+            "from F6's frontier.")
+    if "F7" in drawn:
+        rules.append(
+            "F7's zero idle gaps are **construction, not search** - the "
+            "greedy seed is gap-free before annealing starts. The figure's "
+            "real quantity is the distance to the instance floor.")
+    lines += ["", "## Reading rules that travel with these figures", ""]
+    lines += ["%d. %s" % (i, r) for i, r in enumerate(rules, 1)]
     (OUT / "FIGURES.md").write_text(chr(10).join(lines) + chr(10),
                                     encoding="utf-8")
 

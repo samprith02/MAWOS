@@ -15,7 +15,14 @@ import pytest
 from evaluation import figures
 
 ROOT = Path(__file__).resolve().parent.parent
-BLOCKED = {"F4", "F5", "F9"}
+#: F4/F5/F9 are blocked on a future phase (P2/P3/P5) -- structural, not
+#: transient. F2/F3/F6/F8 joined them at P2 (2026-08-19): the frozen dev
+#: task set moved 108->99 (evaluation/PROTOCOL.md Sec12), which invalidates
+#: every existing LLM capture and router-tuning result until a GPU-resident
+#: recapture lands (dev_frame() and f6_pareto() now detect this and raise
+#: Blocked instead of drawing from a mismatched or CPU-only capture). Move
+#: an entry back out once a fresh capture + tune_router.py run replaces it.
+BLOCKED = {"F2", "F3", "F4", "F5", "F6", "F8", "F9"}
 
 
 def test_registry_covers_every_planned_figure():
@@ -30,7 +37,7 @@ def test_blocked_figures_refuse_to_draw_and_say_why(key):
         fn()
     reason = str(exc.value)
     assert len(reason) > 60, "a blocked figure has to name its experiment"
-    assert "Needs P" in reason or "Plan " in reason
+    assert "Needs " in reason or "Plan " in reason
 
 
 @pytest.mark.parametrize("key", sorted(set("F%d" % i for i in range(1, 10))

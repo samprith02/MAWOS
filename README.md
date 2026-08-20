@@ -80,6 +80,14 @@ Any USN from `4MT23AI001`–`4MT26CV6xx` works as a student login; faculty are
 
 ## Routing (v3): a confidence-gated hybrid
 
+**The numbers below are pre-P2 and stale as of 2026-08-19.** P2 (agent
+reduction, `docs/RESEARCH_PLAN_V3.md` §7) retired `get_admissions_funnel`
+and, with it, 9 dev tasks — the benchmark this section describes moved
+from 108 tasks/13 tools to 99 tasks/12 tools. A fresh GPU-resident
+recapture is required before these percentages are current again; see
+[Research status](#research-status-v3) for exactly what's blocked and why.
+The routing *mechanism* described below is accurate and unaffected.
+
 `backend/app/router.py` escalates to the LLM only when the lexicon's own
 confidence is low — margin (top-1 score minus top-2 score) ≤ τ — not
 whenever Ollama happens to be reachable. τ = 0 is frozen in
@@ -130,42 +138,43 @@ equivalence check** (`evaluation/results/v3_llm/CONDITIONS.md`, PROTOCOL
 §10.1) and must never be differenced against each other. Both numbers are
 reported; neither corrects the other.
 
-**Model sweep (P6, done):** 1.5B / 3B / 7B × 3 seeds, all GPU-resident on a
-6 GB laptop except the 7B, which could only reach 81.7% GPU residency and
-is reported **out of competition** — its accuracy is valid, its latency is
-not comparable to the eligible models, and it is excluded from the Pareto
-frontier and all paired tests. The 3B was selected under a pre-registered
-one-standard-error rule.
+**Model sweep (P6, stale — pending recapture):** the last valid run was
+1.5B / 3B / 7B × 3 seeds, all GPU-resident on a 6 GB laptop except the 7B,
+which could only reach 81.7% GPU residency and was reported **out of
+competition** — its accuracy was valid, its latency was not comparable to
+the eligible models, and it was excluded from the Pareto frontier and all
+paired tests. The 3B was selected under a pre-registered one-standard-error
+rule. That selection was made against the pre-P2, 108-task instrument and
+needs re-confirming against the 99-task set once GPU access is available.
 
 ---
 
 ## The agents
 
-**Currently ten**, each owning an institutional domain:
+**Four**, as of P2 (`docs/RESEARCH_PLAN_V3.md` §7 — a component is an
+agent iff it owns state/policy that outlives one request *and* can act
+without direct invocation; `backend/app/agents.CORE_AGENTS` is the
+queryable source of truth, not just prose):
 
 | Agent | Kind | Responsibility |
 |---|---|---|
 | **Orchestrator** | router + tools | Confidence-gated tool-calling loop; deterministic lexicon as primary tier |
-| **Admission** | workflow | verify → merit rank → seat allotment vs intake & category quota → enrolment (creates student, login, fee, fires cascade) |
-| **Timetable** | constraint solver | objective-driven simulated annealing (P1) over a greedy seed; CSV export |
-| **Academic** | records | students, CIE marks, class rosters, department & institution analytics |
 | **Attendance** | rules + proactive | percentages, <75% shortage, absence streaks, autonomous periodic scan |
-| **Finance** | rules + proactive | fee structures, ₹50/day fines, payments, defaulters, collection stats |
-| **Exam** | rules | schedules; hall-ticket eligibility with reason codes |
-| **Scholarship** | rules + CART | rule pre-filter then calibrated decision-tree scoring |
-| **Placement** | rules + RF | final-year drive eligibility + success-probability ranking |
-| **Notification** | event-driven | turns cascade events into targeted, role-scoped messages |
+| **Eligibility** | rules + CART | hall-ticket eligibility *and* scholarship scoring — merged from Exam+Scholarship at P2, since both owned the same two upstream triggers (attendance/fee updates) and the same shape of policy |
+| **Scheduling** | constraint solver | objective-driven simulated annealing (P1) over a greedy seed; CSV export |
 
-**Planned: four.** A pre-registered criterion (`docs/RESEARCH_PLAN_V3.md`
-§7 — a component is an agent iff it owns state/policy that outlives one
-request *and* can act without direct invocation) reduces this to
-Orchestrator, Attendance, Eligibility (merged Exam+Scholarship), and
-Scheduling; Records, Notification, Admission, Finance and Placement fail
-the criterion and become tools or bus subscribers. **This is a documented
-plan decision (§7), not yet implemented** — that refactor is phase **P2**,
-still pending. The tool surface must not shrink as a side effect (13→12,
-one deliberate removal — see §7.1). Do not read the "ten agents" framing
-above as stale; it describes what is actually running today.
+**Still real, still running, not counted as agents.** Academic, Admission,
+Finance, Placement and Notification stay in the registry — tools.py and
+the REST routes call into them exactly as before — but fail the criterion
+above: Academic/Admission/Finance/Placement have no policy of their own
+that outlives a request, and Notification reacts to events but owns
+neither state nor policy, so it is a bus subscriber, not an agent.
+Merging Exam+Scholarship did **not** merge their tools: `get_hall_ticket`
+and `get_scholarship` stay two distinct tools (§7.1) — agent merging is
+not tool merging. `get_admissions_funnel` *was* retired (13→12 tools):
+Admission's only chat-facing capability, dropped since Admission no longer
+qualifies as an agent; the admissions funnel itself is untouched, still
+served directly by the admin/principal REST routes.
 
 Dropped from v1: Library, Smart-Event, and the pseudo "Student/Faculty
 agents" — students and faculty are *roles with permissions*, not agents.
@@ -267,16 +276,16 @@ the 7B never shares a frontier with an eligible model. Full detail in
 
 | Metric | Result | Run |
 |---|---|---|
-| Intent routing, lexicon (primary tier) | **89.8%** — 108 labelled queries, 12 intents | v3 |
-| Intent routing, LLM tier alone | **76.9% ± 2.0%** (3 seeds) — **loses to the lexicon by 12.9 pts** | v3 |
-| Intent routing, confidence-gated hybrid, τ = 0 | **94.8%** — +4.9 pts over lexicon, CI touches zero, not yet significant | v3 |
+| Intent routing, lexicon (primary tier) | **89.8%** — 108 labelled queries, 12 intents | v3, **pre-P2, stale** — see [Research status](#research-status-v3) |
+| Intent routing, LLM tier alone | **76.9% ± 2.0%** (3 seeds) — **loses to the lexicon by 12.9 pts** | v3, **pre-P2, stale** |
+| Intent routing, confidence-gated hybrid, τ = 0 | **94.8%** — +4.9 pts over lexicon, CI touches zero, not yet significant | v3, **pre-P2, stale** |
 | Intent routing, LLM tier alone (historical, superseded — not corrected) | 70.4%, single uncontrolled run | v2 |
 | Scheduler objective (lower is better) | v2 greedy 2,441.3 → P1 SA **204.2**, instance floor 195.96 | v3 |
 | ITC-2007 external benchmark | harness validated against the official scorer; result **pending instance files** | v3 (P1b) |
 | Attendance computation | 0 mismatches / 1,000 summaries — reported as *deterministic verification*, **not** an AI accuracy claim | v2, unaffected by v3 routing changes |
 | Cross-agent propagation | avg 466 ms, p95 479 ms with the LLM resident; ~127 ms with Ollama stopped — **not comparable across those two conditions**, resource contention only | v2 |
-| Ablation — event bus removed | 0 downstream tables auto-update, 4 manual office interventions per upload vs 0 with the bus | v2 |
-| Failure injection | Scholarship Agent crashed mid-cascade → siblings complete, error audited, replay recovers — **PASS** | v2 |
+| Ablation — event bus removed | 0 downstream tables auto-update, 4 manual office interventions per upload vs 0 with the bus | re-verified 2026-08-20, post-P2 |
+| Failure injection | Eligibility Agent crashed mid-cascade (owns hall-ticket *and* scholarship since the P2 merge, so both withhold together) → Placement and Notification, independent subscribers to the same event, still complete; error audited, replay recovers — **PASS** | re-verified 2026-08-20, post-P2 |
 | Scalability | institution 4× larger, identical workload: latency did not grow (0.72×, within run-to-run noise) | v2 |
 | Scholarship CART / Placement RF | 90% / 82% test accuracy — deliberately **not** ~100% | v2, unaffected |
 
@@ -316,11 +325,13 @@ measured deltas — the report cannot claim the LLM helps when it doesn't.
 
 ```
 backend/app/
-  agents/            10 agents (planned: 4, see P2), one file each
-    orchestrator.py    confidence-gated router + tool-calling loop
-    tools.py           typed tool registry with ROLE ENFORCEMENT
-    timetable.py       objective + greedy seed + simulated annealing (P1)
-    admission.py       admissions pipeline
+  agents/            4 core agents (CORE_AGENTS) + 5 tool-backed components
+    orchestrator.py    confidence-gated router + tool-calling loop [agent]
+    eligibility.py     hall-ticket + scholarship, merged at P2 [agent]
+    timetable.py       objective + greedy seed + simulated annealing (P1) [agent]
+    attendance.py      intake, recompute, proactive scan [agent]
+    tools.py           typed tool registry (12 tools) with ROLE ENFORCEMENT
+    admission.py       admissions pipeline [tool-backed, not an agent]
   router.py          v3 confidence gate: margin <= tau -> escalate
   router_config.json frozen tau=0, sha256-hashed (PROTOCOL 9.3)
   bus.py             instrumented pub/sub, workflow IDs, fault isolation
@@ -354,13 +365,27 @@ Full detail, gates and rationale: `docs/RESEARCH_PLAN_V3.md`. Short form:
 | P0.5 | Router viability gate | done |
 | P1 | Objective-driven scheduler (greedy seed + SA) | done |
 | P1b | ITC-2007 external benchmark harness | harness validated; **blocked on instance files** |
-| P2 | Agent reduction 10 → 4, tool surface held 13→12 | **pending** |
+| P2 | Agent reduction 10 → 4, tool surface held 13→12 | **code + frozen instrument done**; recapture blocked on GPU access |
 | P3 | PCN-style provenance gate | **pending** |
-| P4 | Confidence-gated hybrid router, τ frozen on dev | done |
+| P4 | Confidence-gated hybrid router, τ frozen on dev | **stale** — computed against the pre-P2 108-task/13-tool instrument |
 | P5 | Held-out set → dual annotation → single test run | **blocked — the largest schedule risk** |
-| P6 | Model sweep, 1.5B/3B/7B × 3 seeds | done |
-| P7 | Figures F1–F9 | harness done; 6/9 drawn, 3 blocked on P2/P3/P5 |
-| P8 | Rewrite ARCHITECTURE.md / RESULTS.md to match the evidence | pending — README above is current, those two still carry v2-era numbers by design until P8 |
+| P6 | Model sweep, 1.5B/3B/7B × 3 seeds | **stale**, same reason as P4 |
+| P7 | Figures F1–F9 | harness done; F2/F3/F6/F8 read stale P4/P6 data until recaptured |
+| P8 | Rewrite ARCHITECTURE.md / RESULTS.md to match the evidence | pending — README above is current except where flagged stale above, those two still carry v2-era numbers by design until P8 |
+
+**Why P4/P6 are stale, and why that's not a code problem.** P2 dropped 9
+admission-intent dev tasks when `get_admissions_funnel` was retired
+(108→99 tasks, 13→12 tools) — every number computed against the old
+instrument describes a benchmark that no longer exists. Recapturing needs
+Ollama with real GPU access: this environment's Ollama instance can only
+see CPU (`nvidia-smi` fails with "insufficient permissions" — a sandboxing
+restriction, not a laptop problem; PROTOCOL.md measured this same RTX 4050
+on 2026-08-15), and `evaluation/tune_router.py` correctly hard-exits on a
+non-GPU-resident capture (PROTOCOL §9.2) rather than let a CPU timing
+masquerade as the real thing. A CPU-only diagnostic 3B capture was still
+run for a sanity check on accuracy (not latency, not τ selection) — see
+`evaluation/results/v3_llm/`, marked `gpu_residency.fully_resident: false`
+and not citable as a P4/P6 result.
 
 ### Known limitations (say these before an examiner does)
 

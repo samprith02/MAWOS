@@ -3,8 +3,11 @@
 B.E. final-year research prototype (Dept. of AI&ML, MITE, Group 12).
 Framing: **event-driven multi-agent workflow orchestration engine for
 universities**. The contribution is the orchestration engine, not the agent
-count. Ten agents currently; four is a documented plan decision (§7 of
-`docs/RESEARCH_PLAN_V3.md`), not yet implemented — that's P2 below.
+count. **4 core agents** as of P2 (2026-08-19) — Orchestrator, Attendance,
+Eligibility, Scheduling; `backend/app/agents.CORE_AGENTS` is the queryable
+source of truth. Academic/Admission/Finance/Placement/Notification are
+still real, still in the registry, still called by tools.py and the REST
+routes — just not counted as agents (§7 of `docs/RESEARCH_PLAN_V3.md`).
 
 ## Status (updated 2026-08-19 — keep this current every session)
 
@@ -14,18 +17,30 @@ count. Ten agents currently; four is a documented plan decision (§7 of
 | P0.5 | Router viability gate | done |
 | P1 | Objective-driven scheduler (greedy seed + SA) | done |
 | P1b | ITC-2007 external benchmark harness | harness validated (1,900 cases vs official validator); **blocked on instance files**, see `evaluation/itc2007/INSTANCES.md` |
-| P2 | Agent reduction 10→4, tool surface held 13→12 | **pending** — not started |
+| P2 | Agent reduction 10→4, tool surface held 13→12 | **code + frozen instrument done** (commit `9ed24c8`, 2026-08-19); **recapture blocked** — see below |
 | P3 | PCN-style provenance gate | **pending** — not started |
-| P4 | Confidence-gated hybrid router, τ frozen on dev | done |
+| P4 | Confidence-gated hybrid router, τ frozen on dev | **stale** — pre-P2 numbers (89.8%/76.9%/94.8%, τ=0) described a 108-task, 13-tool instrument that no longer exists; do not cite them as current |
 | P5 | Held-out set → dual annotation → single test run | **blocked on external authors — the largest schedule risk** |
-| P6 | Model sweep, 1.5B/3B/7B × 3 seeds | done |
-| P7 | Figures F1–F9 | harness done; 6/9 drawn (`evaluation/results/figures/`), 3 blocked on P2/P3/P5 |
+| P6 | Model sweep, 1.5B/3B/7B × 3 seeds | **stale** — same reason as P4; needs a fresh GPU-resident sweep against the 99-task set |
+| P7 | Figures F1–F9 | harness done; F2/F3/F6/F8 depend on the stale P4/P6 data and will read old numbers until recaptured; F1/F7 unaffected |
 | P8 | Rewrite ARCHITECTURE.md / RESULTS.md to match the evidence | pending — README.md was brought current 2026-08-19; those two still carry v2-era numbers by design until P8 |
 
-Next unstarted phase in work order: **P2**. It is a refactor of the running
-demo system (10→4 agents) and the RQ1 captures it unblocks additionally
-need P5, which is separately blocked — confirm before starting rather than
-assuming it's next just because it's next in the table.
+**P2 recapture is blocked on GPU access, not on anything in the repo.**
+Ollama in this environment sees CPU only (`nvidia-smi` fails with
+"insufficient permissions"; Ollama's own log drops the discrete GPU and
+falls back to `cpu`) — a sandboxing restriction, not a laptop problem
+(PROTOCOL.md's hardware section measured this same RTX 4050 on
+2026-08-15). `evaluation/tune_router.py` hard-exits on a non-GPU-resident
+capture by design (PROTOCOL §9.2) — that gate is correct and must not be
+weakened to force a number out of it. A CPU-only diagnostic 3B capture was
+run anyway for a sanity read (see `evaluation/results/v3_llm/` —
+`gpu_residency.fully_resident: false`, do not cite as a P4/P6 result). The
+real fix is running `capture_llm.py` + `tune_router.py` + `analyze_sweep.py`
++ `figures.py` from an environment with real GPU access; nothing else
+about P2 is blocked.
+
+Next unstarted phase in work order: **P3**, or the GPU-resident recapture
+above once available. P2's code is done; don't restart that work.
 
 ## Run it
 
