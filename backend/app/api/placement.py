@@ -142,14 +142,17 @@ async def generate_shortlist(drive_id: int, regenerate: bool = False,
 
 
 @router.get("/drives/{drive_id}/shortlist")
-def get_shortlist(drive_id: int, user: User = Depends(require_role("admin")),
+def get_shortlist(drive_id: int, eligible_only: bool = False,
+                  user: User = Depends(require_role("admin")),
                   db: Session = Depends(get_session)):
     agent = get_agents()["placement_agent"]
     if agent.get_drive(db, drive_id) is None:
         raise HTTPException(status_code=404, detail={
             "success": False, "error": {"code": "DRIVE_NOT_FOUND",
                                         "message": "Drive not found."}})
-    return {"drive_id": drive_id, "shortlist": agent.get_shortlist(db, drive_id)}
+    return {"drive_id": drive_id,
+            "shortlist": agent.get_shortlist(db, drive_id,
+                                             eligible_only=eligible_only)}
 
 
 # ---------- eligibility explanation ---------------------------------------------

@@ -293,9 +293,12 @@ class PlacementAgent(BaseAgent):
                          "metadata": {"drive_id": drive_id}}})
         return result
 
-    def get_shortlist(self, db, drive_id: int) -> list[dict]:
-        entries = (db.query(PlacementShortlist)
-                     .filter_by(drive_id=drive_id).all())
+    def get_shortlist(self, db, drive_id: int,
+                      eligible_only: bool = False) -> list[dict]:
+        q = db.query(PlacementShortlist).filter_by(drive_id=drive_id)
+        if eligible_only:
+            q = q.filter(PlacementShortlist.eligible.is_(True))
+        entries = q.all()
         return [{"usn": e.usn, "eligible": e.eligible,
                 "ml_probability": e.ml_probability,
                 "model_version": e.model_version,
