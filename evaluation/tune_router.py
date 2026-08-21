@@ -289,6 +289,13 @@ def main() -> None:
             f"{p['accuracy_std']:.1%} | "
             + " / ".join(f"{a:.1%}" for a in p["accuracy_per_seed"])
             + f" | {p['fixed_mean']:.1f} | {p['broken_mean']:.1f} | {note} |")
+    ci_includes_zero = lo <= 0
+    ci_note = "includes zero" if ci_includes_zero else "excludes zero"
+    sig_clause = (
+        "and the bootstrap CI includes zero"
+        if ci_includes_zero else
+        "even though the bootstrap CI excludes zero"
+    )
     md += [
         "",
         "## Selection",
@@ -303,7 +310,7 @@ def main() -> None:
         "",
         f"- hybrid {chosen['accuracy_mean']:.1%} vs lexicon {lex_acc:.1%} = "
         f"**{delta:+.1%}**",
-        f"- 95% bootstrap CI {lo:+.1%} to {hi:+.1%} — **includes zero**",
+        f"- 95% bootstrap CI {lo:+.1%} to {hi:+.1%} — **{ci_note}**",
         f"- supplementary description only, not a test: {p_null:.1%} of "
         f"resamples show no gain",
         f"- McNemar vs lexicon (majority vote): b01={mc['b01']}, "
@@ -316,7 +323,7 @@ def main() -> None:
         "motivating "
         "held-out evaluation.* Not *\"significantly improves\"* — the paired "
         "McNemar test does not reach conventional significance "
-        f"(p = {mc['p']:.3f}) and the bootstrap CI includes zero. The point "
+        f"(p = {mc['p']:.3f}) {sig_clause}. The point "
         "estimate favours the router and the direction is consistent across "
         "all three seeds, but **dev is contaminated by construction** (§11): "
         "the lexicon was tuned on these queries. These numbers select τ. "

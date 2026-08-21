@@ -16,13 +16,16 @@ from evaluation import figures
 
 ROOT = Path(__file__).resolve().parent.parent
 #: F4/F5/F9 are blocked on a future phase (P2/P3/P5) -- structural, not
-#: transient. F2/F3/F6/F8 joined them at P2 (2026-08-19): the frozen dev
-#: task set moved 108->99 (evaluation/PROTOCOL.md Sec12), which invalidates
-#: every existing LLM capture and router-tuning result until a GPU-resident
-#: recapture lands (dev_frame() and f6_pareto() now detect this and raise
-#: Blocked instead of drawing from a mismatched or CPU-only capture). Move
-#: an entry back out once a fresh capture + tune_router.py run replaces it.
-BLOCKED = {"F2", "F3", "F4", "F5", "F6", "F8", "F9"}
+#: transient. F2/F6/F8 depend on evaluation/results/v3_gates/p6_sweep.json
+#: (the P6 multi-model sweep), which analyze_sweep.py hard-exits on
+#: rewriting until *every* model capture in v3_llm/ matches the current
+#: 99-task instrument (evaluation/PROTOCOL.md Sec12) -- only the 3B has
+#: been recaptured GPU-resident post-P2 so far (2026-08-21); 1.5B/7B are
+#: still the pre-P2 108-task captures. F3, unlike F2/F6/F8, reads only the
+#: fresh single-model capture via dev_frame() and draws correctly already.
+#: Move F2/F6/F8 out once capture_llm.py + analyze_sweep.py complete for
+#: all three models.
+BLOCKED = {"F2", "F4", "F5", "F6", "F8", "F9"}
 
 
 def test_registry_covers_every_planned_figure():

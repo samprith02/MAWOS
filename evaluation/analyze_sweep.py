@@ -204,6 +204,7 @@ def main() -> None:
         "rule": "PROTOCOL.md §9.2, pre-registered 2026-08-15",
         "eligibility_record": "results/v3_llm/ELIGIBILITY.md — determined on "
                               "hardware grounds before any accuracy was seen",
+        "n": len(DEV_TASKS),
         "lexicon_accuracy": lex_acc, "lexicon_errors": n_err,
         "max_escalation": MAX_ESCALATION,
         "eligible_models": [{k: v for k, v in r.items() if k != "_majority_ok"}

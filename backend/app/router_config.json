@@ -6,7 +6,7 @@
   "margin": "top1 - top2 over the frozen lexicon's intent scores",
   "escalate_when": "margin <= tau",
   "selected_on": "dev, 108 tasks, seeds 0/1/2",
-  "dev_accuracy_mean": 0.9475308641975309,
-  "dev_escalation_rate": 0.10185185185185185,
+  "dev_accuracy_mean": 0.9461279461279462,
+  "dev_escalation_rate": 0.1111111111111111,
   "provenance": "evaluation/results/v3_gates/p4_router.json"
 }

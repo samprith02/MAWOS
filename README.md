@@ -80,13 +80,15 @@ Any USN from `4MT23AI001`–`4MT26CV6xx` works as a student login; faculty are
 
 ## Routing (v3): a confidence-gated hybrid
 
-**The numbers below are pre-P2 and stale as of 2026-08-19.** P2 (agent
-reduction, `docs/RESEARCH_PLAN_V3.md` §7) retired `get_admissions_funnel`
-and, with it, 9 dev tasks — the benchmark this section describes moved
-from 108 tasks/13 tools to 99 tasks/12 tools. A fresh GPU-resident
-recapture is required before these percentages are current again; see
-[Research status](#research-status-v3) for exactly what's blocked and why.
-The routing *mechanism* described below is accurate and unaffected.
+**Recaptured GPU-resident on the post-P2, 99-task/12-tool instrument
+(2026-08-21).** The numbers below are current and citable for the 3B
+model. One caveat carries forward: *which* model (3B) gets tuned here was
+picked by the P6 sweep, and that sweep itself is still the pre-P2
+108-task file — 1.5B and 7B have not been recaptured under the current
+instrument yet (blocked on a laptop GPU driver dropout, see
+[Research status](#research-status-v3)). So τ-selection for the 3B is
+fresh and valid; whether the 3B is still the *right* model to select is
+inherited from stale evidence and not yet reconfirmed.
 
 `backend/app/router.py` escalates to the LLM only when the lexicon's own
 confidence is low — margin (top-1 score minus top-2 score) ≤ τ — not
@@ -114,64 +116,60 @@ flowchart TD
 This is the actual decision in `router.py` — a structural diagram, not a
 result, so it holds regardless of which experiment is currently running.
 
-**The LLM tier loses the routing comparison.** On the same 108 queries,
-3 seeds, `qwen2.5:3b-instruct` alone scores **76.9% ± 2.0%** against the
-lexicon's **89.8%** — a **12.9-point loss** (`evaluation/results/v3_llm/`).
-Escalating only the lexicon's own low-confidence cases recovers some of
-that: the hybrid scores **94.8%**, a **+4.9-point** gain over the lexicon
-alone — but that gain's 95% CI is **[0.0, 10.2] points** (lower bound
-touches zero) and McNemar's exact test gives **p = 0.070**. It is not a
-significant result. It was also measured on the same 108 queries the
-lexicon was tuned on, so the dev set cannot be trusted to confirm it either
-way — **the held-out set (P5) decides**, and P5 has not run yet
+**The LLM tier loses the routing comparison.** On the current 99 dev
+queries, 3 seeds, `qwen2.5:3b-instruct` alone scores **83.5% ± 0.5%**
+against the lexicon's **88.9%** — a **5.4-point loss**
+(`evaluation/results/v3_llm/qwen2-5_3b-instruct.json`, GPU-resident,
+0 call failures). Escalating only the lexicon's own low-confidence cases
+recovers more than that back: the hybrid scores **94.6%**, a
+**+5.7-point** gain over the lexicon alone. Its 95% bootstrap CI is
+**[+0.3, +11.8] points** — no longer touching zero — but McNemar's exact
+test on the majority vote still gives **p = 0.070**, so it is not
+significant at the conventional 0.05 threshold even though the interval
+shifted positive. It was also measured on the same 99 queries the lexicon
+was tuned on, so the dev set cannot be trusted to confirm it either way —
+**the held-out set (P5) still decides**
 (`evaluation/results/v3_gates/p4_router.json`).
 
 | | Lexicon (primary) | LLM tier alone | Hybrid, τ = 0 |
 |---|---|---|---|
-| Accuracy (dev, 108 queries) | 89.8% | 76.9% ± 2.0% | 94.8% |
-| Median latency | 0.09 ms | 3,414 ms | 348 ms (expected) |
-| vs lexicon | — | **−12.9 pts** | +4.9 pts, not yet significant |
+| Accuracy (dev, 99 queries) | 88.9% | 83.5% ± 0.5% | 94.6% |
+| Median latency | 0.09 ms | 3,740 ms | 416 ms (expected) |
+| vs lexicon | — | **−5.4 pts** | +5.7 pts, CI excludes 0, p = 0.070 |
 
 This supersedes v2's finding of a −19.4-point LLM loss (70.4% vs 89.8%,
-single uncontrolled run) — but v2 and v3 **fail an inference-condition
-equivalence check** (`evaluation/results/v3_llm/CONDITIONS.md`, PROTOCOL
-§10.1) and must never be differenced against each other. Both numbers are
-reported; neither corrects the other.
+single uncontrolled run) and the earlier v3 108-task finding of −12.9 pts
+— but none of v2, the pre-P2 108-task v3 run, and this 99-task v3 run may
+be differenced against each other (different instruments/conditions,
+PROTOCOL §10.1). All three are reported; none corrects another.
 
-**Model sweep (P6, stale — pending recapture):** the last valid run was
-1.5B / 3B / 7B × 3 seeds, all GPU-resident on a 6 GB laptop except the 7B,
-which could only reach 81.7% GPU residency and was reported **out of
-competition** — its accuracy was valid, its latency was not comparable to
-the eligible models, and it was excluded from the Pareto frontier and all
-paired tests. The 3B was selected under a pre-registered one-standard-error
-rule. That selection was made against the pre-P2, 108-task instrument and
-needs re-confirming against the 99-task set once GPU access is available.
+**Model sweep (P6, still stale — the 3B is recaptured, 1.5B/7B are not.)**
+The last full sweep (1.5B / 3B / 7B × 3 seeds) ran pre-P2 on the 108-task
+instrument; the 3B was selected under a pre-registered one-standard-error
+rule and is the model tuned above. Recapturing 1.5B and 7B under the
+current 99-task instrument stalled on 2026-08-21: the laptop's NVIDIA
+kernel driver (`nvlddmkm`) stopped mid-session — confirmed via Ollama's
+own `/api/ps` reporting `size_vram: 0` for a model that fits easily, and
+`sc query nvlddmkm` showing `STOPPED` with no intervening reboot — not a
+Claude Code sandbox restriction (the same class of issue as the earlier
+GPU-access block, which a host reboot fixed once). `analyze_sweep.py`
+correctly refuses to write a sweep result while any model capture doesn't
+match the current instrument (hard `RuntimeError`, not a silent skip), so
+`evaluation/results/v3_gates/p6_sweep.json` — and the figures that read it
+(F2, F6, F8) — stay blocked until 1.5B and 7B are recaptured GPU-resident.
 
-**CPU diagnostic capture (2026-08-20, not citable).** With GPU access
-blocked, a 3B capture ran on CPU against the current 99-task set as a
-sanity check only — `evaluation/results/v3_llm/qwen2-5_3b-instruct.json`,
-`gpu_residency.fully_resident: false`:
-
-| Seed | Selection accuracy | Abstention |
-|---|---|---|
-| 0 | 82.8% | 11.1% |
-| 1 | 80.8% | 11.1% |
-| 2 | 80.8% | 11.1% |
-| mean | 81.5% ± 1.0% | 11.1% |
-
-This does **not** update `router_config.json` — `tune_router.py` correctly
-hard-exits on non-GPU-resident data (PROTOCOL §9.2) rather than let a CPU
-timing masquerade as a real τ selection, and this table must never be read
-as a P4/P6 result or compared to the 76.9%/94.8% figures above (different
-task set, different compute, not the same experiment). One more thing to
-disclose about this specific run: it ended with an ABORT from the
-harness's own database-integrity check, because two unrelated scripts
-(`ablation.py`, `failure_injection.py`) were run concurrently with it and
-both write to `mawos.db`. `capture_llm.py` itself never executes tools
-during scoring, and the output was verified clean (297 records, 99 unique
-task IDs, 0 call failures) — but the process that produced it wasn't
-clean, and a real recapture needs to run with nothing else touching the
-database at the same time.
+**CPU diagnostic capture (2026-08-20, historical, not citable).** Before
+GPU access was available at all, a 3B capture ran on CPU against the
+99-task set as a sanity check only —
+`gpu_residency.fully_resident: false`, mean selection accuracy 81.5% ±
+1.0% — superseded by the GPU-resident capture above and kept only as a
+record that `tune_router.py` correctly hard-exited on it rather than let
+a CPU timing masquerade as a real τ selection. That run also ended with
+an ABORT from the harness's own database-integrity check, because two
+unrelated scripts (`ablation.py`, `failure_injection.py`) were run
+concurrently with it and both write to `mawos.db`; the 2026-08-21
+GPU-resident recapture ran with nothing else touching the database and
+completed with no such warning.
 
 ---
 
@@ -269,32 +267,35 @@ exits with that explanation instead.
 python evaluation/figures.py          # every figure that has data, one command
 ```
 
-Six of nine are drawn from real captured data
+Three of nine are drawn from real captured data
 (`evaluation/results/figures/`, manifest in `FIGURES.md`):
 
 | Figure | What it shows |
 |---|---|
-| F1 — cascade DAG | live bus topology: 8/10 agents in cascades, 11 edges, depth 2 |
-| F2 — routing accuracy | lexicon 89.8%; best eligible hybrid 94.8%, by model size |
-| F3 — confusion matrices | where the lexicon's 11 dev misses actually land |
-| F6 — accuracy–latency Pareto | τ = 0: 94.8% at 348 ms vs LLM-only 76.9% at 3,414 ms |
+| F1 — cascade DAG | live bus topology: 7/9 agents in cascades, 9 edges, depth 2 |
+| F3 — confusion matrices | where the lexicon's 11 dev misses actually land (99-task set) |
 | F7 — scheduler | P1 204.2 vs v2 2,441, floor 196.0 (seed-0 convergence trace) |
-| F8 — latency CDF | 89.8% of queries answered in 0.09 ms; escalated tail median 3,418 ms |
 
-**Three are intentionally not drawn** — there is no placeholder or
+**Six are intentionally not drawn** — there is no placeholder or
 illustrative version anywhere in this repository, only a `Blocked`
-exception naming what phase unblocks them, enforced by
-`tests/test_figures.py`:
+exception naming what phase (or what missing recapture) unblocks them,
+enforced by `tests/test_figures.py`:
 
-- **F4** (RQ1 2×2 factorial) — needs P2 for the conditions and P5 for the
-  held-out data.
+- **F2, F6, F8** (routing accuracy, Pareto, latency CDF) — all three read
+  `evaluation/results/v3_gates/p6_sweep.json`, the P6 multi-model sweep.
+  Only the 3B has been recaptured on the post-P2 99-task instrument; 1.5B
+  and 7B are still pre-P2 (GPU driver dropout, see
+  [Research status](#research-status-v3)). `analyze_sweep.py` hard-exits
+  rather than write a mismatched sweep, so these three stay blocked.
+- **F4** (RQ1 2×2 factorial) — needs P2 for the conditions (done) and P5
+  for the held-out data.
 - **F5** (provenance gate on/off) — needs P3; the gate doesn't exist yet.
-- **F9** (dose-response over tool-space size) — needs P2 and P5.
+- **F9** (dose-response over tool-space size) — needs P5.
 
 Reading rules that travel with every figure: all accuracy numbers are
-**dev-set** results; the LLM tier loses; v2 and v3 are never differenced;
-the 7B never shares a frontier with an eligible model. Full detail in
-`evaluation/results/figures/FIGURES.md`.
+**dev-set** results; v2 and v3 are never differenced; a figure refuses to
+draw rather than read a capture computed against a dev task set that no
+longer exists. Full detail in `evaluation/results/figures/FIGURES.md`.
 
 ---
 
@@ -302,9 +303,9 @@ the 7B never shares a frontier with an eligible model. Full detail in
 
 | Metric | Result | Run |
 |---|---|---|
-| Intent routing, lexicon (primary tier) | **89.8%** — 108 labelled queries, 12 intents | v3, **pre-P2, stale** — see [Research status](#research-status-v3) |
-| Intent routing, LLM tier alone | **76.9% ± 2.0%** (3 seeds) — **loses to the lexicon by 12.9 pts** | v3, **pre-P2, stale** |
-| Intent routing, confidence-gated hybrid, τ = 0 | **94.8%** — +4.9 pts over lexicon, CI touches zero, not yet significant | v3, **pre-P2, stale** |
+| Intent routing, lexicon (primary tier) | **88.9%** — 99 labelled queries, 11 intents | v3, GPU-resident recapture, 2026-08-21 |
+| Intent routing, LLM tier alone | **83.5% ± 0.5%** (3 seeds) — **loses to the lexicon by 5.4 pts** | v3, GPU-resident recapture, 2026-08-21 |
+| Intent routing, confidence-gated hybrid, τ = 0 | **94.6%** — +5.7 pts over lexicon, 95% CI [+0.3, +11.8] pts, McNemar p = 0.070 | v3, GPU-resident recapture, 2026-08-21 |
 | Intent routing, LLM tier alone (historical, superseded — not corrected) | 70.4%, single uncontrolled run | v2 |
 | Scheduler objective (lower is better) | v2 greedy 2,441.3 → P1 SA **204.2**, instance floor 195.96 | v3 |
 | ITC-2007 external benchmark | harness validated against the official scorer; result **pending instance files** | v3 (P1b) |
@@ -391,41 +392,48 @@ Full detail, gates and rationale: `docs/RESEARCH_PLAN_V3.md`. Short form:
 | P0.5 | Router viability gate | done |
 | P1 | Objective-driven scheduler (greedy seed + SA) | done |
 | P1b | ITC-2007 external benchmark harness | harness validated; **blocked on instance files** |
-| P2 | Agent reduction 10 → 4, tool surface held 13→12 | **code + frozen instrument done**; recapture blocked on GPU access |
-| P3 | PCN-style provenance gate | **pending** |
-| P4 | Confidence-gated hybrid router, τ frozen on dev | **stale** — computed against the pre-P2 108-task/13-tool instrument |
+| P2 | Agent reduction 10 → 4, tool surface held 13→12 | **done** — code, frozen instrument, and downstream figures/tests all on the 99-task set |
+| P3 | PCN-style provenance gate | **pending** — next unstarted phase |
+| P4 | Confidence-gated hybrid router, τ frozen on dev | **done, current** — GPU-resident recapture on the 99-task instrument, 2026-08-21 |
 | P5 | Held-out set → dual annotation → single test run | **blocked — the largest schedule risk** |
-| P6 | Model sweep, 1.5B/3B/7B × 3 seeds | **stale**, same reason as P4 |
-| P7 | Figures F1–F9 | harness done; F2/F3/F6/F8 read stale P4/P6 data until recaptured |
+| P6 | Model sweep, 1.5B/3B/7B × 3 seeds | **partial** — 3B recaptured GPU-resident on the 99-task set; 1.5B/7B still pre-P2, blocked on a laptop GPU driver dropout |
+| P7 | Figures F1–F9 | harness done; F1/F3/F7 draw fresh data; F2/F6/F8 blocked on P6 completing; F4/F5/F9 blocked on P3/P5 |
 | P8 | Rewrite ARCHITECTURE.md / RESULTS.md to match the evidence | pending — README above is current except where flagged stale above, those two still carry v2-era numbers by design until P8 |
 
-**Why P4/P6 are stale, and why that's not a code problem.** P2 dropped 9
-admission-intent dev tasks when `get_admissions_funnel` was retired
-(108→99 tasks, 13→12 tools) — every number computed against the old
-instrument describes a benchmark that no longer exists. Recapturing needs
-Ollama with real GPU access: this environment's Ollama instance can only
-see CPU (`nvidia-smi` fails with "insufficient permissions" — a sandboxing
-restriction, not a laptop problem; PROTOCOL.md measured this same RTX 4050
-on 2026-08-15), and `evaluation/tune_router.py` correctly hard-exits on a
-non-GPU-resident capture (PROTOCOL §9.2) rather than let a CPU timing
-masquerade as the real thing. A CPU-only diagnostic 3B capture was still
-run for a sanity check on accuracy (not latency, not τ selection) — see
-`evaluation/results/v3_llm/`, marked `gpu_residency.fully_resident: false`
-and not citable as a P4/P6 result.
+**Why P6 is only partial, and why that's not a code problem.** P2 dropped
+9 admission-intent dev tasks when `get_admissions_funnel` was retired
+(108→99 tasks, 13→12 tools), invalidating every number computed against
+the old instrument. GPU access to Ollama was blocked for a while (a
+sandboxing-adjacent driver/session fault, fixed once already by a host
+reboot on 2026-08-21), long enough that a CPU-only diagnostic 3B capture
+ran as a sanity check and is preserved above as historical, not citable.
+Once GPU access came back, the 3B was recaptured cleanly (297 records, 99
+unique task IDs, 0 call failures, `fully_resident: true`) and
+`tune_router.py` produced the current P4 numbers above. Completing P6
+needs 1.5B and 7B recaptured the same way, but the NVIDIA kernel driver
+(`nvlddmkm`) dropped again mid-session on 2026-08-21 — no reboot this
+time, just `STOPPED`, confirmed via `sc query nvlddmkm` and Ollama's own
+`/api/ps` reporting `size_vram: 0`. `analyze_sweep.py` hard-exits rather
+than write a sweep from a mismatched capture (a `RuntimeError`, not a
+silent skip), so `p6_sweep.json` and the figures that depend on it (F2,
+F6, F8) stay blocked until that driver comes back and 1.5B/7B are
+recaptured.
 
 ### Known limitations (say these before an examiner does)
 
-- The 108-query routing benchmark and the lexicon it scores were written
+- The 99-query routing benchmark and the lexicon it scores were written
   by the same project — evidence about this classifier on this benchmark,
   not a general claim about language understanding. A held-out set written
   outside the team (P5) is the fix, and it hasn't run yet.
 - τ = 0 was selected on that same contaminated dev set. The hybrid's
-  +4.9-point gain is not statistically confirmed (CI touches zero,
-  McNemar p = 0.070) — P5 decides, not this README.
-- The model sweep is one family (Qwen 2.5), one temperature, three seeds.
-- The 7B could not stay GPU-resident on this 6 GB laptop and is reported
-  out of competition — valid accuracy, non-comparable latency.
+  +5.7-point gain has a CI that now excludes zero, but McNemar's exact
+  test still gives p = 0.070 — not significant at 0.05. P5 decides, not
+  this README.
+- The model sweep is one family (Qwen 2.5), one temperature, three seeds
+  — and as of 2026-08-21 only one of the three sizes (3B) has been
+  reconfirmed against the current 99-task instrument.
+- The 7B could not stay GPU-resident on this 6 GB laptop in the pre-P2
+  sweep and was reported out of competition — valid accuracy,
+  non-comparable latency; its post-P2 status is unknown until recaptured.
 - Data is synthetic (UCI-calibrated, copula, 3% label noise); the bus is
   in-process and at-most-once; replay recovery is manual.
-- The agent count is currently 10, not the 4 the pre-registered criterion
-  (§7) settles on — P2 has not been implemented yet.

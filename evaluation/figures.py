@@ -347,6 +347,26 @@ def dev_frame(model=SELECTED_MODEL):
     }
 
 
+def sweep_fresh(sweep):
+    """Guard against a P6 sweep computed against a retired dev task set.
+
+    analyze_sweep.py hard-exits before writing p6_sweep.json if any capture
+    in v3_llm/ doesn't match the current instrument, so a *written* file is
+    normally trustworthy -- but a pre-P2 file predates the "n" field
+    entirely, and would otherwise be read as if it were current.
+    """
+    from evaluation.benchmark.tasks import DEV_TASKS
+    if sweep.get("n") != len(DEV_TASKS):
+        raise Blocked(
+            f"p6_sweep.json was computed against n={sweep.get('n', '?')} "
+            f"dev tasks, but evaluation/benchmark/tasks.py now has "
+            f"{len(DEV_TASKS)} -- most likely a pre-P2 sweep (108 tasks) "
+            "or a sweep where not every model in v3_llm/ has been "
+            "recaptured against the post-P2 instrument yet. Needs "
+            "capture_llm.py for every model + analyze_sweep.py to "
+            "complete without error.")
+
+
 def _rate(ok_by_seed, ids):
     """Mean and population sd of accuracy over seeds, restricted to `ids`."""
     per = [sum(ok[i] for i in ids) / len(ids) for ok in ok_by_seed.values()]
@@ -357,6 +377,7 @@ def _rate(ok_by_seed, ids):
 
 def f2_routing_accuracy():
     sweep = load(GATES / "p6_sweep.json")
+    sweep_fresh(sweep)
     v2 = load(V2 / "baseline.json")
     lex_acc = v2["routing"]["overall"]["mean"]
     fr = dev_frame()
@@ -601,6 +622,7 @@ def f6_pareto():
     """
     p4 = load(GATES / "p4_router.json")
     sweep = load(GATES / "p6_sweep.json")
+    sweep_fresh(sweep)
     v2 = load(V2 / "baseline.json")
 
     from evaluation.benchmark.tasks import DEV_TASKS
@@ -862,6 +884,7 @@ def f8_latency_cdf():
     """
     v2 = load(V2 / "baseline.json")
     sweep = load(GATES / "p6_sweep.json")
+    sweep_fresh(sweep)
     lex_ms = float(np.mean([s["wall_ms"] for s in v2["routing"]["per_seed"]])
                    / v2["routing"]["n_queries"])
     elig = {m["model"]: m["eligible"]
@@ -887,8 +910,8 @@ def f8_latency_cdf():
         ax.step(v, y, where="post", **kw)
         return v
 
-    ecdf([lex_ms] * 108, color=C_LEX, lw=6.0, alpha=0.42,
-         label="lexicon only (n=108)")
+    ecdf([lex_ms] * len(fr["tasks"]), color=C_LEX, lw=6.0, alpha=0.42,
+         label="lexicon only (n=%d)" % len(fr["tasks"]))
     hv = ecdf(hybrid, color=C_HYB, lw=2.2,
               label="hybrid at tau=%g (n=%d)" % (tau, len(hybrid)))
     shades = {"qwen2.5:1.5b-instruct": "#e8a08c",
@@ -1080,6 +1103,8 @@ def manifest(rows):
         if status == "blocked":
             lines.append("* **%s** - %s" % (key, note))
     drawn = {key for key, _stem, status, _s, _n in rows if status == "ok"}
+    routing_figs = ["F2", "F3", "F6", "F8"]
+    routing_blocked = [k for k in routing_figs if k not in drawn]
     routing_drawn = {"F2", "F6"} <= drawn
     rules = []
     if routing_drawn:
@@ -1092,13 +1117,16 @@ def manifest(rows):
         rules.append(
             "The **LLM tier loses** the routing comparison. F2 and F6 are "
             "drawn to show that, not to hide it.")
-    else:
+    elif routing_blocked:
         rules.append(
-            "**F2, F3, F6 and F8 are currently blocked, not just "
-            "development-set results** — see 'What the blocked figures "
-            "are waiting for' above. Do not substitute a number from an "
-            "older run of this repository; it was computed against a dev "
-            "task set that no longer exists.")
+            "**%s currently blocked, not just development-set "
+            "results** — see 'What the blocked figures are waiting for' "
+            "above. Do not substitute a number from an older run of this "
+            "repository; it was computed against a dev task set that no "
+            "longer exists."
+            % ("%s is" % routing_blocked[0] if len(routing_blocked) == 1
+               else "%s and %s are" % (", ".join(routing_blocked[:-1]),
+                                        routing_blocked[-1])))
     rules.append(
         "**v2 and v3 LLM numbers are never differenced.** The two runs "
         "failed an equivalence check (PROTOCOL 10.1). The only v2 quantity "
