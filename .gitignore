@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+.env
 mawos.db
 ml/models/*.joblib
 ml/data/*.csv

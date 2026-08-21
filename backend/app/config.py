@@ -1,17 +1,19 @@
-"""Central configuration for MAWOS.
-
-Everything is overridable via environment variables so the same codebase
-runs on SQLite (default, zero-install) or PostgreSQL, and with or without
-a local Ollama LLM.
-"""
+"""Central configuration for MAWOS."""
 import os
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+from dotenv import load_dotenv
 
-# Shared Institutional Context Store.
-# Default: SQLite file. Set MAWOS_DATABASE_URL=postgresql://... to use Postgres.
-DATABASE_URL = os.getenv("MAWOS_DATABASE_URL", f"sqlite:///{BASE_DIR / 'mawos.db'}")
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+load_dotenv(BASE_DIR / ".env")
+
+# PostgreSQL is the application's only configured database. Tests and isolated
+# evaluation scripts may explicitly override this environment variable.
+DATABASE_URL = os.getenv("MAWOS_DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError(
+        "MAWOS_DATABASE_URL is required. Configure it in .env or the environment."
+    )
 
 # JWT auth
 JWT_SECRET = os.getenv("MAWOS_JWT_SECRET", "mawos-dev-secret-change-in-prod")

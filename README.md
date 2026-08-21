@@ -203,5 +203,30 @@ docs/                ARCHITECTURE · DATASET_METHODOLOGY · CODE_WALKTHROUGH · 
 tests/               pytest suite
 ```
 
-Optional: `set MAWOS_DATABASE_URL=postgresql://user:pass@localhost/mawos`
-switches the context store to PostgreSQL with no code changes.
+### PostgreSQL
+
+MAWOS requires PostgreSQL for its application database. Create the `mawos`
+database before starting the backend, then configure `MAWOS_DATABASE_URL` in
+the root `.env` file. The expected local connection is:
+
+```text
+Host: 127.0.0.1
+Port: 5432
+Database: mawos
+Username: postgres
+```
+
+Set the password only in `.env`; do not commit it or place it in this README.
+The required SQLAlchemy URL uses the `psycopg` driver:
+
+```text
+MAWOS_DATABASE_URL=postgresql+psycopg://postgres:<password>@127.0.0.1:5432/mawos
+```
+
+On a fresh PostgreSQL database, the backend creates the tables from
+`backend/app/models.py` during startup. To migrate the existing SQLite backup
+without deleting it, run:
+
+```bash
+python scripts/migrate_sqlite_to_postgres.py
+```

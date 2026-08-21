@@ -31,7 +31,7 @@ Orchestration"** consistently in the abstract, contributions and conclusion.
     │  instrumented pub/sub bus (workflow IDs, hop counts, per-hop latency,
     │  per-subscriber fault isolation)  +  periodic autonomous scans
     ▼
- Shared Institutional Context Store (SQLAlchemy; SQLite or PostgreSQL)
+ Shared Institutional Context Store (SQLAlchemy + PostgreSQL)
 ```
 
 ### The propagation cascade (the core demonstration)
