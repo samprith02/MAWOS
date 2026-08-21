@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from . import config, llm
 from .agents import get_agents
 from .api.routes import router
+from .api.placement import router as placement_router
 from .database import Base, SessionLocal, engine
 from .models import TimetableSlot
 from .seed import bootstrap_evaluations, seed_all
@@ -55,6 +56,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="MAWOS", version="2.0.0", lifespan=lifespan)
 app.include_router(router)
+app.include_router(placement_router)
 
 if config.STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(config.STATIC_DIR)), name="static")
