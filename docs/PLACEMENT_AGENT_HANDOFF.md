@@ -172,3 +172,20 @@ per the original task spec, saved via `joblib.dump()` to
   to work — I don't always know how to interpret raw JSON/output myself.
 - I use PowerShell in VS Code on Windows — commands must be PowerShell-
   compatible, not bash/Linux syntax.
+
+  
+## Update since last handoff save
+- Added an `eligible_only: bool = False` query param to
+  `GET /api/placement/drives/{drive_id}/shortlist` (both in
+  `PlacementAgent.get_shortlist()` in `placement.py` and the route in
+  `api/placement.py`), so a coordinator can view just the eligible
+  candidates instead of the full list with rejection reasons.
+- Confirmed: automated per-student notification on shortlist generation
+  (`placement.notification_required` events) already filters to
+  eligible-only internally in `generate_shortlist_and_announce()` — this
+  was NOT dependent on the new `eligible_only` param, that part was
+  already correct since Stage 2/3.
+- If continuing in a new chat: ask me (the user) to run `Get-Content` on
+  `backend\app\agents\placement.py` and `backend\app\api\placement.py`
+  first to see current state, rather than assuming — I may have made
+  small tweaks since this doc was last saved.
