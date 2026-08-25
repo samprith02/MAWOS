@@ -15,17 +15,18 @@ import pytest
 from evaluation import figures
 
 ROOT = Path(__file__).resolve().parent.parent
-#: F4/F5/F9 are blocked on a future phase (P2/P3/P5) -- structural, not
-#: transient. F2/F6/F8 depend on evaluation/results/v3_gates/p6_sweep.json
-#: (the P6 multi-model sweep), which analyze_sweep.py hard-exits on
-#: rewriting until *every* model capture in v3_llm/ matches the current
-#: 99-task instrument (evaluation/PROTOCOL.md Sec12) -- only the 3B has
-#: been recaptured GPU-resident post-P2 so far (2026-08-21); 1.5B/7B are
-#: still the pre-P2 108-task captures. F3, unlike F2/F6/F8, reads only the
-#: fresh single-model capture via dev_frame() and draws correctly already.
-#: Move F2/F6/F8 out once capture_llm.py + analyze_sweep.py complete for
-#: all three models.
-BLOCKED = {"F2", "F4", "F5", "F6", "F8", "F9"}
+#: F4 (RQ1's B/C cells) and F9 (tool-space dose-response) are blocked on
+#: P2-adjacent experiments that haven't run. F5 needs the provenance
+#: gate's held-out result (P3 has only a dev-only engineering pass so
+#: far, see evaluation/gate_p3.py -- not RQ2's confirmed result). F2/F6/F8
+#: depended on evaluation/results/v3_gates/p6_sweep.json (the P6
+#: multi-model sweep), which analyze_sweep.py hard-exits on rewriting
+#: until *every* model capture in v3_llm/ matches the current 99-task
+#: instrument (evaluation/PROTOCOL.md Sec12) -- all three (1.5B/3B/7B)
+#: were recaptured GPU-resident-where-possible against it as of
+#: 2026-08-25 (7B stays out-of-competition at 81.7% residency, per
+#: PROTOCOL Sec9.2, but is still a valid capture), so F2/F6/F8 draw now.
+BLOCKED = {"F4", "F5", "F9"}
 
 
 def test_registry_covers_every_planned_figure():
