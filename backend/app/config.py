@@ -24,6 +24,11 @@ OLLAMA_HOST = os.getenv("MAWOS_OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("MAWOS_OLLAMA_MODEL", "qwen2.5:3b-instruct")
 OLLAMA_TIMEOUT_S = float(os.getenv("MAWOS_OLLAMA_TIMEOUT", "8.0"))
 
+# P3 — PCN-style provenance gate on the LLM tier's free-text answers
+# (backend/app/provenance.py, docs/RESEARCH_PLAN_V3.md §3.2). On by
+# default; the dev-only evaluation is evaluation/gate_p3.py.
+PROVENANCE_GATE_ENABLED = os.getenv("MAWOS_PROVENANCE_GATE", "1") == "1"
+
 # Institutional business rules
 ATTENDANCE_THRESHOLD = 75.0          # % required for hall ticket
 ABSENCE_STREAK_ALERT = 3             # consecutive absences that trigger an alert

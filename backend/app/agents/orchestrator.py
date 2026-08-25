@@ -24,7 +24,7 @@ every response and logged.
 import json
 import time
 
-from .. import llm, router
+from .. import config, llm, provenance, router
 from ..models import IntentLog
 from . import tools as toolreg
 from .base import BaseAgent
@@ -64,6 +64,7 @@ class OrchestratorAgent(BaseAgent):
         ]
         schemas = toolreg.schemas_for_role(user.role)
         tools_used = []
+        tool_results = []
         for _round in range(3):
             reply = llm.chat(messages, tools=schemas)
             if reply is None:
@@ -72,14 +73,19 @@ class OrchestratorAgent(BaseAgent):
             if not calls:
                 latency = (time.perf_counter() - start) * 1000
                 first_tool = tools_used[0]["name"] if tools_used else "direct_answer"
+                text = (reply.get("content", "").strip()
+                        or "I could not compose an answer.")
+                gate = self._gate(text, tools_used, tool_results)
+                if gate:
+                    text = gate.pop("text")
                 db.add(IntentLog(query=message, predicted_intent=first_tool,
                                  method="llm", latency_ms=round(latency, 1)))
                 db.commit()
-                return {"text": reply.get("content", "").strip() or
-                        "I could not compose an answer.",
-                        "mode": "llm", "model": llm.config.OLLAMA_MODEL,
-                        "tools_used": tools_used,
-                        "latency_ms": round(latency, 1)}
+                resp = {"text": text, "mode": "llm", "model": llm.config.OLLAMA_MODEL,
+                        "tools_used": tools_used, "latency_ms": round(latency, 1)}
+                if gate:
+                    resp["provenance"] = gate
+                return resp
             messages.append(reply)
             for call in calls:
                 fn = call.get("function", {})
@@ -94,9 +100,32 @@ class OrchestratorAgent(BaseAgent):
                 result = toolreg.execute(db, self.agents, user, name, args)
                 tools_used.append({"name": name, "args": args,
                                    "ms": round((time.perf_counter() - t0) * 1000, 1)})
+                tool_results.append(result)
                 messages.append({"role": "tool", "name": name,
                                  "content": json.dumps(result, default=str)[:4000]})
         return None  # too many rounds -> fallback
+
+    def _gate(self, text: str, tools_used: list, tool_results: list) -> dict | None:
+        """P3 provenance gate (see `backend/app/provenance.py`).
+
+        Only meaningful when at least one tool was called this turn —
+        with none, there is no tool data for a claim to be inconsistent
+        with. Returns None (no gate info at all) in that case, otherwise
+        the gate's check plus the text to actually send (unchanged
+        unless the gate blocked and a grounded fallback exists).
+        """
+        if not tool_results:
+            return None
+        result = provenance.check(text, tool_results)
+        result["text"] = text
+        if result["blocked"] and config.PROVENANCE_GATE_ENABLED:
+            fallback = "\n\n".join(
+                self._format(tu["name"], tr)
+                for tu, tr in zip(tools_used, tool_results)).strip()
+            result["fell_back"] = bool(fallback)
+            if fallback:
+                result["text"] = fallback
+        return result
 
     # ------------------------------------------------------------- fallback path
     def _format(self, tool_name: str, result: dict) -> str:
