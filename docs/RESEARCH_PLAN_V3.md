@@ -303,6 +303,17 @@ runtime capture mandatory; and the LLM-vs-lexicon gap is restated
 as an estimate while leaving the direction — the LLM tier loses on
 routing — unchanged.
 
+> **2026-08-25 addendum.** §3.5.2 is the original pre-P2 decision run
+> (108 tasks, 13 tools) and is kept verbatim as the historical record of
+> why 3B was selected — it is not rewritten. P2 (2026-08-19) dropped 9
+> admission-intent tasks (108→99, 13→12 tools), invalidating every number
+> above for citation. All three models were recaptured against the
+> current 99-task instrument on 2026-08-21 (3B, at P4) and 2026-08-25
+> (1.5B/7B); `analyze_sweep.py` reconfirms **qwen2.5:3b-instruct** as the
+> pick (McNemar vs 1.5B, p = 0.003) — the selection was not stale after
+> all. Current numbers: `evaluation/results/v3_gates/p6_sweep.json`,
+> README.md's "Routing (v3)" section.
+
 ### 3.6 P4 result (run 2026-08-15) — router built, τ = 0, effect not yet established
 
 `evaluation/tune_router.py` → `results/v3_gates/p4_router.{json,md}`.
@@ -360,6 +371,15 @@ lexicon answered correctly and ~60 000× faster. The UI, the metrics
 endpoint and the startup banner previously called the lexicon a
 "fallback"; under a confidence gate it is the primary tier, and they now
 say so.
+
+> **2026-08-21 addendum.** The table above is the original pre-P2 dev
+> curve (108 tasks) and is kept as the historical record of the τ = 0
+> decision — not rewritten. Recaptured GPU-resident against the current
+> 99-task/12-tool instrument: lexicon 88.9%, hybrid at τ = 0 **94.6%**
+> (+5.7 pts, 95% CI **[+0.3, +11.8]** — no longer touching zero — McNemar
+> p = 0.070, still short of 0.05). τ = 0 was reselected by the same
+> pre-registered rule against the fresh curve, not carried over. Current
+> numbers: `evaluation/results/v3_gates/p4_router.json`, PROTOCOL §12.
 
 ---
 
@@ -635,12 +655,12 @@ Net tool-surface change: 13 → 12 (`get_admissions_funnel` removed). The
 | **P0.5** | Router viability gate (§3.5) — simulation primary, AUC descriptive. | **may cancel P4** |
 | **P1** | Scheduler: objective + greedy seed + SA. Keep greedy runnable. E4 + weight ablation, 10 seeds. **Done — §4.3.1.** | before/after + convergence reproduce |
 | **P1b** | ITC-2007 harness (§4.4), separate from production scheduler. E4b. **Harness done and validated — §8.2**; blocked on instance files. | official validator passes |
-| **P2** | Agent reduction 10 → 4 (§7), tool surface held per §7.1. | tool count verified 13→12 |
-| **P3** | PCN-style provenance gate. E3. | false-block rate acceptable |
-| **P4** | Hybrid router, τ on dev only, complete curve published. E1. **Done — §3.6.** Multi-tool composition and memory are *not* included; see §3.6. | τ never touched test |
+| **P2** | Agent reduction 10 → 4 (§7), tool surface held per §7.1. **Done, 2026-08-19.** | tool count verified 13→12 |
+| **P3** | PCN-style provenance gate. E3. **Dev-only engineering pass done, 2026-08-25** (`backend/app/provenance.py`, `evaluation/gate_p3.py` → `results/v3_gates/p3_provenance.md`, chart in `p3_diagnostic.png`): 100% catch rate on synthetic corruption, 23.5% block rate on genuine answers, one seed. **Not** RQ2's confirmed result — needs real annotated hallucination data and the 3-seed convention, both tracking with P5. | false-block rate acceptable |
+| **P4** | Hybrid router, τ on dev only, complete curve published. E1. **Done — §3.6 (108-task run); recaptured GPU-resident against the current 99-task instrument 2026-08-21** (PROTOCOL §12), τ = 0 reselected — see README.md "Routing (v3)" for the current numbers. Multi-tool composition and memory are *not* included; see §3.6. | τ never touched test |
 | **P5** | Held-out set → dual annotation → κ → **single** test run of E1/E2/E5. | test touched exactly once |
-| **P6** | Model sweep 1.5B/3B/7B × 3 seeds. **Done — §3.5.2.** | all three GPU-resident, verified |
-| **P7** | Figures F1–F9. **Harness done — §8.1**; 6 drawn, 3 blocked on P2/P3. | every figure regenerable by one command |
+| **P6** | Model sweep 1.5B/3B/7B × 3 seeds. **Done — §3.5.2 (108-task run); all three recaptured against the current 99-task instrument 2026-08-25**, 3B reconfirmed (McNemar vs 1.5B, p = 0.003). | all three GPU-resident, verified |
+| **P7** | Figures F1–F9. **Harness done — §8.1**; 6 drawn (F1/F2/F3/F6/F7/F8), 3 blocked (F4/F5/F9 — on P3/P5, not P2, which is done). | every figure regenerable by one command |
 | **P8** | Rewrite README / ARCHITECTURE / RESULTS to match the evidence. | §9 threats written |
 
 **Figures.** F1 cascade DAG · F2 routing accuracy × system × model size ·
