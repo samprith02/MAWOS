@@ -311,8 +311,10 @@ RENDER.dept = async (main) => {
           `<option value="${s.year}-${s.section}">Year ${s.year} · Section ${s.section}</option>`).join("")}</select>
         <button class="btn ghost tiny" id="tt-view">View</button>
         <button class="btn gold tiny" id="tt-gen">Regenerate department timetable</button>
+        <button class="btn ghost tiny" id="tt-sim">Watch solver (live simulation)</button>
       </div>
       <div id="tt-out"></div>
+      <div id="sim-out"></div>
     </div>
     <div class="card span2">
       <h3>Fee defaulters <span class="sub">· Finance Agent</span></h3>
@@ -337,7 +339,92 @@ RENDER.dept = async (main) => {
     $("tt-out").innerHTML = `<p class="muted">Solver: ${r.slots_placed}/${r.slots_required} slots placed
       (${r.placement_rate}%) · 0 teacher conflicts · ${r.restarts_used} restart(s) · ${r.solve_ms} ms</p>`;
   };
+  $("tt-sim").onclick = async () => {
+    const [y, s] = $("tt-sec").value.split("-");
+    await runLiveSimulation(d.dept, y, s);
+  };
 };
+
+/* Replays the real P1 solver's own event trace (seed placements, then the
+ * actual cost/temperature curve from simulated annealing) so the user can
+ * watch the timetable for one section get built. This regenerates the
+ * WHOLE department (same as "Regenerate department timetable") — the
+ * animation just focuses on one section's slice of the trace. */
+async function runLiveSimulation(dept, year, section) {
+  const btn = $("tt-sim");
+  btn.disabled = true; btn.textContent = "Solving…";
+  const out = $("sim-out");
+  out.innerHTML = `<p class="muted">Running the solver…</p>`;
+  let r;
+  try {
+    r = await api("/hod/generate-timetable-live", { method: "POST" });
+  } catch (e) {
+    btn.disabled = false; btn.textContent = "Watch solver (live simulation)";
+    out.innerHTML = `<p class="muted">Error: ${esc(e.message)}</p>`;
+    return;
+  }
+  btn.disabled = false; btn.textContent = "Watch solver (live simulation)";
+
+  const key = `${dept}-${year}-${section}`;
+  const events = r.seed_events.filter(e => e.section === key);
+  const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+  const PERIODS = ["9:00", "10:00", "11:15", "12:15", "14:00", "15:00"];
+
+  out.innerHTML = `
+    <div class="sim-wrap">
+      <div class="sim-status">
+        <span class="sim-phase on" id="sim-phase">Phase: Seeding</span>
+        <span class="sim-stat" id="sim-count">placed 0 / ${events.length}</span>
+      </div>
+      <div class="tt-wrap" id="sim-grid-wrap"><table class="tt">
+        <tr><th>Day</th>${PERIODS.map(p => `<th>${esc(p)}</th>`).join("")}</tr>
+        ${DAYS.map((day, d) => `<tr><th>${esc(day)}</th>${PERIODS.map((_, p) =>
+          `<td class="free" data-cell="${d}-${p}"></td>`).join("")}</tr>`).join("")}
+      </table></div>
+      <div class="sim-chart-wrap">
+        <div class="sim-chart-label"><span>Simulated annealing — cost vs. temperature</span>
+          <span id="sim-chart-readout">—</span></div>
+        <svg viewBox="0 0 600 110" preserveAspectRatio="none">
+          <polyline id="sim-cost-line" fill="none" stroke="var(--data)" stroke-width="2"/>
+          <polyline id="sim-temp-line" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-dasharray="4 3"/>
+        </svg>
+      </div>
+      <p class="muted" id="sim-final"></p>
+    </div>`;
+
+  for (const ev of events) {
+    const cell = out.querySelector(`[data-cell="${ev.day}-${ev.period}"]`);
+    cell.classList.remove("free");
+    cell.classList.add("placing");
+    cell.innerHTML = `<div class="subj">${esc(ev.subject)}</div>`;
+    $("sim-count").textContent = `placed ${events.indexOf(ev) + 1} / ${events.length}`;
+    await new Promise(res => setTimeout(res, 40));
+  }
+
+  $("sim-phase").textContent = "Phase: Annealing";
+  const trace = r.anneal_trace;
+  const maxCost = Math.max(...trace.map(t => t.cost), 1);
+  const maxTemp = Math.max(...trace.map(t => t.temp), 1);
+  const toXY = (i, v, max) => `${(600 * i / (trace.length - 1)).toFixed(1)},${(108 - 100 * v / max).toFixed(1)}`;
+  const costPts = [], tempPts = [];
+  const costLine = $("sim-cost-line"), tempLine = $("sim-temp-line"), readout = $("sim-chart-readout");
+  const step = Math.max(1, Math.floor(trace.length / 150));
+  for (let i = 0; i < trace.length; i += step) {
+    costPts.push(toXY(i, trace[i].cost, maxCost));
+    tempPts.push(toXY(i, trace[i].temp, maxTemp));
+    costLine.setAttribute("points", costPts.join(" "));
+    tempLine.setAttribute("points", tempPts.join(" "));
+    readout.textContent = `cost ${trace[i].cost.toFixed(1)} · T ${trace[i].temp.toFixed(3)} · best ${trace[i].best.toFixed(1)}`;
+    await new Promise(res => setTimeout(res, 20));
+  }
+
+  $("sim-phase").textContent = "Done"; $("sim-phase").classList.remove("on");
+  const g = await api(`/timetable/${dept}/${year}/${section}`);
+  out.querySelector("#sim-grid-wrap").outerHTML = ttTable(g);
+  $("sim-final").textContent =
+    `Final: ${r.slots_placed}/${r.slots_required} slots placed (${r.placement_rate}%) · ` +
+    `objective ${r.objective} (seed ${r.objective_at_seed}) · 0 teacher conflicts · ${r.solve_ms} ms total`;
+}
 
 /* ================= PRINCIPAL / INSTITUTION ================= */
 RENDER.institution = async (main) => {

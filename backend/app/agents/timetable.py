@@ -30,7 +30,7 @@ it. What is claimed is a measured before/after on a real defect.
 """
 import time
 
-from .. import scheduler
+from .. import scheduler, scheduler_live
 from ..models import Department, TeachingAssignment, TimetableSlot
 from .base import BaseAgent
 
@@ -106,6 +106,69 @@ class TimetableAgent(BaseAgent):
             "objective_at_seed": round(info["seed_cost"], 1),
             "annealing_steps": info["iterations"],
             "solve_ms": round((time.perf_counter() - t0) * 1000, 1),
+        }
+
+    def generate_live(self, db, dept_code: str | None = None,
+                      max_restarts: int = 3, seed: int = 7,
+                      iters: int = SOLVER_ITERS) -> dict:
+        """Same regeneration as `generate`, plus a replayable event trace.
+
+        Visualisation-only: uses `scheduler_live.solve_with_trace` instead
+        of `scheduler.solve`, but writes the exact same `TimetableSlot`
+        rows via the exact same replace-scope-atomically path.
+        """
+        q = db.query(TeachingAssignment)
+        if dept_code:
+            q = q.filter(TeachingAssignment.dept_code == dept_code)
+        assignments = q.all()
+        if not assignments:
+            return {"ok": False, "error": "no teaching assignments found"}
+
+        blocked: dict[tuple[int, int], int] = {}
+        if dept_code:
+            outside = (db.query(TimetableSlot)
+                         .filter(TimetableSlot.dept_code != dept_code).all())
+            for s in outside:
+                key = (s.faculty_id, s.day)
+                blocked[key] = blocked.get(key, 0) | (1 << s.period)
+
+        demands = []
+        for a in assignments:
+            for _ in range(a.subject.credits):
+                demands.append(((a.dept_code, a.year, a.section),
+                                a.subject_code, a.faculty_id))
+
+        try:
+            info = scheduler_live.solve_with_trace(
+                demands, seed=seed, iters=iters, restarts=max_restarts,
+                blocked=blocked)
+        except scheduler.Unplaceable as exc:
+            return {"ok": False, "error": f"no feasible timetable: {exc}"}
+        sched = info.pop("sched")
+        placed = sched.slots()
+
+        dq = db.query(TimetableSlot)
+        if dept_code:
+            dq = dq.filter(TimetableSlot.dept_code == dept_code)
+        dq.delete()
+        db.bulk_insert_mappings(TimetableSlot, placed)
+        db.commit()
+
+        total_needed = len(demands)
+        return {
+            "ok": True, "scope": dept_code or "ALL",
+            "sections": len(sched.sections), "slots_placed": len(placed),
+            "slots_required": total_needed,
+            "unplaced": total_needed - len(placed),
+            "placement_rate": round(100 * len(placed) / total_needed, 2),
+            "teacher_conflicts": 0,
+            "solver": "greedy+annealing",
+            "objective": round(info["final_cost"], 1),
+            "objective_at_seed": round(info["seed_cost"], 1),
+            "annealing_steps": iters,
+            "solve_ms": info["solve_ms"],
+            "seed_events": info["seed_events"],
+            "anneal_trace": info["anneal_trace"],
         }
 
     async def generate_and_announce(self, db, dept_code: str | None,

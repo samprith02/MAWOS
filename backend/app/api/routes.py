@@ -215,6 +215,24 @@ async def hod_generate_timetable(
         db, scope, user.username)
 
 
+@router.post("/hod/generate-timetable-live")
+async def hod_generate_timetable_live(
+        user: User = Depends(require_role("hod", "admin")),
+        db: Session = Depends(get_session)):
+    """Same regeneration as above, plus a replayable solver event trace
+    (seed placements in order, real cost/temperature curve from
+    annealing) for the front-end's live simulation view."""
+    scope = user.dept_code if user.role == "hod" else None
+    agent = get_agents()["timetable_agent"]
+    result = agent.generate_live(db, scope)
+    if result.get("ok"):
+        await agent.publish("timetable.generated", {
+            "scope": result["scope"], "sections": result["sections"],
+            "placement_rate": result["placement_rate"],
+            "solve_ms": result["solve_ms"], "triggered_by": user.username})
+    return result
+
+
 # ---------- principal --------------------------------------------------------------------
 @router.get("/principal/analytics")
 def principal_analytics(user: User = Depends(require_role("principal", "admin")),
