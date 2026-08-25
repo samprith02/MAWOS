@@ -81,14 +81,13 @@ Any USN from `4MT23AI001`–`4MT26CV6xx` works as a student login; faculty are
 ## Routing (v3): a confidence-gated hybrid
 
 **Recaptured GPU-resident on the post-P2, 99-task/12-tool instrument
-(2026-08-21).** The numbers below are current and citable for the 3B
-model. One caveat carries forward: *which* model (3B) gets tuned here was
-picked by the P6 sweep, and that sweep itself is still the pre-P2
-108-task file — 1.5B and 7B have not been recaptured under the current
-instrument yet (blocked on a laptop GPU driver dropout, see
-[Research status](#research-status-v3)). So τ-selection for the 3B is
-fresh and valid; whether the 3B is still the *right* model to select is
-inherited from stale evidence and not yet reconfirmed.
+(2026-08-21, τ; 2026-08-25, full P6 sweep).** The numbers below are
+current and citable for the 3B model. *Which* model (3B) gets tuned here
+was picked by the P6 sweep, and as of 2026-08-25 that sweep is itself
+recaptured against the same current instrument for all three sizes
+(1.5B/3B/7B) — `analyze_sweep.py` reconfirms qwen2.5:3b-instruct as the
+pick (McNemar vs 1.5B, p = 0.003), so τ-selection for the 3B rests on
+fresh evidence end to end, not a stale sweep.
 
 `backend/app/router.py` escalates to the LLM only when the lexicon's own
 confidence is low — margin (top-1 score minus top-2 score) ≤ τ — not
@@ -143,20 +142,18 @@ single uncontrolled run) and the earlier v3 108-task finding of −12.9 pts
 be differenced against each other (different instruments/conditions,
 PROTOCOL §10.1). All three are reported; none corrects another.
 
-**Model sweep (P6, still stale — the 3B is recaptured, 1.5B/7B are not.)**
-The last full sweep (1.5B / 3B / 7B × 3 seeds) ran pre-P2 on the 108-task
-instrument; the 3B was selected under a pre-registered one-standard-error
-rule and is the model tuned above. Recapturing 1.5B and 7B under the
-current 99-task instrument stalled on 2026-08-21: the laptop's NVIDIA
-kernel driver (`nvlddmkm`) stopped mid-session — confirmed via Ollama's
-own `/api/ps` reporting `size_vram: 0` for a model that fits easily, and
-`sc query nvlddmkm` showing `STOPPED` with no intervening reboot — not a
-Claude Code sandbox restriction (the same class of issue as the earlier
-GPU-access block, which a host reboot fixed once). `analyze_sweep.py`
-correctly refuses to write a sweep result while any model capture doesn't
-match the current instrument (hard `RuntimeError`, not a silent skip), so
-`evaluation/results/v3_gates/p6_sweep.json` — and the figures that read it
-(F2, F6, F8) — stay blocked until 1.5B and 7B are recaptured GPU-resident.
+**Model sweep (P6, complete as of 2026-08-25).** 1.5B / 3B / 7B × 3 seeds,
+all recaptured against the current 99-task/12-tool instrument. Recapturing
+1.5B and 7B stalled for a few days on the laptop's NVIDIA kernel driver
+(`nvlddmkm`) dropping mid-session (confirmed via `sc query nvlddmkm` →
+`STOPPED` and Ollama's own `/api/ps` reporting `size_vram: 0`) — the same
+class of issue as an earlier GPU-access block that a host reboot had
+already fixed once, not a Claude Code sandbox restriction. The driver
+came back healthy on its own; `analyze_sweep.py` now runs against all
+three captures and **reconfirms qwen2.5:3b-instruct** as the §9.2 pick
+(McNemar vs 1.5B, p = 0.003) — the model tuned above was not selected on
+stale evidence after all. `evaluation/results/v3_gates/p6_sweep.json` is
+current; F2/F6/F8 draw from it.
 
 **CPU diagnostic capture (2026-08-20, historical, not citable).** Before
 GPU access was available at all, a 3B capture ran on CPU against the
@@ -230,6 +227,17 @@ individual seed values were never stored, only the band. P1 lands within
 each objective term in turn) confirms every term is load-bearing: none of
 them can be dropped without moving the objective.
 
+**Live solver simulation (UI only, not a research result).** HOD dashboard
+→ Department → "Watch solver (live simulation)" replays this same P1
+solver's own event trace — seed placements, then the real cost/temperature
+curve from annealing — so a section's timetable visibly builds itself.
+`backend/app/scheduler_live.py` is strictly additive (zero diff to
+`scheduler.py`; reuses the real, unmodified `anneal()`). Added 2026-08-25
+after a stale, never-regenerated `timetable_slots` table (auto-seeded once
+and never refreshed) was mistaken for a broken solver — regenerating with
+this same P1 code produces a clean, gap-free schedule, which is what this
+view demonstrates live.
+
 ---
 
 ## External benchmark: ITC-2007 track 3 (P1b)
@@ -267,29 +275,30 @@ exits with that explanation instead.
 python evaluation/figures.py          # every figure that has data, one command
 ```
 
-Three of nine are drawn from real captured data
+Six of nine are drawn from real captured data
 (`evaluation/results/figures/`, manifest in `FIGURES.md`):
 
 | Figure | What it shows |
 |---|---|
 | F1 — cascade DAG | live bus topology: 7/9 agents in cascades, 9 edges, depth 2 |
+| F2 — routing accuracy | v3 lexicon 88.9% (v2's 89.8% drawn only as a reference line, same frozen instrument), best eligible hybrid 94.6% |
 | F3 — confusion matrices | where the lexicon's 11 dev misses actually land (99-task set) |
+| F6 — Pareto (accuracy vs latency) | τ=0: 94.6% at 416 ms vs LLM-only 83.5% at 3,740 ms |
 | F7 — scheduler | P1 204.2 vs v2 2,441, floor 196.0 (seed-0 convergence trace) |
+| F8 — latency CDF | 88.9% of queries answered in 0.09 ms; escalated tail median 3,865 ms |
 
-**Six are intentionally not drawn** — there is no placeholder or
+**Three are intentionally not drawn** — there is no placeholder or
 illustrative version anywhere in this repository, only a `Blocked`
 exception naming what phase (or what missing recapture) unblocks them,
-enforced by `tests/test_figures.py`:
+enforced by `tests/test_figures.py`. F2, F6 and F8 used to be in this
+list too (P6 was partial), but as of 2026-08-25 all three model captures
+match the current instrument and those three now draw:
 
-- **F2, F6, F8** (routing accuracy, Pareto, latency CDF) — all three read
-  `evaluation/results/v3_gates/p6_sweep.json`, the P6 multi-model sweep.
-  Only the 3B has been recaptured on the post-P2 99-task instrument; 1.5B
-  and 7B are still pre-P2 (GPU driver dropout, see
-  [Research status](#research-status-v3)). `analyze_sweep.py` hard-exits
-  rather than write a mismatched sweep, so these three stay blocked.
 - **F4** (RQ1 2×2 factorial) — needs P2 for the conditions (done) and P5
   for the held-out data.
-- **F5** (provenance gate on/off) — needs P3; the gate doesn't exist yet.
+- **F5** (provenance gate on/off) — P3 has only a dev-only engineering
+  pass so far (see [Research status](#research-status-v3)), not RQ2's
+  confirmed held-out result F5 needs.
 - **F9** (dose-response over tool-space size) — needs P5.
 
 Reading rules that travel with every figure: all accuracy numbers are
@@ -329,6 +338,9 @@ python evaluation/gate_p05.py             # P0.5 router viability gate
 python evaluation/capture_llm.py          # frozen-protocol LLM capture (live Ollama)
 python evaluation/analyze_sweep.py        # P6 model selection, PROTOCOL 9.2
 python evaluation/tune_router.py          # P4 threshold selection, PROTOCOL 9.3
+python evaluation/gate_p3.py              # P3 provenance gate, dev-only pass (needs live Ollama)
+python evaluation/gate_p3_figure.py       # P3 diagnostic chart (reads p3_provenance.json, no Ollama needed)
+python evaluation/capture_llm_resume.py --models 1.5b,7b   # checkpointed capture, resumable if killed mid-run
 python evaluation/scheduler_eval.py       # E4: P1 solver vs frozen v2 greedy
 python evaluation/freeze_manifest.py      # verify the frozen instrument (PROTOCOL 1.5)
 python evaluation/evaluate.py             # v2 harness: both routing tiers
@@ -356,6 +368,7 @@ backend/app/
     orchestrator.py    confidence-gated router + tool-calling loop [agent]
     eligibility.py     hall-ticket + scholarship, merged at P2 [agent]
     timetable.py       objective + greedy seed + simulated annealing (P1) [agent]
+  scheduler_live.py  additive event-trace wrapper for the live simulation UI (not research)
     attendance.py      intake, recompute, proactive scan [agent]
     tools.py           typed tool registry (12 tools) with ROLE ENFORCEMENT
     admission.py       admissions pipeline [tool-backed, not an agent]
@@ -393,31 +406,75 @@ Full detail, gates and rationale: `docs/RESEARCH_PLAN_V3.md`. Short form:
 | P1 | Objective-driven scheduler (greedy seed + SA) | done |
 | P1b | ITC-2007 external benchmark harness | harness validated; **blocked on instance files** |
 | P2 | Agent reduction 10 → 4, tool surface held 13→12 | **done** — code, frozen instrument, and downstream figures/tests all on the 99-task set |
-| P3 | PCN-style provenance gate | **pending** — next unstarted phase |
+| P3 | PCN-style provenance gate | **dev-only engineering pass done**, 2026-08-25 — see below |
 | P4 | Confidence-gated hybrid router, τ frozen on dev | **done, current** — GPU-resident recapture on the 99-task instrument, 2026-08-21 |
 | P5 | Held-out set → dual annotation → single test run | **blocked — the largest schedule risk** |
-| P6 | Model sweep, 1.5B/3B/7B × 3 seeds | **partial** — 3B recaptured GPU-resident on the 99-task set; 1.5B/7B still pre-P2, blocked on a laptop GPU driver dropout |
-| P7 | Figures F1–F9 | harness done; F1/F3/F7 draw fresh data; F2/F6/F8 blocked on P6 completing; F4/F5/F9 blocked on P3/P5 |
+| P6 | Model sweep, 1.5B/3B/7B × 3 seeds | **done**, 2026-08-25 — all three recaptured against the 99-task set; 3B reconfirmed as the §9.2 pick |
+| P7 | Figures F1–F9 | harness done; F1/F2/F3/F6/F7/F8 draw fresh data; F4/F5/F9 blocked on P2-adjacent work/P3/P5 |
 | P8 | Rewrite ARCHITECTURE.md / RESULTS.md to match the evidence | pending — README above is current except where flagged stale above, those two still carry v2-era numbers by design until P8 |
 
-**Why P6 is only partial, and why that's not a code problem.** P2 dropped
-9 admission-intent dev tasks when `get_admissions_funnel` was retired
-(108→99 tasks, 13→12 tools), invalidating every number computed against
-the old instrument. GPU access to Ollama was blocked for a while (a
-sandboxing-adjacent driver/session fault, fixed once already by a host
-reboot on 2026-08-21), long enough that a CPU-only diagnostic 3B capture
-ran as a sanity check and is preserved above as historical, not citable.
-Once GPU access came back, the 3B was recaptured cleanly (297 records, 99
-unique task IDs, 0 call failures, `fully_resident: true`) and
-`tune_router.py` produced the current P4 numbers above. Completing P6
-needs 1.5B and 7B recaptured the same way, but the NVIDIA kernel driver
-(`nvlddmkm`) dropped again mid-session on 2026-08-21 — no reboot this
-time, just `STOPPED`, confirmed via `sc query nvlddmkm` and Ollama's own
-`/api/ps` reporting `size_vram: 0`. `analyze_sweep.py` hard-exits rather
-than write a sweep from a mismatched capture (a `RuntimeError`, not a
-silent skip), so `p6_sweep.json` and the figures that depend on it (F2,
-F6, F8) stay blocked until that driver comes back and 1.5B/7B are
-recaptured.
+```mermaid
+flowchart LR
+    P0["P0 baseline"] --> P05["P0.5 gate"] --> P1["P1 scheduler"] --> P2["P2 4 agents"]
+    P2 --> P3["P3 provenance gate\n(dev-only pass)"]
+    P2 --> P4["P4 hybrid router"]
+    P2 --> P6["P6 model sweep"]
+    P4 --> P7["P7 figures"]
+    P6 --> P7
+    P3 -.needs P5.-> P5["P5 held-out set\nBLOCKED: external authors"]
+    P1 -.instances.-> P1b["P1b ITC-2007\nBLOCKED: instance files"]
+    P5 --> P8["P8 doc rewrite"]
+
+    classDef done fill:#dce9e4,stroke:#1b7f79,color:#1b3d38;
+    classDef partial fill:#f7ecd6,stroke:#a06a1e,color:#5a3e0f;
+    classDef blocked fill:#f4dede,stroke:#8a3b2f,color:#5a2318;
+    classDef pending fill:#eef1f6,stroke:#4a5899,color:#2a3357;
+    class P0,P05,P1,P2,P4,P6 done;
+    class P3,P7 partial;
+    class P5,P1b blocked;
+    class P8 pending;
+```
+
+**P6, completed 2026-08-25.** P2 dropped 9 admission-intent dev tasks
+when `get_admissions_funnel` was retired (108→99 tasks, 13→12 tools),
+invalidating every number computed against the old instrument. The 3B was
+recaptured cleanly against the new one at P4 (297 records, 99 unique task
+IDs, 0 call failures, `fully_resident: true`). Recapturing 1.5B and 7B
+stalled for a few days on the laptop's NVIDIA kernel driver (`nvlddmkm`)
+dropping mid-session (`STOPPED` in `sc query nvlddmkm`, no reboot); the
+driver came back healthy on its own and both were recaptured the same
+way (297 records each, 0 call failures; 1.5B 100% GPU-resident, 7B 81.7%
+— same historical pattern, reported out-of-competition). `analyze_sweep.py`
+now runs against all three and reconfirms **qwen2.5:3b-instruct** as the
+§9.2 pick (McNemar vs 1.5B, p = 0.003) — the model behind P4's τ was not
+selected on stale evidence after all. F2/F6/F8 now draw from the fresh
+`p6_sweep.json`.
+
+**P3 — provenance gate (dev-only, 2026-08-25).** `backend/app/provenance.py`
+extracts every numeric claim from the LLM tier's free-text answer and checks
+it against the tool payload(s) that actually ran, blocking (falling back to
+a deterministic tool-result rendering) if any claim doesn't trace back to
+real data. Only the LLM tier is gated — the lexicon's answers are formatted
+directly from tool output and grounded by construction. `evaluation/gate_p3.py`
+validates the mechanism on the 54 numeric-answer dev tasks: one real claim
+per genuine answer replaced with a fabricated value (synthetic ground truth,
+since a real annotated-hallucination corpus doesn't exist yet — that's P5,
+blocked on external authors), one seed. **Catch rate on synthetic corruption:
+100% (39/39). Block rate on genuine answers: 23.5% (12/51)** — down from an
+initial 34% after fixing three real extraction bugs the first pass surfaced
+(Indian lakh-style comma grouping, e.g. "₹1,03,340.55"; markdown list/ordinal
+labels being mistaken for claims; dates and dict keys never entering the
+grounded set). The residual 12 blocks are a mix the manual-review table in
+`evaluation/results/v3_gates/p3_provenance.md` leaves auditable rather than
+auto-classified — several are the LLM doing its own arithmetic (e.g. a
+computed "shortage of 9.33%") which the gate correctly can't verify, not
+proof of a hallucination. **Not RQ2's confirmed result** — one seed,
+synthetic ground truth, not the 3-seed convention.
+`python evaluation/gate_p3_figure.py` plots these two rates plus the
+gate's cost against the LLM call it checks (`evaluation/results/v3_gates/p3_diagnostic.png`,
+regex/set arithmetic at 468 µs/check vs. ~3.7 s for the LLM call itself —
+about 8,000× cheaper). It is deliberately outside the P7 figure registry
+and is not F5 — same caveats as this paragraph travel with it.
 
 ### Known limitations (say these before an examiner does)
 
@@ -430,10 +487,15 @@ recaptured.
   test still gives p = 0.070 — not significant at 0.05. P5 decides, not
   this README.
 - The model sweep is one family (Qwen 2.5), one temperature, three seeds
-  — and as of 2026-08-21 only one of the three sizes (3B) has been
-  reconfirmed against the current 99-task instrument.
-- The 7B could not stay GPU-resident on this 6 GB laptop in the pre-P2
-  sweep and was reported out of competition — valid accuracy,
-  non-comparable latency; its post-P2 status is unknown until recaptured.
+  — all three sizes are now reconfirmed against the current 99-task
+  instrument (2026-08-25), but it is still one family at one temperature.
+- The 7B could not stay GPU-resident on this 6 GB laptop, in either the
+  pre- or post-P2 sweep (81.7% both times), and is reported out of
+  competition — valid accuracy, non-comparable latency.
+- The provenance gate's false-block rate (23.5%) is measured against
+  synthetic corruption, not real annotated hallucinations — a genuine
+  hallucination might not look like "swap one number for a fabricated
+  one," so the catch rate could be optimistic until P5's real annotated
+  data exists.
 - Data is synthetic (UCI-calibrated, copula, 3% label noise); the bus is
   in-process and at-most-once; replay recovery is manual.
