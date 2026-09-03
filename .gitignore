@@ -26,3 +26,77 @@ venv/
 # the competition instances are not ours to redistribute.
 evaluation/itc2007/vendor/
 evaluation/itc2007/instances/*.ctt
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python test and tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# React / Node dependencies
+node_modules/
+frontend/node_modules/
+frontend-react/node_modules/
+
+# React/Vite build files
+dist/
+build/
+frontend/dist/
+frontend-react/dist/
+.vite/
+frontend/.vite/
+frontend-react/.vite/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local databases and backups
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+mawos-before-postgres.db
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+tmp/
+temp/
+
+# IDE configuration
+.idea/
+.vscode/
+*.iml
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+
+# Local uploads and generated runtime files
+uploads/
+runtime/
