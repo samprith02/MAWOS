@@ -7,6 +7,8 @@ a local Ollama LLM.
 import os
 from pathlib import Path
 
+from sqlalchemy.engine import make_url
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
@@ -106,9 +108,50 @@ def validate_security_configuration() -> None:
     jwt_secret()
     seed_demo_data_enabled()
 
+
+def database_url() -> str:
+    """Return a validated database URL without ever exposing credentials."""
+    configured_url = os.getenv("MAWOS_DATABASE_URL")
+    if configured_url is None or not configured_url.strip():
+        if environment_mode() == "production":
+            raise ConfigurationError(
+                "MAWOS_DATABASE_URL must be explicitly configured in production"
+            )
+        return f"sqlite:///{BASE_DIR / 'mawos.db'}"
+
+    try:
+        parsed = make_url(configured_url)
+    except Exception as exc:
+        raise ConfigurationError("MAWOS_DATABASE_URL is invalid") from exc
+
+    if parsed.drivername == "sqlite":
+        return configured_url
+    if parsed.drivername != "postgresql+psycopg":
+        raise ConfigurationError(
+            "MAWOS_DATABASE_URL must use sqlite or postgresql+psycopg"
+        )
+    return configured_url
+
+
+def database_backend() -> str:
+    """Return only the safe backend name, never connection details."""
+    return make_url(DATABASE_URL).get_backend_name()
+
+
+def validate_database_configuration() -> None:
+    """Validate the selected backend and PostgreSQL seed safeguards."""
+    backend = database_backend()
+    if backend not in {"sqlite", "postgresql"}:
+        raise ConfigurationError("MAWOS_DATABASE_URL selects an unsupported backend")
+    if backend == "postgresql" and seed_demo_data_enabled():
+        raise ConfigurationError(
+            "MAWOS_SEED_DEMO_DATA is not allowed when PostgreSQL is active"
+        )
+
+
 # Shared Institutional Context Store.
-# Default: SQLite file. Set MAWOS_DATABASE_URL=postgresql://... to use Postgres.
-DATABASE_URL = os.getenv("MAWOS_DATABASE_URL", f"sqlite:///{BASE_DIR / 'mawos.db'}")
+# Default: SQLite file outside production. PostgreSQL must use Psycopg 3.
+DATABASE_URL = database_url()
 
 # JWT auth
 JWT_ALGORITHM = "HS256"

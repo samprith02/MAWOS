@@ -8,7 +8,7 @@ from . import config, llm
 from . import router as hybrid_router
 from .agents import get_agents
 from .api.routes import router
-from .database import Base, SessionLocal, engine
+from .database import Base, SessionLocal, engine, verify_existing_schema
 from .models import TimetableSlot
 from .seed import bootstrap_evaluations, seed_all
 
@@ -29,23 +29,32 @@ async def _proactive_loop(agents):
 async def lifespan(app: FastAPI):
     # Validate before touching the database or creating background work.
     config.validate_security_configuration()
-    Base.metadata.create_all(bind=engine)
+    config.validate_database_configuration()
+    database_backend = config.database_backend()
+    if database_backend == "sqlite":
+        # SQLite remains supported for local development and isolated tests.
+        Base.metadata.create_all(bind=engine)
+    else:
+        # PostgreSQL schema is managed by reviewed Alembic migrations, never startup.
+        verify_existing_schema()
+    print(f"[MAWOS] database backend: {database_backend}")
     agents = get_agents()
-    if config.seed_demo_data_enabled():
+    if database_backend == "sqlite" and config.seed_demo_data_enabled():
         freshly_seeded = seed_all()
         if freshly_seeded:
             print("[MAWOS] fresh demo data seeded — bootstrapping evaluations…")
             bootstrap_evaluations(agents)
-    db = SessionLocal()
-    try:
-        if db.query(TimetableSlot).count() == 0:
-            print("[MAWOS] generating institution timetable…")
-            result = agents["timetable_agent"].generate(db)
-            print(f"[MAWOS] timetable: {result['slots_placed']} slots, "
-                  f"{result['placement_rate']}% placed, "
-                  f"{result['solve_ms']} ms")
-    finally:
-        db.close()
+    if database_backend == "sqlite":
+        db = SessionLocal()
+        try:
+            if db.query(TimetableSlot).count() == 0:
+                print("[MAWOS] generating institution timetable…")
+                result = agents["timetable_agent"].generate(db)
+                print(f"[MAWOS] timetable: {result['slots_placed']} slots, "
+                      f"{result['placement_rate']}% placed, "
+                      f"{result['solve_ms']} ms")
+        finally:
+            db.close()
     mode = (f"hybrid router, tau {hybrid_router.TAU:.2f}, escalating to "
             f"{config.OLLAMA_MODEL}") if llm.check_ollama() else \
         "lexicon only (install Ollama + qwen2.5 to enable escalation)"

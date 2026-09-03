@@ -72,6 +72,63 @@ npm run dev
 Port 8000 is the backend API only. Port 5173 is the React website; Vite
 proxies its relative `/api` requests to the backend.
 
+### PostgreSQL: existing MAWOS database
+
+MAWOS uses Psycopg 3 for PostgreSQL. The populated `mawos` database is an
+existing schema, not an application bootstrap target: startup validates it but
+never creates tables, seeds users, or generates a timetable when PostgreSQL is
+active. Use a dedicated non-superuser application role such as `mawos_app`.
+
+Set the ignored local `.env` to use the explicit SQLAlchemy URL format:
+
+```env
+MAWOS_DATABASE_URL=postgresql+psycopg://mawos_app:replace-with-password@127.0.0.1:5432/mawos
+MAWOS_SEED_DEMO_DATA=false
+```
+
+Verify the target before starting the API. This script opens an explicit
+read-only transaction, checks `mawos.public`, compares all model metadata, and
+prints safe row counts without printing credentials:
+
+```bash
+set -a; source .env; set +a
+.venv/bin/python scripts/verify_postgresql.py
+```
+
+Take a full backup before any write operation, including Alembic stamping. Do
+not overwrite an existing backup:
+
+```bash
+test ! -e mawos_before_app_switch.backup && pg_dump \
+  -h 127.0.0.1 -U postgres -d mawos --format=custom \
+  --file=mawos_before_app_switch.backup
+```
+
+After a successful verification and backup, start the backend using the loaded
+environment. It reports `MAWOS database backend: postgresql` without logging
+the connection URL.
+
+```bash
+set -a; source .env; set +a
+.venv/bin/python run.py
+```
+
+Never run `pytest` against populated `mawos`. Unit tests force an isolated
+SQLite database. PostgreSQL integration tests require an explicitly configured
+separate `MAWOS_POSTGRES_TEST_URL` targeting `mawos_test`.
+
+Alembic is configured with an empty baseline revision for the existing public
+schema. After the read-only verification and confirmed backup, review it and
+record the baseline only with:
+
+```bash
+set -a; source .env; set +a
+.venv/bin/alembic -c alembic.ini stamp head
+```
+
+Do not run `alembic upgrade` for this baseline; `stamp` only adds Alembic
+version tracking.
+
 ### Turning the LLM tier on
 
 The router works with **no LLM at all** — the keyword lexicon is the
@@ -430,9 +487,6 @@ docs/                RESEARCH_PLAN_V3.md (the plan, phase-gated) · ARCHITECTURE
                      DATASET_METHODOLOGY · CODE_WALKTHROUGH · PLAN_V2 (historical)
 tests/               44 pytest tests
 ```
-
-Optional: `set MAWOS_DATABASE_URL=postgresql://user:pass@localhost/mawos`
-switches the context store to PostgreSQL with no code changes.
 
 ---
 

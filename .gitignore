@@ -78,6 +78,8 @@ pnpm-debug.log*
 *.sqlite3
 *.sqlite-journal
 mawos-before-postgres.db
+*.backup
+*.dump
 
 # Temporary files
 *.tmp
