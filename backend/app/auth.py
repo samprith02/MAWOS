@@ -41,7 +41,7 @@ def create_token(user: User) -> str:
         "name": user.display_name,
         "exp": dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=config.JWT_EXPIRY_HOURS),
     }
-    return jwt.encode(payload, config.JWT_SECRET, algorithm=config.JWT_ALGORITHM)
+    return jwt.encode(payload, config.jwt_secret(), algorithm=config.JWT_ALGORITHM)
 
 
 def get_current_user(
@@ -51,7 +51,7 @@ def get_current_user(
     if credentials is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
-        payload = jwt.decode(credentials.credentials, config.JWT_SECRET,
+        payload = jwt.decode(credentials.credentials, config.jwt_secret(),
                              algorithms=[config.JWT_ALGORITHM])
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")

@@ -52,6 +52,28 @@ class PlacementAgent(BaseAgent):
                   .filter(PlacementDrive.drive_date >= cutoff)
                   .order_by(PlacementDrive.drive_date).all())
 
+    def _drive_evaluation(self, student, drive, attendance: float) -> tuple[bool, float | None, str]:
+        """Calculate one shortlist result without changing ORM state."""
+        prob = None
+        if self.model is not None:
+            prob = float(self.model.predict_proba(
+                [[student.cgpa, student.backlogs, attendance]])[0][1])
+        reasons = []
+        allowed = (drive.departments == "ALL"
+                   or student.dept_code in drive.departments.split(","))
+        if not allowed:
+            reasons.append(f"drive not open to {student.dept_code}")
+        if student.cgpa < drive.min_cgpa:
+            reasons.append(f"CGPA {student.cgpa} < required {drive.min_cgpa}")
+        if student.backlogs > drive.max_backlogs:
+            reasons.append(f"{student.backlogs} backlogs > allowed {drive.max_backlogs}")
+        if attendance < drive.min_attendance:
+            reasons.append(f"attendance {attendance}% < {drive.min_attendance}%")
+        eligible = not reasons
+        if eligible:
+            reasons.append("meets all drive criteria")
+        return eligible, prob if eligible else None, "; ".join(reasons)
+
     def evaluate_student(self, db, usn: str, drives=None,
                          attendance: float | None = None) -> int:
         student = db.get(Student, usn)
@@ -59,38 +81,22 @@ class PlacementAgent(BaseAgent):
             return 0
         if attendance is None:
             attendance = overall_percentage(db, usn)
-        prob = None
-        if self.model is not None:
-            prob = float(self.model.predict_proba(
-                [[student.cgpa, student.backlogs, attendance]])[0][1])
         if drives is None:
             drives = self._upcoming_drives(db)
         existing = {e.drive_id: e for e in
                     db.query(PlacementShortlist).filter_by(usn=usn).all()}
         changed = 0
         for drive in drives:
-            reasons = []
-            allowed = (drive.departments == "ALL"
-                       or student.dept_code in drive.departments.split(","))
-            if not allowed:
-                reasons.append(f"drive not open to {student.dept_code}")
-            if student.cgpa < drive.min_cgpa:
-                reasons.append(f"CGPA {student.cgpa} < required {drive.min_cgpa}")
-            if student.backlogs > drive.max_backlogs:
-                reasons.append(f"{student.backlogs} backlogs > allowed {drive.max_backlogs}")
-            if attendance < drive.min_attendance:
-                reasons.append(f"attendance {attendance}% < {drive.min_attendance}%")
-            eligible = not reasons
-            if eligible:
-                reasons.append("meets all drive criteria")
+            eligible, probability, reasons = self._drive_evaluation(
+                student, drive, attendance)
             entry = existing.get(drive.id)
             if entry is None:
                 entry = PlacementShortlist(drive_id=drive.id, usn=usn,
                                            eligible=eligible)
                 db.add(entry)
             entry.eligible = eligible
-            entry.ml_probability = prob if eligible else None
-            entry.reasons = "; ".join(reasons)
+            entry.ml_probability = probability
+            entry.reasons = reasons
             changed += 1
         return changed
 
@@ -98,21 +104,29 @@ class PlacementAgent(BaseAgent):
         student = db.get(Student, usn)
         if student is None:
             return []
-        if student.year == 4:
-            self.evaluate_student(db, usn)
-            db.commit()
+        drives = self._upcoming_drives(db)
         entries = {e.drive_id: e for e in
                    db.query(PlacementShortlist).filter_by(usn=usn).all()}
+        calculated = {}
+        if student.year == 4:
+            attendance = overall_percentage(db, usn)
+            calculated = {drive.id: self._drive_evaluation(student, drive, attendance)
+                          for drive in drives}
         out = []
-        for d in self._upcoming_drives(db)[:15]:
+        for d in drives[:15]:
             e = entries.get(d.id)
+            if d.id in calculated:
+                eligible, probability, reasons = calculated[d.id]
+            else:
+                eligible = bool(e and e.eligible)
+                probability = e.ml_probability if e else None
+                reasons = e.reasons if e else \
+                    ("placements open in final year" if student.year != 4 else "")
             out.append({"company": d.company, "role": d.role,
                         "package_lpa": d.package_lpa, "date": str(d.drive_date),
                         "departments": d.departments,
-                        "eligible": bool(e and e.eligible),
-                        "probability": e.ml_probability if e else None,
-                        "reasons": e.reasons if e else
-                        ("placements open in final year" if student.year != 4 else "")})
+                        "eligible": eligible, "probability": probability,
+                        "reasons": reasons})
         return out
 
     def stats(self, db) -> dict:

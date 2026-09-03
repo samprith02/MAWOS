@@ -100,3 +100,5 @@ Thumbs.db
 # Local uploads and generated runtime files
 uploads/
 runtime/
+
+mawos_schema.sql

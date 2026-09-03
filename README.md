@@ -27,15 +27,50 @@ number from this repository.
 
 ## Quickstart
 
+Install backend and React dependencies once:
+
 ```bash
 pip install -r requirements.txt
 python ml/calibrate.py       # estimate distributions from the real UCI dataset
 python ml/train.py           # generate calibrated data + train CART & RF
-python run.py                # -> http://localhost:8000
+cd frontend && npm install
 ```
 
-First launch seeds the institution and solves the timetable. Roughly 60 s of
-one-time setup.
+Create a local environment file before starting the service. Demo data is
+disabled by default; set `MAWOS_SEED_DEMO_DATA=true` only for an explicitly
+requested local demo dataset.
+
+```bash
+cp .env.example .env
+# Set MAWOS_JWT_SECRET to a long random value before any production deployment.
+set -a; source .env; set +a
+```
+
+MAWOS reads environment variables directly; load `.env` into the shell (as
+above) or configure the same values through your process manager.
+
+When demo seeding is explicitly enabled, the first launch seeds the institution
+and solves the timetable. Roughly 60 s of one-time setup.
+
+Run MAWOS in two terminals:
+
+```bash
+# Terminal 1 — backend API
+source .venv/bin/activate
+.venv/bin/python run.py
+# API: http://127.0.0.1:8000
+# Docs: http://127.0.0.1:8000/docs
+```
+
+```bash
+# Terminal 2 — React website
+cd frontend
+npm run dev
+# Website: http://127.0.0.1:5173
+```
+
+Port 8000 is the backend API only. Port 5173 is the React website; Vite
+proxies its relative `/api` requests to the backend.
 
 ### Turning the LLM tier on
 
@@ -47,7 +82,7 @@ escalation tier for the low-confidence remainder (see
 ```bash
 %LOCALAPPDATA%\Ollama\ollama.exe serve          # FIRST — leave running
 %LOCALAPPDATA%\Ollama\ollama.exe pull qwen2.5:3b-instruct
-python run.py
+.venv/bin/python run.py
 ```
 
 `llm.py` caches the Ollama availability check at startup, so the header
@@ -64,6 +99,10 @@ from the GitHub release, `unzip` it to `%LOCALAPPDATA%\Ollama`, verify the
 signature, then run the two commands above.
 
 ### Demo accounts (five different portals, not five skins)
+
+These accounts exist only after starting a development or test environment
+with `MAWOS_SEED_DEMO_DATA=true`. They are never created automatically in
+production.
 
 | Role | Login | What that role can actually do |
 |---|---|---|
@@ -379,7 +418,9 @@ backend/app/
   models.py          shared institutional context store
   seed.py            the synthetic institution
   api/routes.py      role-guarded FastAPI gateway
-frontend/static/     five role portals (no build step)
+frontend/            React/Vite application (served separately on port 5173)
+  src/               role dashboards, components, services, and tests
+  vite.config.js      development API proxy to port 8000
 ml/                  UCI calibration -> copula generation -> CART/RF
 evaluation/          v2 + v3 harnesses; see `evaluation/results/` and PROTOCOL.md
   itc2007/           ITC-2007 CB-CTT harness (P1b): parser, cost model, SA, validator crosscheck

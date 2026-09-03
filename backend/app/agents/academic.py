@@ -6,6 +6,7 @@ from ..models import (
     AttendanceSummary, Department, MarksRecord, Student, Subject,
     TeachingAssignment,
 )
+from ..marks_policy import INTERNALS, MAX_MARKS
 from .attendance import overall_percentage
 from .base import BaseAgent
 
@@ -47,31 +48,56 @@ class AcademicAgent(BaseAgent):
         return list(by_subject.values())
 
     def enter_marks(self, db, entered_by: str, records: list[dict]) -> dict:
-        accepted, rejected = 0, []
+        """Persist a complete, prevalidated sheet in one transaction.
+
+        Validation deliberately finishes before any ORM object is changed so a
+        bad row can never create a partial marks submission.
+        """
+        if not records:
+            raise ValueError("at least one student mark is required")
+        validated = []
+        seen_usns = set()
         for r in records:
             usn = str(r.get("usn", "")).upper().strip()
+            subject_code = str(r.get("subject_code", "")).upper().strip()
+            if not usn:
+                raise ValueError("student USN is required")
+            if usn in seen_usns:
+                raise ValueError("marks sheet contains a duplicate student")
+            seen_usns.add(usn)
+            if not subject_code or db.get(Subject, subject_code) is None:
+                raise ValueError("marks sheet contains an unknown subject")
             if db.get(Student, usn) is None:
-                rejected.append({**r, "reason": "unknown USN"})
-                continue
+                raise ValueError(f"marks sheet contains an unknown student: {usn}")
             try:
                 internal = int(r["internal"])
-                marks = float(r["marks"])
-                assert 1 <= internal <= 3 and 0 <= marks <= 50
-            except (KeyError, ValueError, AssertionError):
-                rejected.append({**r, "reason": "invalid internal/marks"})
-                continue
-            existing = db.query(MarksRecord).filter_by(
-                usn=usn, subject_code=r["subject_code"], internal=internal).first()
-            if existing:
-                existing.marks = marks
-                existing.entered_by = entered_by
-            else:
-                db.add(MarksRecord(usn=usn, subject_code=r["subject_code"],
-                                   internal=internal, marks=marks,
-                                   entered_by=entered_by))
-            accepted += 1
-        db.commit()
-        return {"accepted": accepted, "rejected": rejected}
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError("assessment must be an integer") from exc
+            mark = r.get("marks")
+            if isinstance(mark, bool) or not isinstance(mark, (int, float)):
+                raise ValueError("mark must be a numeric value")
+            if internal not in INTERNALS or not 0 <= mark <= MAX_MARKS:
+                raise ValueError(f"mark must be between 0 and {MAX_MARKS:g}")
+            validated.append((usn, subject_code, internal, float(mark)))
+
+        try:
+            for usn, subject_code, internal, mark in validated:
+                existing = db.query(MarksRecord).filter_by(
+                    usn=usn, subject_code=subject_code, internal=internal).first()
+                if existing:
+                    existing.marks = mark
+                    existing.max_marks = MAX_MARKS
+                    existing.entered_by = entered_by
+                else:
+                    db.add(MarksRecord(usn=usn, subject_code=subject_code,
+                                       internal=internal, marks=mark,
+                                       max_marks=MAX_MARKS,
+                                       entered_by=entered_by))
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
+        return {"accepted": len(validated), "rejected": []}
 
     def class_roster(self, db, dept: str, year: int, section: str) -> list[dict]:
         rows = (db.query(Student).filter_by(dept_code=dept, year=year,

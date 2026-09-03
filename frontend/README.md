@@ -1,8 +1,9 @@
 # MAWOS React frontend
 
 The frontend is a Vite React application using React Router, Tailwind CSS,
-Lucide, Recharts, and a centralized `/api` client. The Vite development
-server proxies `/api` to FastAPI at `http://127.0.0.1:8000`.
+Lucide, Recharts, and a centralized relative `/api` client. The Vite
+development server runs at `http://127.0.0.1:5173` and proxies `/api` to
+FastAPI at `http://127.0.0.1:8000`.
 
 ```bash
 cd frontend
@@ -10,9 +11,8 @@ npm install
 npm run dev
 ```
 
-For production, run `npm run build`; FastAPI serves `frontend/dist` and uses
-an SPA fallback for client routes. Existing `frontend/static/` files are kept
-as the legacy rollback frontend and remain available under `/static`.
+`npm run build` produces a local deployment artifact in `dist/`; it is not
+served by FastAPI and is not committed. Start the React website with Vite.
 
 ## Deliberately unavailable presentation areas
 

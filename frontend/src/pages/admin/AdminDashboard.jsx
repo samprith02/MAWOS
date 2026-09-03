@@ -5,4 +5,67 @@ import { api } from '../../services/api';
 import { unavailableAdminControls } from '../../data/mockAdapter';
 import { useApi } from '../../hooks/useApi';
 import { ConfirmDialog, DashboardCard, DataTable, ErrorState, LoadingSkeleton, PageHeader, StatCard, StatusBadge, Toast } from '../../components/ui';
-export default function AdminDashboard() { const { token } = useAuth(); const [revision, setRevision] = useState(0); const [pending, setPending] = useState(null); const [busy, setBusy] = useState(false); const [toast, setToast] = useState(''); const { data, loading, error } = useApi(() => api.admissions(token), [token, revision]); const action = async () => { setBusy(true); try { const result = await api.adminAction(token, pending.path, pending.body); setToast(result.message || `${pending.label} completed.`); setRevision((v) => v + 1); } catch (e) { setToast(e.message); } finally { setBusy(false); setPending(null); } }; if (loading) return <LoadingSkeleton rows={6} />; if (error) return <ErrorState error={error} />; const stages = Object.entries(data.funnel).filter(([, value]) => typeof value === 'number'); return <><PageHeader title="Admissions administration" eyebrow="Admin portal / Controlled operations"><p className="mt-1 text-sm text-muted">Destructive and workflow actions require confirmation. Sensitive infrastructure controls are not fabricated without APIs.</p></PageHeader><div className="grid gap-4 md:grid-cols-3"><StatCard label="Applications" value={data.applications.length} icon={Users} /><StatCard label="Admissions stages" value={stages.length} icon={Database} tone="teal" /><StatCard label="Protected actions" value="Confirm" icon={ShieldAlert} tone="amber" /></div><div className="mt-4 grid gap-4 xl:grid-cols-3"><DashboardCard title="Admissions pipeline" className="xl:col-span-2"><div className="grid gap-3 sm:grid-cols-4">{stages.map(([stage, count]) => <div className="rounded-lg bg-slate-50 p-4" key={stage}><p className="text-2xl font-bold">{count}</p><p className="mt-1 text-xs capitalize text-muted">{stage.replaceAll('_', ' ')}</p></div>)}</div><div className="mt-5 flex flex-wrap gap-2"><button className="btn-secondary" onClick={() => setPending({ label: 'Verify applications', path: '/admin/admissions/verify-all' })}>Verify all</button><button className="btn-secondary" onClick={() => setPending({ label: 'Run merit ranking', path: '/admin/admissions/run-merit' })}>Run merit</button><button className="btn-primary" onClick={() => setPending({ label: 'Allot seats', path: '/admin/admissions/allot' })}>Allot seats</button><button className="btn-secondary" onClick={() => setPending({ label: 'Simulate day', path: '/admin/simulate-day' })}><Play size={16} />Simulate day</button></div></DashboardCard><DashboardCard title="Unavailable administrative areas"><ul className="space-y-2 text-sm text-muted">{unavailableAdminControls.map((item) => <li key={item}>• {item}</li>)}</ul><p className="mt-4 text-xs text-muted">These require explicit FastAPI endpoints; no client-side mock actions are provided.</p></DashboardCard><DashboardCard title="Applications" className="xl:col-span-3"><DataTable rows={data.applications} columns={[{ key: 'id', label: 'ID' }, { key: 'applicant_name', label: 'Applicant' }, { key: 'dept_code', label: 'Department' }, { key: 'entrance_score', label: 'Score' }, { label: 'Status', render: (app) => <StatusBadge status={app.status || 'pending'}>{app.status || 'pending'}</StatusBadge> }, { label: 'Action', render: (app) => <button className="text-sm font-semibold text-primary" onClick={() => setPending({ label: 'Enrol applicant', path: '/admin/admissions/enrol', body: { application_id: app.id } })}>Enrol</button> }]} /></DashboardCard></div><ConfirmDialog open={Boolean(pending)} title={`${pending?.label}?`} confirmLabel={pending?.label} busy={busy} onClose={() => setPending(null)} onConfirm={action}>This action changes admission workflow data. Review the current stage before continuing.</ConfirmDialog><Toast message={toast} type={toast ? 'success' : 'error'} onClose={() => setToast('')} /></>; }
+
+const isRecord = (value) => value && typeof value === 'object' && !Array.isArray(value);
+const isFiniteNumber = (value) => typeof value === 'number' && Number.isFinite(value);
+
+export function adminAdmissionsModel(data) {
+  if (!isRecord(data) || !isRecord(data.funnel) || !isRecord(data.funnel.stages)
+    || !Array.isArray(data.applications)) {
+    throw new Error('Admissions data returned an invalid dashboard contract.');
+  }
+  if (!Object.values(data.funnel.stages).every(isFiniteNumber)) {
+    throw new Error('Admissions funnel contains an invalid stage count.');
+  }
+  if (!data.applications.every((application) => isRecord(application)
+    && Number.isInteger(application.id) && typeof application.applicant_name === 'string'
+    && typeof application.dept_code === 'string' && isFiniteNumber(application.entrance_score)
+    && typeof application.status === 'string')) {
+    throw new Error('Admissions data contains an invalid application record.');
+  }
+  return { applications: data.applications, stages: Object.entries(data.funnel.stages) };
+}
+
+export default function AdminDashboard() {
+  const { token } = useAuth();
+  const [revision, setRevision] = useState(0);
+  const [pending, setPending] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [toast, setToast] = useState('');
+  const { data, loading, error } = useApi(() => api.admissions(token), [token, revision]);
+  const action = async () => {
+    setBusy(true);
+    try {
+      const result = await api.adminAction(token, pending.path, pending.body);
+      setToast(result.message || `${pending.label} completed.`);
+      setRevision((value) => value + 1);
+    } catch (actionError) {
+      setToast(actionError.message);
+    } finally {
+      setBusy(false);
+      setPending(null);
+    }
+  };
+  if (loading) return <LoadingSkeleton rows={6} />;
+  if (error) return <ErrorState error={error} />;
+
+  let model;
+  try {
+    model = adminAdmissionsModel(data);
+  } catch (contractError) {
+    return <ErrorState error={contractError} />;
+  }
+  const { applications, stages } = model;
+
+  return <>
+    <PageHeader title="Admissions administration" eyebrow="Admin portal / Controlled operations"><p className="mt-1 text-sm text-muted">Destructive and workflow actions require confirmation. Sensitive infrastructure controls are not fabricated without APIs.</p></PageHeader>
+    <div className="grid gap-4 md:grid-cols-3"><StatCard label="Applications" value={applications.length} icon={Users} /><StatCard label="Admissions stages" value={stages.length} icon={Database} tone="teal" /><StatCard label="Protected actions" value="Confirm" icon={ShieldAlert} tone="amber" /></div>
+    <div className="mt-4 grid gap-4 xl:grid-cols-3">
+      <DashboardCard title="Admissions pipeline" className="xl:col-span-2"><div className="grid gap-3 sm:grid-cols-4">{stages.map(([stage, count]) => <div className="rounded-lg bg-slate-50 p-4" key={stage}><p className="text-2xl font-bold">{count}</p><p className="mt-1 text-xs capitalize text-muted">{stage.replaceAll('_', ' ')}</p></div>)}</div><div className="mt-5 flex flex-wrap gap-2"><button className="btn-secondary" onClick={() => setPending({ label: 'Verify applications', path: '/admin/admissions/verify-all' })}>Verify all</button><button className="btn-secondary" onClick={() => setPending({ label: 'Run merit ranking', path: '/admin/admissions/run-merit' })}>Run merit</button><button className="btn-primary" onClick={() => setPending({ label: 'Allot seats', path: '/admin/admissions/allot' })}>Allot seats</button><button className="btn-secondary" onClick={() => setPending({ label: 'Simulate day', path: '/admin/simulate-day' })}><Play size={16} />Simulate day</button></div></DashboardCard>
+      <DashboardCard title="Unavailable administrative areas"><ul className="space-y-2 text-sm text-muted">{unavailableAdminControls.map((item) => <li key={item}>• {item}</li>)}</ul><p className="mt-4 text-xs text-muted">These require explicit FastAPI endpoints; no client-side mock actions are provided.</p></DashboardCard>
+      <DashboardCard title="Applications" className="xl:col-span-3"><DataTable rows={applications} columns={[{ key: 'id', label: 'ID' }, { key: 'applicant_name', label: 'Applicant' }, { key: 'dept_code', label: 'Department' }, { key: 'entrance_score', label: 'Score' }, { label: 'Status', render: (application) => <StatusBadge status={application.status}>{application.status}</StatusBadge> }, { label: 'Action', render: (application) => <button className="text-sm font-semibold text-primary" onClick={() => setPending({ label: 'Enrol applicant', path: '/admin/admissions/enrol', body: { application_id: application.id } })}>Enrol</button> }]} /></DashboardCard>
+    </div>
+    <ConfirmDialog open={Boolean(pending)} title={`${pending?.label}?`} confirmLabel={pending?.label} busy={busy} onClose={() => setPending(null)} onConfirm={action}>This action changes admission workflow data. Review the current stage before continuing.</ConfirmDialog>
+    <Toast message={toast} type={toast ? 'success' : 'error'} onClose={() => setToast('')} />
+  </>;
+}

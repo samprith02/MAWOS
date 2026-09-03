@@ -116,11 +116,13 @@ be able to point at each:
 The model warm-up before the timed loop is not cosmetic: the first call loads
 ~2 GB and would otherwise blow the 32 s HTTP timeout and score as an error.
 
-### 10. `frontend/static/` + `backend/app/api/routes.py`
-Five role portals from one SPA; routes are thin JWT+role-guarded wrappers
-(business logic lives only in agents). Note `_owns_assignment` — faculty can
-mark attendance *only* for subject-sections they are actually assigned to; the
-API returns 403 otherwise, and that is tested.
+### 10. `frontend/src/` + `backend/app/api/routes.py`
+The React/Vite frontend runs separately on port 5173 and proxies relative
+`/api` requests to the FastAPI backend on port 8000. React routes are handled
+by Vite, while backend routes are thin JWT+role-guarded wrappers (business
+logic lives only in agents). Note `_owns_assignment` — faculty can mark
+attendance *only* for subject-sections they are actually assigned to; the API
+returns 403 otherwise, and that is tested.
 
 ## Viva question bank
 

@@ -1,11 +1,8 @@
-"""MAWOS v2 — event-driven multi-agent workflow orchestration for a full
-institution. Single process: agents + bus + context store + web portals."""
+"""MAWOS API — event-driven institutional workflow orchestration."""
 import asyncio
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI
 
 from . import config, llm
 from . import router as hybrid_router
@@ -30,12 +27,15 @@ async def _proactive_loop(agents):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Validate before touching the database or creating background work.
+    config.validate_security_configuration()
     Base.metadata.create_all(bind=engine)
-    freshly_seeded = seed_all()
     agents = get_agents()
-    if freshly_seeded:
-        print("[MAWOS] fresh seed — bootstrapping evaluations…")
-        bootstrap_evaluations(agents)
+    if config.seed_demo_data_enabled():
+        freshly_seeded = seed_all()
+        if freshly_seeded:
+            print("[MAWOS] fresh demo data seeded — bootstrapping evaluations…")
+            bootstrap_evaluations(agents)
     db = SessionLocal()
     try:
         if db.query(TimetableSlot).count() == 0:
@@ -58,23 +58,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="MAWOS", version="2.0.0", lifespan=lifespan)
 app.include_router(router)
 
-if config.STATIC_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(config.STATIC_DIR)), name="static")
 
-if config.FRONTEND_DIST_DIR.exists():
-    # Vite emits immutable assets under /assets.  Keep legacy /static mounted
-    # above so the old frontend remains available as a rollback artifact.
-    app.mount("/assets", StaticFiles(directory=str(config.FRONTEND_DIST_DIR / "assets")),
-              name="frontend-assets")
-
-    @app.get("/{full_path:path}", include_in_schema=False)
-    def react_index(request: Request, full_path: str):
-        # API routes are registered first and therefore never hit this SPA
-        # fallback.  Missing assets must remain 404s rather than returning HTML.
-        if full_path.startswith(("api/", "assets/", "static/")):
-            raise HTTPException(status_code=404, detail="Not found")
-        return FileResponse(str(config.FRONTEND_DIST_DIR / "index.html"))
-elif config.STATIC_DIR.exists():
-    @app.get("/", include_in_schema=False)
-    def legacy_index():
-        return FileResponse(str(config.STATIC_DIR / "index.html"))
+@app.get("/", tags=["service"])
+def service_status():
+    """Backend-only health/status endpoint; the React app runs via Vite."""
+    return {"service": "MAWOS API", "status": "running", "docs": "/docs"}

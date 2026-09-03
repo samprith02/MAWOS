@@ -5,6 +5,9 @@ import tempfile
 from pathlib import Path
 
 _tmpdir = tempfile.mkdtemp(prefix="mawos_test_")
+os.environ["MAWOS_ENV"] = "test"
+os.environ["MAWOS_JWT_SECRET"] = "mawos-test-secret-0123456789-abcdefghijklmnopqrstuvwxyz"
+os.environ["MAWOS_SEED_DEMO_DATA"] = "false"
 os.environ["MAWOS_DATABASE_URL"] = f"sqlite:///{Path(_tmpdir) / 'test.db'}"
 
 ROOT = Path(__file__).resolve().parent.parent

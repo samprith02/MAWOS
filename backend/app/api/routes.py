@@ -1,10 +1,11 @@
 """REST API v2 — role-scoped gateway in front of the agent layer."""
 import datetime as dt
+import math
 
 import numpy as np
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 
 from .. import llm, metrics
@@ -12,7 +13,17 @@ from ..agents import get_agents
 from ..auth import create_token, get_current_user, require_role, verify_password
 from ..database import get_session
 from ..models import (Department, HallTicket, ScholarshipAssessment, Student,
-                      TeachingAssignment, User)
+                      TeachingAssignment, User, Faculty)
+from ..marks_policy import INTERNALS, MAX_MARKS, assessments
+from .schemas import (
+    AdminAdmissionsResponse,
+    AdmissionApplicationResponse,
+    AdmissionsFunnelResponse,
+    DepartmentAnalyticsResponse,
+    FeeCollectionResponse,
+    PlacementStatsResponse,
+    PrincipalAnalyticsResponse,
+)
 
 router = APIRouter(prefix="/api")
 
@@ -193,17 +204,81 @@ async def mark_attendance(sheet: AttendanceSheet,
         db, user.username, records)
 
 
+class MarkEntry(BaseModel):
+    usn: str
+    marks: float
+
+    @field_validator("usn")
+    @classmethod
+    def usn_is_required(cls, value: str) -> str:
+        value = value.strip().upper()
+        if not value:
+            raise ValueError("student USN is required")
+        return value
+
+    @field_validator("marks", mode="before")
+    @classmethod
+    def mark_is_numeric_and_in_range(cls, value):
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError("mark must be a numeric value")
+        if not math.isfinite(value):
+            raise ValueError("mark must be finite")
+        if value < 0 or value > MAX_MARKS:
+            raise ValueError(f"mark must be between 0 and {MAX_MARKS:g}")
+        return float(value)
+
+
 class MarksSheet(BaseModel):
     subject_code: str
     internal: int
-    entries: list[dict]  # [{usn, marks}]
+    entries: list[MarkEntry]
+
+    @field_validator("subject_code")
+    @classmethod
+    def subject_is_required(cls, value: str) -> str:
+        value = value.strip().upper()
+        if not value:
+            raise ValueError("subject code is required")
+        return value
+
+    @field_validator("internal")
+    @classmethod
+    def internal_is_supported(cls, value: int) -> int:
+        if value not in INTERNALS:
+            raise ValueError(f"assessment must be one of {INTERNALS}")
+        return value
+
+    @field_validator("entries")
+    @classmethod
+    def sheet_has_unique_entries(cls, entries: list[MarkEntry]) -> list[MarkEntry]:
+        if not entries:
+            raise ValueError("at least one student mark is required")
+        usns = [entry.usn for entry in entries]
+        if len(usns) != len(set(usns)):
+            raise ValueError("marks sheet contains a duplicate student")
+        return entries
+
+
+class MarksAssessmentPolicy(BaseModel):
+    internal: int
+    label: str
+    max_marks: float
+
+
+class MarksPolicyResponse(BaseModel):
+    assessments: list[MarksAssessmentPolicy]
+
+
+@router.get("/faculty/marks-policy", response_model=MarksPolicyResponse)
+def marks_policy(user: User = Depends(require_role("faculty", "hod", "admin"))):
+    return MarksPolicyResponse(assessments=assessments())
 
 
 def _authorize_marks_sheet(db, user, sheet: MarksSheet) -> None:
     if user.role == "admin":
         return
     subject_code = sheet.subject_code.upper()
-    usns = {str(e.get("usn", "")).upper().strip() for e in sheet.entries}
+    usns = {entry.usn for entry in sheet.entries}
     students = {s.usn: s for s in db.query(Student).filter(Student.usn.in_(usns)).all()}
     if len(students) != len(usns) or "" in usns:
         raise HTTPException(status_code=403,
@@ -234,10 +309,16 @@ def enter_marks(sheet: MarksSheet,
                 user: User = Depends(require_role("faculty", "hod", "admin")),
                 db: Session = Depends(get_session)):
     _authorize_marks_sheet(db, user, sheet)
-    records = [{"usn": e.get("usn"), "subject_code": sheet.subject_code.upper(),
-                "internal": sheet.internal, "marks": e.get("marks")}
-               for e in sheet.entries]
-    return get_agents()["academic_agent"].enter_marks(db, user.username, records)
+    records = [{"usn": entry.usn, "subject_code": sheet.subject_code,
+                "internal": sheet.internal, "marks": entry.marks}
+               for entry in sheet.entries]
+    try:
+        return get_agents()["academic_agent"].enter_marks(
+            db, user.username, records)
+    except ValueError as exc:
+        # Defensive domain validation for callers that bypass the Pydantic
+        # boundary; no records have been staged before this is raised.
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 # ---------- HOD ------------------------------------------------------------------------
@@ -282,25 +363,51 @@ async def hod_generate_timetable_live(
 
 
 # ---------- principal --------------------------------------------------------------------
-@router.get("/principal/analytics")
+@router.get("/principal/analytics", response_model=PrincipalAnalyticsResponse)
 def principal_analytics(user: User = Depends(require_role("principal", "admin")),
                         db: Session = Depends(get_session)):
     agents = get_agents()
-    return {"departments": agents["academic_agent"].institution_analytics(db),
-            "fee_collection": agents["finance_agent"].collection_stats(db),
-            "placements": agents["placement_agent"].stats(db),
-            "admissions": agents["admission_agent"].funnel(db)}
+    department_map = agents["academic_agent"].institution_analytics(db)
+    departments = [DepartmentAnalyticsResponse(
+        **data,
+        faculty=db.query(Faculty).filter_by(dept_code=code).count(),
+    ) for code, data in sorted(department_map.items())]
+    fee_by_department = agents["finance_agent"].collection_stats(db)
+    total_due = round(sum(row["due"] for row in fee_by_department.values()), 2)
+    total_collected = round(sum(row["collected"]
+                                for row in fee_by_department.values()), 2)
+    return PrincipalAnalyticsResponse(
+        departments=departments,
+        fee_collection=FeeCollectionResponse(
+            total_due=total_due,
+            total_collected=total_collected,
+            total_outstanding=round(total_due - total_collected, 2),
+            by_department=fee_by_department,
+        ),
+        placements=PlacementStatsResponse(**agents["placement_agent"].stats(db)),
+        admissions=AdmissionsFunnelResponse(**agents["admission_agent"].funnel(db)),
+    )
 
 
 # ---------- admissions (admin) ---------------------------------------------------------------
-@router.get("/admin/admissions")
+@router.get("/admin/admissions", response_model=AdminAdmissionsResponse)
 def admissions_list(status: str | None = None, dept: str | None = None,
                     user: User = Depends(require_role("admin", "principal")),
                     db: Session = Depends(get_session)):
     agents = get_agents()
-    return {"funnel": agents["admission_agent"].funnel(db),
-            "applications": agents["admission_agent"].list_applications(
-                db, status=status, dept=dept)}
+    applications = agents["admission_agent"].list_applications(
+        db, status=status, dept=dept)
+    return AdminAdmissionsResponse(
+        funnel=AdmissionsFunnelResponse(**agents["admission_agent"].funnel(db)),
+        applications=[AdmissionApplicationResponse(
+            id=row["id"], applicant_name=row["name"], dept_code=row["dept"],
+            category=row["category"], tenth_pct=row["tenth"],
+            twelfth_pct=row["twelfth"], entrance_score=row["entrance"],
+            status=row["status"], merit_score=row["merit_score"],
+            merit_rank=row["merit_rank"], allotted_usn=row["usn"],
+            notes=row["notes"],
+        ) for row in applications],
+    )
 
 
 @router.post("/admin/admissions/verify-all")

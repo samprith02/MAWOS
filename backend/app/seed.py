@@ -103,11 +103,18 @@ def _class_days(n_days: int, end: dt.date) -> list[dt.date]:
 
 
 def seed_all(per_section: int = PER_SECTION) -> bool:
-    """Idempotent. per_section scales the institution
-    (institution size = 5 depts x 4 years x 2 sections x per_section)."""
+    """Seed only an empty database. per_section scales the institution.
+
+    Existing data is left untouched, including when a development operator
+    explicitly enables demo seeding at startup.
+    """
     db = SessionLocal()
     try:
-        if db.query(Student).count() > 0:
+        existing_models = (User, Student, Faculty, Department, Subject,
+                           TeachingAssignment, Application, FeeRecord,
+                           AttendanceRecord, MarksRecord, ExamSchedule,
+                           PlacementDrive)
+        if any(db.query(model).first() is not None for model in existing_models):
             return False
         rng = np.random.default_rng(RNG_SEED)
         pyrng = random.Random(RNG_SEED)

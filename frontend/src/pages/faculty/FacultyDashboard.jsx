@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpenCheck, CheckCircle2, ClipboardPenLine, Users } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -22,9 +22,90 @@ function AttendancePanel({ token, assignment, roster, onSubmitted }) {
   return <div className="mt-5 rounded-lg border bg-slate-50 p-4"><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="font-semibold">Attendance sheet · {assignment.subject}</p><p className="text-xs text-muted">Present: {roster.length - absent.size} · Absent: {absent.size}</p></div><label className="text-sm">Date<input className="field mt-1" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label></div><button className="btn-secondary mt-3" onClick={() => setAbsent(new Set())}>Mark all present</button><div className="mt-3 max-h-72 overflow-auto rounded-lg border bg-white"><table className="w-full text-sm"><thead className="sticky top-0 bg-white text-left text-xs uppercase text-muted"><tr><th className="p-2">Present</th><th>USN</th><th>Name</th><th>Attendance</th></tr></thead><tbody>{roster.map((student) => <tr className="border-t" key={student.usn}><td className="p-2"><input aria-label={`Mark ${student.name} present`} type="checkbox" checked={!absent.has(student.usn)} onChange={() => toggle(student.usn)} /></td><td>{student.usn}</td><td>{student.name}</td><td>{student.attendance}%</td></tr>)}</tbody></table></div>{error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}<button className="btn-primary mt-4" disabled={busy || locked || !roster.length} onClick={submit}>{locked ? 'Submission locked' : busy ? 'Submitting…' : 'Submit attendance'}</button></div>;
 }
 
-function MarksPanel({ token, assignment, roster, onSubmitted }) {
-  const [internal, setInternal] = useState(1); const [maximum, setMaximum] = useState(50); const [marks, setMarks] = useState({}); const [confirm, setConfirm] = useState(false); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
-  const invalid = useMemo(() => Object.values(marks).some((value) => value === '' || Number(value) < 0 || Number(value) > maximum), [marks, maximum]);
-  const save = async () => { setBusy(true); setError(''); try { const entries = roster.map((student) => ({ usn: student.usn, marks: Number(marks[student.usn] ?? 0) })); const r = await api.marks(token, { subject_code: assignment.subject, internal, entries }); onSubmitted(`${r.accepted} marks entries saved for ${assignment.subject}.`); } catch (err) { setError(err.message); } finally { setBusy(false); setConfirm(false); } };
-  return <div className="mt-5 rounded-lg border bg-slate-50 p-4"><div className="flex flex-wrap gap-3"><label className="text-sm">Assessment<select className="field mt-1" value={internal} onChange={(e) => setInternal(Number(e.target.value))}><option value="1">CIE-1</option><option value="2">CIE-2</option><option value="3">CIE-3</option></select></label><label className="text-sm">Maximum marks<input className="field mt-1 w-32" type="number" min="1" value={maximum} onChange={(e) => setMaximum(Number(e.target.value))} /></label></div><div className="mt-4 max-h-72 overflow-auto rounded-lg border bg-white"><table className="w-full text-sm"><thead className="sticky top-0 bg-white text-left text-xs uppercase text-muted"><tr><th className="p-2">USN</th><th>Name</th><th>Marks / {maximum}</th></tr></thead><tbody>{roster.map((student) => <tr className="border-t" key={student.usn}><td className="p-2">{student.usn}</td><td>{student.name}</td><td><input aria-label={`Marks for ${student.name}`} className="field w-24 !py-1" type="number" min="0" max={maximum} value={marks[student.usn] ?? ''} onChange={(e) => setMarks({ ...marks, [student.usn]: e.target.value })} /></td></tr>)}</tbody></table></div>{invalid && <p className="mt-3 text-sm text-red-600">Enter marks between 0 and {maximum} for every student.</p>}{error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}<button className="btn-primary mt-4" disabled={invalid || !roster.length} onClick={() => setConfirm(true)}>Review and submit</button><ConfirmDialog open={confirm} title="Submit marks?" confirmLabel="Save marks" busy={busy} onClose={() => setConfirm(false)} onConfirm={save}>This writes CIE-{internal} marks for {roster.length} students. The server will verify your assignment scope.</ConfirmDialog></div>;
+export function validateMarksDraft(roster, marksDraft, maximum) {
+  const errors = {};
+  let missingCount = 0;
+  for (const student of roster) {
+    const raw = marksDraft[student.usn];
+    if (raw === '' || raw === null || raw === undefined) {
+      errors[student.usn] = 'Mark is required.';
+      missingCount += 1;
+      continue;
+    }
+    const mark = Number(raw);
+    if (!Number.isFinite(mark)) errors[student.usn] = 'Enter a numeric mark.';
+    else if (mark < 0) errors[student.usn] = 'Mark cannot be negative.';
+    else if (mark > maximum) errors[student.usn] = `Mark cannot exceed ${maximum}.`;
+  }
+  return { errors, missingCount };
+}
+
+export function MarksPanel({ token, assignment, roster, onSubmitted }) {
+  const { data: policy, loading: policyLoading, error: policyError } = useApi(() => api.marksPolicy(token), [token]);
+  const [internal, setInternal] = useState(null);
+  const [marksDraft, setMarksDraft] = useState({});
+  const [touched, setTouched] = useState({});
+  const [attempted, setAttempted] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const inputRefs = useRef({});
+  const assessments = Array.isArray(policy?.assessments) ? policy.assessments : [];
+  const selectedInternal = internal ?? assessments[0]?.internal;
+  const assessment = assessments.find((item) => item.internal === selectedInternal);
+  const maximum = assessment?.max_marks;
+  const policyIsValid = assessments.length > 0 && assessments.every((item) => Number.isInteger(item.internal)
+    && typeof item.label === 'string' && Number.isFinite(item.max_marks) && item.max_marks >= 0);
+  const validation = useMemo(() => Number.isFinite(maximum)
+    ? validateMarksDraft(roster, marksDraft, maximum) : { errors: {}, missingCount: 0 }, [roster, marksDraft, maximum]);
+
+  if (policyLoading) return <LoadingSkeleton rows={3} />;
+  if (policyError || !policyIsValid || !assessment) return <ErrorState error={policyError || new Error('Marks policy is unavailable or invalid.')} />;
+
+  const focusFirstInvalid = () => {
+    const firstUsn = roster.find((student) => validation.errors[student.usn])?.usn;
+    inputRefs.current[firstUsn]?.focus();
+  };
+  const review = () => {
+    setAttempted(true);
+    setError('');
+    if (Object.keys(validation.errors).length) {
+      focusFirstInvalid();
+      return;
+    }
+    setConfirm(true);
+  };
+  const save = async () => {
+    setAttempted(true);
+    setError('');
+    if (Object.keys(validation.errors).length) {
+      setConfirm(false);
+      focusFirstInvalid();
+      return;
+    }
+    setBusy(true);
+    try {
+      const entries = roster.map((student) => ({ usn: student.usn, marks: Number(marksDraft[student.usn]) }));
+      const result = await api.marks(token, { subject_code: assignment.subject, internal: selectedInternal, entries });
+      onSubmitted(`${result.accepted} marks entries saved for ${assignment.subject}.`);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setBusy(false);
+      setConfirm(false);
+    }
+  };
+  const updateDraft = (usn, value) => {
+    setMarksDraft((draft) => ({ ...draft, [usn]: value }));
+    setTouched((current) => ({ ...current, [usn]: true }));
+  };
+
+  return <div className="mt-5 rounded-lg border bg-slate-50 p-4">
+    <div className="flex flex-wrap gap-3"><label className="text-sm">Assessment<select className="field mt-1" value={selectedInternal} onChange={(event) => setInternal(Number(event.target.value))}>{assessments.map((item) => <option key={item.internal} value={item.internal}>{item.label}</option>)}</select></label><p className="pt-6 text-sm font-medium">Maximum marks: {maximum}</p></div>
+    <div className="mt-4 max-h-72 overflow-auto rounded-lg border bg-white"><table className="w-full text-sm"><thead className="sticky top-0 bg-white text-left text-xs uppercase text-muted"><tr><th className="p-2">USN</th><th>Name</th><th>Marks / {maximum}</th></tr></thead><tbody>{roster.map((student) => { const fieldError = validation.errors[student.usn]; const showError = fieldError && (attempted || touched[student.usn]); return <tr className="border-t" key={student.usn}><td className="p-2">{student.usn}</td><td>{student.name}</td><td><input ref={(node) => { inputRefs.current[student.usn] = node; }} aria-label={`Marks for ${student.name}`} aria-invalid={Boolean(showError)} className="field w-24 !py-1" type="number" min="0" max={maximum} value={marksDraft[student.usn] ?? ''} onChange={(event) => updateDraft(student.usn, event.target.value)} onBlur={() => setTouched((current) => ({ ...current, [student.usn]: true }))} />{showError && <p role="alert" className="mt-1 text-xs text-red-600">{fieldError}</p>}</td></tr>; })}</tbody></table></div>
+    {attempted && validation.missingCount > 0 && <p className="mt-3 text-sm text-red-600">{validation.missingCount} {validation.missingCount === 1 ? 'student still requires' : 'students still require'} marks.</p>}
+    {error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}
+    <button className="btn-primary mt-4" disabled={busy || !roster.length} onClick={review}>Review and submit</button>
+    <ConfirmDialog open={confirm} title="Submit marks?" confirmLabel="Save marks" busy={busy} onClose={() => setConfirm(false)} onConfirm={save}>This writes {assessment.label} marks out of {maximum} for {roster.length} students. The server will verify your assignment scope.</ConfirmDialog>
+  </div>;
 }

@@ -34,6 +34,7 @@ export const api = {
   facultyOverview: (token) => request('/faculty/overview', { token }),
   roster: (token, dept, year, section) => request(`/faculty/roster/${dept}/${year}/${section}`, { token }),
   attendance: (token, body) => request('/faculty/attendance', { token, body }),
+  marksPolicy: (token) => request('/faculty/marks-policy', { token }),
   marks: (token, body) => request('/faculty/marks', { token, body }),
   hodAnalytics: (token) => request('/hod/analytics', { token }),
   generateTimetable: (token) => request('/hod/generate-timetable', { token, method: 'POST' }),
