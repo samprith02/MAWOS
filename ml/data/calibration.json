@@ -1,0 +1,36 @@
+{
+  "source": "UCI Student Performance (Cortez & Silva 2008), n=1044",
+  "cgpa_mean": 7.585,
+  "cgpa_std": 0.874,
+  "attendance_mean_pct": 95.23,
+  "attendance_std_pct": 6.68,
+  "backlog_probs": [
+    0.8248,
+    0.1149,
+    0.0316,
+    0.0287,
+    0.0
+  ],
+  "correlation_order": [
+    "cgpa",
+    "attendance_pct",
+    "backlogs"
+  ],
+  "correlation_matrix": [
+    [
+      1.0,
+      0.218,
+      -0.3494
+    ],
+    [
+      0.218,
+      1.0,
+      -0.1514
+    ],
+    [
+      -0.3494,
+      -0.1514,
+      1.0
+    ]
+  ]
+}

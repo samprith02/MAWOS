@@ -1,0 +1,13 @@
+# Frozen measuring instrument — PROTOCOL.md §1.5.
+# sha256 of each file with newlines normalised to LF.
+# Regenerate with: python evaluation/freeze_manifest.py --write
+# A regeneration needs a dated entry in PROTOCOL.md §12.
+
+4741dcef80653258b8ea221bdc0e8b4eaced03bf739232404a9530a34860c306  evaluation/benchmark/tasks.py
+066b0039fb37a6870076365cdaa7624270de629bb5bf557aaefa33fbc1c7450d  evaluation/benchmark/distractors.py
+b7f557af87bc257be81157a515228c576d0e614639b058ffb0917412b5d55785  evaluation/benchmark/toolspace.py
+f3177fc555a778791e353f23cc328bfe15f8e16785b2c5cedce7c74494c3597f  evaluation/benchmark/instrumentation.py
+75f7f13de70367854180a2b9cb46d47814c757947843ad341a25bcee0fb436b0  evaluation/benchmark/schedule_metrics.py
+251a45ca0b661d131c0df680644d9ffc0e053e008757e81d102848d59c77462b  evaluation/baselines/lexicon_v2.py
+31798153c681e5a0bbc8974d3c53ea6b4608112d54c90776790c0b74de9bb25b  evaluation/baselines/scheduler_v2.py
+384aa93969e46e95f35ddd25f2f974f6e2b3865917a1d51c2511721d4d31eb6f  backend/app/router_config.json

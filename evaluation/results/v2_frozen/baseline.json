@@ -1,0 +1,522 @@
+{
+  "generated": "2026-08-15T10:34:49",
+  "git_commit": "46a0c6e",
+  "shipped_db_sha256": "2056e866a843d9486fffd14696c550226439a49c695e77df1ec63356a6856daa",
+  "routing": {
+    "n_queries": 108,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "overall": {
+      "mean": 0.8981481481481481,
+      "std": 0.0
+    },
+    "standard": {
+      "mean": 1.0,
+      "std": 0.0
+    },
+    "colloquial": {
+      "mean": 0.6944444444444444,
+      "std": 0.0
+    },
+    "per_seed": [
+      {
+        "seed": 0,
+        "overall": 0.8981481481481481,
+        "standard": 1.0,
+        "colloquial": 0.6944444444444444,
+        "wall_ms": 13.706099999581056
+      },
+      {
+        "seed": 1,
+        "overall": 0.8981481481481481,
+        "standard": 1.0,
+        "colloquial": 0.6944444444444444,
+        "wall_ms": 9.45000000001528
+      },
+      {
+        "seed": 2,
+        "overall": 0.8981481481481481,
+        "standard": 1.0,
+        "colloquial": 0.6944444444444444,
+        "wall_ms": 7.542499999999563
+      }
+    ],
+    "misrouted": [
+      {
+        "id": "att-h03",
+        "query": "How many more classes can I afford to miss?",
+        "expected": "attendance_query",
+        "got": "profile_query",
+        "stratum": "colloquial"
+      },
+      {
+        "id": "fee-h03",
+        "query": "The accounts office is asking for money again, what's pending?",
+        "expected": "fees_query",
+        "got": "profile_query",
+        "stratum": "colloquial"
+      },
+      {
+        "id": "sch-h02",
+        "query": "Will the college waive my fees given my family situation?",
+        "expected": "scholarship_query",
+        "got": "fees_query",
+        "stratum": "colloquial"
+      },
+      {
+        "id": "esc-h01",
+        "query": "How far away are the semester finals?",
+        "expected": "exam_schedule_query",
+        "got": "profile_query",
+        "stratum": "colloquial"
+      },
+      {
+        "id": "esc-h02",
+        "query": "When do we write our papers?",
+        "expected": "exam_schedule_query",
+        "got": "profile_query",
+        "stratum": "colloquial"
+      },
+      {
+        "id": "mrk-h02",
+        "query": "How did the ML test go for me?",
+        "expected": "marks_query",
+        "got": "profile_query",
+        "stratum": "colloquial"
+      },
+      {
+        "id": "tt-h02",
+        "query": "What's my day looking like tomorrow?",
+        "expected": "timetable_query",
+        "got": "profile_query",
+        "stratum": "colloquial"
+      },
+      {
+        "id": "tt-h03",
+        "query": "Where should I be for the first class on Monday?",
+        "expected": "timetable_query",
+        "got": "profile_query",
+        "stratum": "colloquial"
+      },
+      {
+        "id": "ana-h02",
+        "query": "Which section is struggling the most?",
+        "expected": "analytics_query",
+        "got": "profile_query",
+        "stratum": "colloquial"
+      },
+      {
+        "id": "ana-h03",
+        "query": "How does our branch compare this semester?",
+        "expected": "analytics_query",
+        "got": "admission_query",
+        "stratum": "colloquial"
+      },
+      {
+        "id": "ntf-h01",
+        "query": "Did the college send me anything?",
+        "expected": "notification_query",
+        "got": "profile_query",
+        "stratum": "colloquial"
+      }
+    ],
+    "lexicon_sha256": "313809cb23022e267d9afeb00b0c1e7f0dbfcef8cf0a53f7cf8e28a1803a9bbc",
+    "note": "The lexicon is deterministic, so the seed bands are zero by construction. They are reported anyway: a zero variance band is evidence, and it is the contrast against the LLM tier's non-zero band that makes the comparison honest."
+  },
+  "scheduler": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "slots_required": 720,
+    "bands": {
+      "late_start_days": {
+        "mean": 80.8,
+        "std": 5.5641710972974225,
+        "min": 74,
+        "max": 90
+      },
+      "late_start_rate": {
+        "mean": 0.404,
+        "std": 0.027820855486487113,
+        "min": 0.37,
+        "max": 0.45
+      },
+      "idle_gaps_total": {
+        "mean": 223,
+        "std": 11.436782764396638,
+        "min": 207,
+        "max": 250
+      },
+      "idle_gaps_per_section_day": {
+        "mean": 1.115,
+        "std": 0.05718391382198319,
+        "min": 1.035,
+        "max": 1.25
+      },
+      "daily_load_sigma_mean": {
+        "mean": 1.0102784757594514,
+        "std": 0.04348256886869606,
+        "min": 0.957010873563909,
+        "max": 1.094442644141726
+      },
+      "longest_block_mean": {
+        "mean": 2.6325,
+        "std": 0.04148795005781797,
+        "min": 2.565,
+        "max": 2.695
+      },
+      "subject_repeat_days": {
+        "mean": 138.5,
+        "std": 7.060453243241541,
+        "min": 123,
+        "max": 149
+      },
+      "faculty_idle_gaps": {
+        "mean": 322,
+        "std": 11.296016997154352,
+        "min": 304,
+        "max": 338
+      },
+      "placement_rate": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "unplaced": {
+        "mean": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "faculty_conflicts": {
+        "mean": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "section_conflicts": {
+        "mean": 0,
+        "std": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "objective": {
+        "mean": 2441.3113903037806,
+        "std": 42.02728446609724,
+        "min": 2394.3498328268665,
+        "max": 2530.8043494255635
+      },
+      "solve_ms": {
+        "mean": 162.9292099999475,
+        "std": 17.977951675105786,
+        "min": 141.41169999993508,
+        "max": 192.2858000002634
+      }
+    },
+    "per_seed": [
+      {
+        "section_days": 200,
+        "slots_placed": 720,
+        "late_start_days": 83,
+        "late_start_rate": 0.415,
+        "idle_gaps_total": 208,
+        "idle_gaps_per_section_day": 1.04,
+        "idle_gap_distribution": {
+          "0": 70,
+          "1": 73,
+          "2": 38,
+          "3": 17,
+          "4": 2
+        },
+        "daily_load_sigma_mean": 1.094442644141726,
+        "daily_load_min": 1,
+        "daily_load_max": 6,
+        "longest_block_mean": 2.695,
+        "subject_repeat_days": 143,
+        "faculty_idle_gaps": 310,
+        "faculty_conflicts": 0,
+        "section_conflicts": 0,
+        "placement_rate": 1.0,
+        "unplaced": 0,
+        "objective": 2405.7770576566904,
+        "seed": 0,
+        "solve_ms": 188.4291999999732,
+        "restarts_used": 1
+      },
+      {
+        "section_days": 200,
+        "slots_placed": 720,
+        "late_start_days": 89,
+        "late_start_rate": 0.445,
+        "idle_gaps_total": 217,
+        "idle_gaps_per_section_day": 1.085,
+        "idle_gap_distribution": {
+          "0": 58,
+          "1": 82,
+          "2": 46,
+          "3": 13,
+          "4": 1
+        },
+        "daily_load_sigma_mean": 0.9805600788755567,
+        "daily_load_min": 1,
+        "daily_load_max": 6,
+        "longest_block_mean": 2.61,
+        "subject_repeat_days": 149,
+        "faculty_idle_gaps": 315,
+        "faculty_conflicts": 0,
+        "section_conflicts": 0,
+        "placement_rate": 1.0,
+        "unplaced": 0,
+        "objective": 2446.2240315502227,
+        "seed": 1,
+        "solve_ms": 154.53419999994367,
+        "restarts_used": 1
+      },
+      {
+        "section_days": 200,
+        "slots_placed": 720,
+        "late_start_days": 90,
+        "late_start_rate": 0.45,
+        "idle_gaps_total": 225,
+        "idle_gaps_per_section_day": 1.125,
+        "idle_gap_distribution": {
+          "0": 59,
+          "1": 76,
+          "2": 48,
+          "3": 15,
+          "4": 2
+        },
+        "daily_load_sigma_mean": 0.9821897820617277,
+        "daily_load_min": 1,
+        "daily_load_max": 6,
+        "longest_block_mean": 2.67,
+        "subject_repeat_days": 123,
+        "faculty_idle_gaps": 333,
+        "faculty_conflicts": 0,
+        "section_conflicts": 0,
+        "placement_rate": 1.0,
+        "unplaced": 0,
+        "objective": 2456.875912824691,
+        "seed": 2,
+        "solve_ms": 141.41169999993508,
+        "restarts_used": 1
+      },
+      {
+        "section_days": 200,
+        "slots_placed": 720,
+        "late_start_days": 74,
+        "late_start_rate": 0.37,
+        "idle_gaps_total": 224,
+        "idle_gaps_per_section_day": 1.12,
+        "idle_gap_distribution": {
+          "0": 57,
+          "1": 81,
+          "2": 46,
+          "3": 13,
+          "4": 3
+        },
+        "daily_load_sigma_mean": 1.0008899030869567,
+        "daily_load_min": 1,
+        "daily_load_max": 6,
+        "longest_block_mean": 2.625,
+        "subject_repeat_days": 132,
+        "faculty_idle_gaps": 314,
+        "faculty_conflicts": 0,
+        "section_conflicts": 0,
+        "placement_rate": 1.0,
+        "unplaced": 0,
+        "objective": 2394.3559612347826,
+        "seed": 3,
+        "solve_ms": 152.9937999998765,
+        "restarts_used": 1
+      },
+      {
+        "section_days": 200,
+        "slots_placed": 720,
+        "late_start_days": 80,
+        "late_start_rate": 0.4,
+        "idle_gaps_total": 207,
+        "idle_gaps_per_section_day": 1.035,
+        "idle_gap_distribution": {
+          "0": 64,
+          "1": 79,
+          "2": 45,
+          "3": 10,
+          "4": 2
+        },
+        "daily_load_sigma_mean": 1.0883745820671664,
+        "daily_load_min": 1,
+        "daily_load_max": 6,
+        "longest_block_mean": 2.655,
+        "subject_repeat_days": 140,
+        "faculty_idle_gaps": 324,
+        "faculty_conflicts": 0,
+        "section_conflicts": 0,
+        "placement_rate": 1.0,
+        "unplaced": 0,
+        "objective": 2394.3498328268665,
+        "seed": 4,
+        "solve_ms": 192.2858000002634,
+        "restarts_used": 1
+      },
+      {
+        "section_days": 200,
+        "slots_placed": 720,
+        "late_start_days": 82,
+        "late_start_rate": 0.41,
+        "idle_gaps_total": 221,
+        "idle_gaps_per_section_day": 1.105,
+        "idle_gap_distribution": {
+          "0": 62,
+          "1": 72,
+          "2": 51,
+          "3": 13,
+          "4": 2
+        },
+        "daily_load_sigma_mean": 1.019343052741746,
+        "daily_load_min": 1,
+        "daily_load_max": 6,
+        "longest_block_mean": 2.665,
+        "subject_repeat_days": 141,
+        "faculty_idle_gaps": 338,
+        "faculty_conflicts": 0,
+        "section_conflicts": 0,
+        "placement_rate": 1.0,
+        "unplaced": 0,
+        "objective": 2460.7372210966982,
+        "seed": 5,
+        "solve_ms": 152.16670000017984,
+        "restarts_used": 1
+      },
+      {
+        "section_days": 200,
+        "slots_placed": 720,
+        "late_start_days": 75,
+        "late_start_rate": 0.375,
+        "idle_gaps_total": 223,
+        "idle_gaps_per_section_day": 1.115,
+        "idle_gap_distribution": {
+          "0": 52,
+          "1": 85,
+          "2": 52,
+          "3": 10,
+          "4": 1
+        },
+        "daily_load_sigma_mean": 1.0017351067875446,
+        "daily_load_min": 1,
+        "daily_load_max": 6,
+        "longest_block_mean": 2.565,
+        "subject_repeat_days": 134,
+        "faculty_idle_gaps": 315,
+        "faculty_conflicts": 0,
+        "section_conflicts": 0,
+        "placement_rate": 1.0,
+        "unplaced": 0,
+        "objective": 2398.694042715018,
+        "seed": 6,
+        "solve_ms": 178.29419999998208,
+        "restarts_used": 1
+      },
+      {
+        "section_days": 200,
+        "slots_placed": 720,
+        "late_start_days": 84,
+        "late_start_rate": 0.42,
+        "idle_gaps_total": 225,
+        "idle_gaps_per_section_day": 1.125,
+        "idle_gap_distribution": {
+          "0": 58,
+          "1": 81,
+          "2": 41,
+          "3": 18,
+          "4": 2
+        },
+        "daily_load_sigma_mean": 0.9953006640013722,
+        "daily_load_min": 1,
+        "daily_load_max": 6,
+        "longest_block_mean": 2.655,
+        "subject_repeat_days": 144,
+        "faculty_idle_gaps": 333,
+        "faculty_conflicts": 0,
+        "section_conflicts": 0,
+        "placement_rate": 1.0,
+        "unplaced": 0,
+        "objective": 2480.120265600549,
+        "seed": 7,
+        "solve_ms": 147.00039999979708,
+        "restarts_used": 1
+      },
+      {
+        "section_days": 200,
+        "slots_placed": 720,
+        "late_start_days": 77,
+        "late_start_rate": 0.385,
+        "idle_gaps_total": 250,
+        "idle_gaps_per_section_day": 1.25,
+        "idle_gap_distribution": {
+          "0": 49,
+          "1": 79,
+          "2": 46,
+          "3": 25,
+          "4": 1
+        },
+        "daily_load_sigma_mean": 0.957010873563909,
+        "daily_load_min": 1,
+        "daily_load_max": 6,
+        "longest_block_mean": 2.565,
+        "subject_repeat_days": 143,
+        "faculty_idle_gaps": 304,
+        "faculty_conflicts": 0,
+        "section_conflicts": 0,
+        "placement_rate": 1.0,
+        "unplaced": 0,
+        "objective": 2530.8043494255635,
+        "seed": 8,
+        "solve_ms": 145.67059999990306,
+        "restarts_used": 1
+      },
+      {
+        "section_days": 200,
+        "slots_placed": 720,
+        "late_start_days": 74,
+        "late_start_rate": 0.37,
+        "idle_gaps_total": 230,
+        "idle_gaps_per_section_day": 1.15,
+        "idle_gap_distribution": {
+          "0": 58,
+          "1": 76,
+          "2": 45,
+          "3": 20,
+          "4": 1
+        },
+        "daily_load_sigma_mean": 0.9829380702668089,
+        "daily_load_min": 1,
+        "daily_load_max": 6,
+        "longest_block_mean": 2.62,
+        "subject_repeat_days": 136,
+        "faculty_idle_gaps": 334,
+        "faculty_conflicts": 0,
+        "section_conflicts": 0,
+        "placement_rate": 1.0,
+        "unplaced": 0,
+        "objective": 2445.175228106724,
+        "seed": 9,
+        "solve_ms": 176.50549999962095,
+        "restarts_used": 1
+      }
+    ]
+  }
+}

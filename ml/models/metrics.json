@@ -1,0 +1,54 @@
+{
+  "scholarship_cart": {
+    "test_accuracy": 0.9,
+    "precision": 0.8958,
+    "recall": 0.8958,
+    "f1": 0.8958,
+    "cv5_mean_accuracy": 0.8525,
+    "cv5_std": 0.033,
+    "confusion_matrix": [
+      [
+        47,
+        5
+      ],
+      [
+        5,
+        43
+      ]
+    ],
+    "n_train": 400,
+    "n_test": 100,
+    "features": [
+      "cgpa",
+      "attendance_pct",
+      "family_income",
+      "backlogs",
+      "fees_cleared"
+    ]
+  },
+  "placement_rf": {
+    "test_accuracy": 0.82,
+    "precision": 0.7959,
+    "recall": 0.8298,
+    "f1": 0.8125,
+    "cv5_mean_accuracy": 0.8083,
+    "cv5_std": 0.0118,
+    "confusion_matrix": [
+      [
+        129,
+        30
+      ],
+      [
+        24,
+        117
+      ]
+    ],
+    "n_train": 1200,
+    "n_test": 300,
+    "features": [
+      "cgpa",
+      "backlogs",
+      "attendance_pct"
+    ]
+  }
+}

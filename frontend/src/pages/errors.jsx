@@ -1,0 +1,4 @@
+import { Link } from 'react-router-dom';
+import { ShieldX, TriangleAlert } from 'lucide-react';
+export function ForbiddenPage() { return <section className="mx-auto mt-16 max-w-lg text-center"><ShieldX className="mx-auto text-red-500" size={48} /><h1 className="mt-4 text-2xl font-bold">403 — Access denied</h1><p className="mt-2 text-muted">Your role does not have access to this workspace.</p><Link className="btn-primary mt-6" to="/">Return to dashboard</Link></section>; }
+export function NotFoundPage() { return <section className="mx-auto mt-16 max-w-lg text-center"><TriangleAlert className="mx-auto text-amber-500" size={48} /><h1 className="mt-4 text-2xl font-bold">404 — Page not found</h1><p className="mt-2 text-muted">The page may have moved or is unavailable for your role.</p><Link className="btn-primary mt-6" to="/">Return to dashboard</Link></section>; }
