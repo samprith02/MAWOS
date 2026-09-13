@@ -15,7 +15,8 @@ they are one agent, not two. Merging the agent does not merge the tools:
 so the dev benchmark's gold labels are untouched.
 """
 from .. import config
-from ..models import ExamSchedule, HallTicket, ScholarshipAssessment, Student
+from ..models import (EligibilityOverride, ExamSchedule, HallTicket,
+                      ScholarshipAssessment, Student)
 from .attendance import overall_percentage
 from .base import BaseAgent
 from .finance import fees_cleared
@@ -62,7 +63,18 @@ class EligibilityAgent(BaseAgent):
         if not cleared:
             reasons.append("overdue fees pending")
         eligible = not reasons
-        if eligible:
+        # A recorded manual override (issue_eligibility_override) may flip an
+        # otherwise-ineligible verdict to eligible. It does not rewrite the
+        # rule: the blocking reasons above stay in the record, with the
+        # override appended, so the audit trail shows what was waived and by
+        # whom rather than silently recomputing a clean verdict.
+        override = (db.query(EligibilityOverride)
+                      .filter_by(usn=usn, semester=student.semester)
+                      .order_by(EligibilityOverride.id.desc()).first())
+        if override is not None and not eligible:
+            eligible = True
+            reasons.append(f"overridden by {override.decided_by}: {override.reason}")
+        elif eligible:
             reasons.append(f"attendance {attendance}% ok; fees cleared")
         ticket = db.query(HallTicket).filter_by(usn=usn,
                                                 semester=student.semester).first()
@@ -79,6 +91,50 @@ class EligibilityAgent(BaseAgent):
                   .order_by(ExamSchedule.exam_date).all())
         return [{"subject": e.subject_code, "date": str(e.exam_date),
                  "session": e.session} for e in rows]
+
+    # ---------- write tool (v5 chat/guard path) ---------------------------------
+    def override(self, db, usn: str, exam: str | None, reason: str | None,
+                 decided_by: str = "system") -> dict:
+        """Manual override of a hall-ticket verdict (backend/app/agents/tools.py:
+        `issue_eligibility_override`). Records an `EligibilityOverride` row --
+        `evaluate_hall_ticket` is the only place that interprets it -- then
+        re-runs that same evaluation so `changed` reports the real post-write
+        verdict rather than assuming the override took effect (it is a no-op
+        on an already-eligible student, and that must show up as such).
+        """
+        usn = str(usn or "").upper().strip()
+        student = db.get(Student, usn)
+        if student is None:
+            return {"applied": False, "changed": [],
+                    "detail": f"unknown student {usn}"}
+        reason = str(reason or "").strip()
+        if not reason:
+            return {"applied": False, "changed": [],
+                    "detail": "a reason is required"}
+        exam = str(exam or "").strip()
+        before = self.evaluate_hall_ticket(db, usn)
+        # `db` is autoflush=False (backend/app/database.py) and this is the
+        # only call site that runs `evaluate_hall_ticket` twice in one
+        # session: without an explicit flush here, the second call's query
+        # for the HallTicket row this one may have just created returns None
+        # (the pending insert isn't visible yet) and adds a SECOND row for
+        # the same (usn, semester), which then fails the unique constraint
+        # at commit. Flush so the row -- and its id -- is visible to the
+        # re-evaluation below.
+        db.flush()
+        db.add(EligibilityOverride(usn=usn, semester=student.semester, exam=exam,
+                                   reason=reason, decided_by=decided_by))
+        db.flush()
+        after = self.evaluate_hall_ticket(db, usn)
+        db.commit()
+        return {"applied": True,
+                "changed": [{"usn": usn, "semester": student.semester,
+                             "exam": exam, "eligible_before": before["eligible"],
+                             "eligible_after": after["eligible"],
+                             "reasons": after["reasons"]}],
+                "detail": (f"override recorded by {decided_by} for {usn}"
+                          + (f" ({exam})" if exam else "") + f": {reason} -- "
+                          + f"eligible {before['eligible']} -> {after['eligible']}")}
 
     # ---------- scholarship scoring -----------------------------------------
     def evaluate_scholarship(self, db, usn: str) -> dict:

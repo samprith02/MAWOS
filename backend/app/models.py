@@ -237,6 +237,26 @@ class HallTicket(Base):
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
 
+class EligibilityOverride(Base):
+    """A manual override of a hall-ticket verdict (v5 write tool
+    `issue_eligibility_override`, hod/principal only -- the highest-
+    privilege write in the system). `EligibilityAgent.evaluate_hall_ticket`
+    checks for the latest override on (usn, semester) and lets it flip an
+    otherwise-ineligible verdict to eligible; it does not touch the
+    attendance/fees rule itself, so the original blocking reasons stay
+    visible in `HallTicket.reasons` alongside the override note -- this is
+    an audited exception, not a rewritten policy.
+    """
+    __tablename__ = "eligibility_overrides"
+    id = Column(Integer, primary_key=True)
+    usn = Column(String(16), ForeignKey("students.usn"), nullable=False, index=True)
+    semester = Column(Integer, nullable=False)
+    exam = Column(String(64), nullable=False, default="")
+    reason = Column(Text, nullable=False)
+    decided_by = Column(String(64), nullable=False)
+    created_at = Column(DateTime, default=utcnow, index=True)
+
+
 class ScholarshipAssessment(Base):
     __tablename__ = "scholarship_assessments"
     __table_args__ = (UniqueConstraint("usn", "scheme", name="uq_scholarship_scheme"),)

@@ -55,10 +55,27 @@ def test_full_cascade_under_one_workflow(agents, db):
 def test_tool_permissions_lock_students_to_self(agents, db):
     from backend.app.agents import tools
     student1 = db.query(User).filter_by(username=STUDENT_OK).first()
-    # a student asking for another student's record still gets their OWN data
-    result = tools.execute(db, agents, student1, "get_attendance",
-                           {"usn": STUDENT_RISK})
-    assert result.get("usn") == STUDENT_OK
-    # and role-gated tools refuse
+    # v5 CHANGE (was: silent coercion to the caller's own USN).
+    # A student asking for another student's record is now DENIED outright.
+    # v3 returned the caller's OWN data under the requested USN, which in an
+    # LLM-driven system is a grounding hazard: the model would faithfully
+    # report the wrong student's name against the right student's numbers.
+    # The denial is also logged as a GuardDecision, so the attempt is
+    # countable -- a silent coercion never was.
+    denied_other = tools.execute(db, agents, student1, "get_attendance",
+                                 {"usn": STUDENT_RISK})
+    assert denied_other.get("reason_code") == "OUT_OF_SCOPE"
+    # the student CAN still read their own record
+    own = tools.execute(db, agents, student1, "get_attendance",
+                        {"usn": STUDENT_OK})
+    assert own.get("usn") == STUDENT_OK
+    # and role-gated tools still refuse
     denied = tools.execute(db, agents, student1, "get_institution_analytics", {})
-    assert "not permitted" in denied.get("error", "")
+    # v5 CHANGE: the resume brief's own text asserted the OLD pre-guard
+    # message ("not permitted"); guard.authorise's actual denial detail is
+    # "role '<role>' may not use <capability>" (backend/app/guard.py
+    # _decide). Assert the reason_code -- the stable, documented contract
+    # (guard.REASON_NOT_PERMITTED) -- rather than a message string that no
+    # longer matches.
+    assert denied.get("reason_code") == "NOT_PERMITTED"
+    assert "may not use" in denied.get("error", "")

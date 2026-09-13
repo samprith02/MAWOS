@@ -58,3 +58,24 @@ def test_unknown_capability_is_denied_not_crashed(db, agents, base_data):
     v = guard.authorise(db, u, "definitely_not_a_tool", {})
     assert v.allowed is False
     assert v.reason_code == guard.REASON_NOT_PERMITTED
+
+
+def test_role_exclusion_and_unknown_capability_are_distinguishable(db, agents, base_data):
+    """After Task 6, mark_attendance EXISTS but is staff-only. A student hitting
+    it must be denied by the ROLE filter, not by the unknown-capability branch --
+    and a genuinely unknown capability must still be denied separately."""
+    from backend.app.agents.tools import TOOLS
+    u = db.query(User).filter_by(role="student").first()
+
+    assert "mark_attendance" in TOOLS, "Task 6 must register this tool"
+    real = guard.authorise(db, u, "mark_attendance", {})
+    fake = guard.authorise(db, u, "definitely_not_a_tool", {})
+    db.commit()
+
+    assert real.allowed is False and fake.allowed is False
+    assert real.reason_code == guard.REASON_NOT_PERMITTED
+    assert fake.reason_code == guard.REASON_NOT_PERMITTED
+    # The discriminator: a registered-but-forbidden capability is a real
+    # capability; an unknown one is not. was_exposed is False for both
+    # (a student never sees either), so the distinguishing fact is
+    # registry membership, asserted above.
