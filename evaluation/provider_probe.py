@@ -346,14 +346,19 @@ def score(records: list[dict]) -> dict:
     # own rate-pacing sleep, which hosted providers require and local ones
     # do not, so wall-clock M7 was not provider-agnostic and the two
     # classes were never comparable on it. Completed runs are NOT re-scored.
+    # Population is UNCHANGED from the prior definition: category A_single
+    # only (`a`), same as the wall-clock M7 it replaces. D14 authorises a
+    # measure change, not a population change — those are two different
+    # things and only the measure is being re-registered here.
     item_provider_s = sorted(
         sum(x["latency_ms"] for x in r["rounds"] if "latency_ms" in x) / 1000.0
-        for r in records
+        for r in a
     )
-    m7 = statistics.median(item_provider_s) if item_provider_s else 0.0
-    # Retained as a diagnostic so the pacing overhead stays visible.
-    item_wall_s = sorted(r["wall_ms"] / 1000.0 for r in records if "wall_ms" in r)
-    m7_wall = statistics.median(item_wall_s) if item_wall_s else 0.0
+    m7 = statistics.median(item_provider_s) if item_provider_s else float("inf")
+    # Retained as a diagnostic, same population, so it is a like-for-like
+    # comparison against the historical wall-clock M7 values.
+    item_wall_s = sorted(r["wall_ms"] / 1000.0 for r in a if "wall_ms" in r)
+    m7_wall = statistics.median(item_wall_s) if item_wall_s else float("inf")
 
     call_lat = sorted(x["latency_ms"] for r in records
                       for x in r["rounds"] if "latency_ms" in x)

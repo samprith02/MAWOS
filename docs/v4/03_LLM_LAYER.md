@@ -110,9 +110,17 @@ flatter the local models either.
 **What changed.** M7 is redefined from wall-clock time to **summed provider
 latency**: the p50, over items, of `sum(round.latency_ms)` for that item's
 rounds. The threshold value (6.0 s, per §2.3.1) is unchanged — only the
-*measure* changed, not the bound. `evaluation/provider_probe.py::score()`
-retains the old wall-clock figure as a diagnostic field, `m7_wall_p50_s`,
-so the harness's own pacing overhead stays visible instead of disappearing.
+*measure* changed, not the bound. **The population is also unchanged: M7
+remains scoped to category A_single (the single-tool-turn items) only,
+exactly as the wall-clock M7 it replaces was.** D14 authorises changing the
+measure, not the population — those are two independent things, and
+bundling an unregistered population change into a registered measure change
+would itself be the kind of instrument drift PROTOCOL §1 rule 8 exists to
+prevent. `evaluation/provider_probe.py::score()` retains the old wall-clock
+figure as a diagnostic field, `m7_wall_p50_s`, computed over the *same*
+A_single population, so it is a like-for-like comparison against the
+historical wall-clock values (and does in fact reproduce them exactly,
+modulo floating-point rounding) rather than a different number entirely.
 
 **Why it is structural, not empirical.** Wall-clock time includes this
 harness's own rate-pacing `sleep`, inserted between calls to respect a
