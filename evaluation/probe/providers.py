@@ -175,16 +175,46 @@ class OpenAICompatibleProvider(Provider):
     Untested at R0.5: no credential for any of them was present in the
     environment. Implemented anyway so that testing one later is a config
     change, not a code change.
+
+    Client-side pacing and 429 retry, added 2026-09-14 for the first real
+    run of this class (Groq): free hosted tiers are requests-per-minute
+    limited (Groq's is 30/min), and without pacing measure 9 (hard-failure
+    rate) records how hard this client hammers the endpoint rather than
+    provider reliability -- exactly the reasoning already applied to
+    `GeminiProvider` below, mirrored here rather than re-derived. Every 429
+    that survives the retries is still counted as a hard failure exactly
+    as specified; pacing reduces spurious failures, it does not hide real
+    ones.
     """
 
     kind = "hosted"
 
+    #: Task 2a: exactly 2 retries on 429, sleep 5 s then 15 s -- a fixed
+    #: schedule, not multiplied by attempt (unlike GeminiProvider's, which
+    #: scales). Chosen deliberately smaller than Gemini's because Groq's
+    #: free tier resets every 60 s (RPM, not RPD), so two bounded waits are
+    #: enough to clear a transient hit without turning one stalled item
+    #: into a multi-minute stall.
+    RATE_BACKOFF_SCHEDULE_S = (5.0, 15.0)
+
     def __init__(self, model: str, base_url: str, key_env: str,
-                 label: str | None = None):
+                 label: str | None = None, min_interval_s: float | None = None):
         self.model = model
         self.base_url = base_url.rstrip("/")
         self.key_env = key_env
         self.name = label or f"openai-compat:{model}"
+        # Client-side pacing, same pattern as `GeminiProvider._pace()`.
+        # Default 2.5 s: Groq's free tier is 30 req/min (2.0 s floor), so
+        # 2.5 s leaves headroom. Overridable via MAWOS_OPENAI_PACING_S so a
+        # different hosted candidate's tier can be paced without a code
+        # change.
+        self.min_interval_s = (min_interval_s if min_interval_s is not None
+                                else float(os.getenv("MAWOS_OPENAI_PACING_S",
+                                                      "2.5")))
+        self.max_rate_retries = len(self.RATE_BACKOFF_SCHEDULE_S)
+        self._last_call = 0.0
+        self._rate_limit_hits = 0
+        self._rate_limit_exhausted = 0
 
     def availability(self) -> tuple[bool, str]:
         if not os.getenv(self.key_env):
@@ -200,28 +230,106 @@ class OpenAICompatibleProvider(Provider):
         except Exception as exc:
             return False, f"{type(exc).__name__}: {exc}"
 
+    def _pace(self) -> None:
+        wait = self.min_interval_s - (time.monotonic() - self._last_call)
+        if wait > 0:
+            time.sleep(wait)
+        self._last_call = time.monotonic()
+
+    @staticmethod
+    def _prepare_messages(messages: list[dict]) -> list[dict]:
+        """Translate the harness's provider-agnostic message shape into a
+        strictly OpenAI-compliant one.
+
+        `run_item()` builds messages once and hands the same shape to every
+        provider (Ollama, Gemini, this one). Ollama and Gemini both tolerate
+        or translate `tool_calls[].function.arguments` as a raw dict; the
+        real OpenAI Chat Completions schema Groq/OpenRouter/GitHub Models
+        validate against does not -- it requires `arguments` to be a JSON
+        *string*, and every `tool_calls[]` entry to carry `id`/`type`, with
+        the following `role: tool` message echoing that `id` back as
+        `tool_call_id`. Discovered live against Groq (HTTP 400, one field
+        at a time: `arguments` must be a string, then `id` is missing).
+        Handled here, not in `run_item()`, so Ollama's and Gemini's already
+        -working translation of the same generic shape is untouched.
+        """
+        out: list[dict] = []
+        pending_ids: list[str] = []
+        for m in messages:
+            if m.get("role") == "assistant" and m.get("tool_calls"):
+                new_calls = []
+                ids = []
+                for i, c in enumerate(m["tool_calls"]):
+                    fn = c.get("function", {})
+                    args = fn.get("arguments")
+                    if not isinstance(args, str):
+                        args = json.dumps(args if args is not None else {})
+                    cid = (c.get("_meta") or {}).get("id") \
+                        or f"call_{len(out)}_{i}"
+                    ids.append(cid)
+                    new_calls.append({"id": cid, "type": "function",
+                                      "function": {"name": fn.get("name", ""),
+                                                   "arguments": args}})
+                out.append({"role": "assistant",
+                           "content": m.get("content") or "",
+                           "tool_calls": new_calls})
+                pending_ids = list(ids)
+            elif m.get("role") == "tool":
+                nm = {k: v for k, v in m.items() if k != "_meta"}
+                if pending_ids:
+                    nm["tool_call_id"] = pending_ids.pop(0)
+                out.append(nm)
+            else:
+                out.append(m)
+        return out
+
     def chat(self, messages, tools, seed, temperature=0.0,
              timeout=120.0) -> Reply:
-        body = {"model": self.model, "messages": messages,
+        body = {"model": self.model,
+                "messages": self._prepare_messages(messages),
                 "temperature": temperature, "seed": seed}
         if tools:
             body["tools"] = tools
-        t0 = time.perf_counter()
-        try:
-            r = httpx.post(f"{self.base_url}/chat/completions", json=body,
-                           timeout=timeout, headers={
-                               "Authorization":
-                                   f"Bearer {os.environ[self.key_env]}"})
-        except httpx.TimeoutException as exc:
-            return Reply(latency_ms=(time.perf_counter() - t0) * 1000,
-                         error=str(exc)[:300], error_kind="timeout")
-        except Exception as exc:
-            return Reply(latency_ms=(time.perf_counter() - t0) * 1000,
-                         error=f"{type(exc).__name__}: {exc}"[:300],
-                         error_kind="transport")
-        ms = (time.perf_counter() - t0) * 1000
+
+        def _post():
+            self._pace()
+            t0 = time.perf_counter()
+            try:
+                resp = httpx.post(f"{self.base_url}/chat/completions",
+                                  json=body, timeout=timeout, headers={
+                                      "Authorization":
+                                          f"Bearer {os.environ[self.key_env]}"})
+            except httpx.TimeoutException as exc:
+                return None, (time.perf_counter() - t0) * 1000, \
+                    ("timeout", str(exc)[:300])
+            except Exception as exc:
+                return None, (time.perf_counter() - t0) * 1000, \
+                    ("transport", f"{type(exc).__name__}: {exc}"[:300])
+            return resp, (time.perf_counter() - t0) * 1000, None
+
+        r, ms, err = _post()
+        if err:
+            return Reply(latency_ms=ms, error=err[1], error_kind=err[0])
+
+        # Bounded retry on 429 -- same rationale and shape as
+        # `GeminiProvider.chat()`: a transient free-tier quota hit must not
+        # contaminate M2-M6 with an infrastructure artifact. Every 429 is
+        # counted; only a call that still fails after the retries is a hard
+        # failure for M9.
+        attempt = 0
+        while r is not None and r.status_code == 429 \
+                and attempt < self.max_rate_retries:
+            self._rate_limit_hits += 1
+            time.sleep(self.RATE_BACKOFF_SCHEDULE_S[attempt])
+            attempt += 1
+            r, ms, err = _post()
+            if err:
+                return Reply(latency_ms=ms, error=err[1], error_kind=err[0])
+
         if r.status_code != 200:
             kind = "ratelimit" if r.status_code == 429 else "http"
+            if kind == "ratelimit":
+                self._rate_limit_exhausted += 1
             return Reply(latency_ms=ms,
                          error=f"HTTP {r.status_code}: {r.text[:200]}",
                          error_kind=kind)
@@ -243,12 +351,21 @@ class OpenAICompatibleProvider(Provider):
                     parsed, err = {}, f"arguments not valid JSON: {exc}"
             if not isinstance(parsed, dict):
                 parsed, err = {}, "arguments not an object"
-            calls.append(ToolCall(fn.get("name", ""), parsed, args, err))
+            calls.append(ToolCall(fn.get("name", ""), parsed, args, err,
+                                  meta={"id": c.get("id")}))
         usage = payload.get("usage") or {}
         return Reply(content=(choice.get("content") or "").strip(),
                      tool_calls=calls, latency_ms=ms,
                      prompt_tokens=usage.get("prompt_tokens", 0),
                      completion_tokens=usage.get("completion_tokens", 0))
+
+    def fingerprint(self) -> dict:
+        fp = super().fingerprint()
+        fp.update(model=self.model, base_url=self.base_url,
+                  min_interval_s=self.min_interval_s,
+                  rate_limit_hits=self._rate_limit_hits,
+                  rate_limit_exhausted=self._rate_limit_exhausted)
+        return fp
 
 
 # ------------------------------------------------------------------ shortlist
@@ -276,7 +393,31 @@ def shortlist() -> list[Provider]:
         # class: hosted frontier-tier
         _gemini(),
         # class: free-tier hosted, OpenAI-compatible
-        OpenAICompatibleProvider("llama-3.3-70b-versatile",
+        # `llama-3.3-70b-versatile` -- the model this candidate was chosen
+        # under -- was retired from Groq's catalog some time before this
+        # 2026-09-14 run (confirmed live: GET /v1/models lists no
+        # `llama-3.3*` model at all; a chat request against it returns
+        # HTTP 404 model_not_found on every single call). Per
+        # `03_LLM_LAYER.md` §4.4, "[e]xact vendors are chosen at R0.5 from
+        # what is actually available ... at that time" -- the CLASS (a
+        # free-tier hosted, tool-calling-capable model on Groq) is what is
+        # frozen, not this specific string. Substituted with
+        # `openai/gpt-oss-120b`: the largest model in Groq's current
+        # catalog that supports the OpenAI-style `tools` parameter
+        # (confirmed via the live /models listing's `supported_features`),
+        # comfortably clears the >=32k context requirement (131072), and
+        # is still free-tier. The label changes to `groq:gpt-oss-120b` so
+        # results are never misattributed to a model that was never
+        # actually called.
+        OpenAICompatibleProvider("openai/gpt-oss-120b",
                                  "https://api.groq.com/openai/v1",
-                                 "GROQ_API_KEY", label="groq:llama-3.3-70b"),
+                                 "GROQ_API_KEY", label="groq:gpt-oss-120b"),
+        OpenAICompatibleProvider("meta-llama/llama-3.3-70b-instruct",
+                                 "https://openrouter.ai/api/v1",
+                                 "OPENROUTER_API_KEY",
+                                 label="openrouter:llama-3.3-70b"),
+        OpenAICompatibleProvider("gpt-4o-mini",
+                                 "https://models.inference.ai.azure.com",
+                                 "GITHUB_MODELS_TOKEN",
+                                 label="github-models:gpt-4o-mini"),
     ]

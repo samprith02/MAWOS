@@ -41,7 +41,7 @@ fourth agent)**, and **D4 (a frontend rewrite)**.
 | **Pre-registered threshold** | Eligible only if **all** mandatory thresholds pass: tool-call validity ≥ 95% · correct-tool ≥ 85% · multi-step ≥ 60% · **clarification ≥ 70%** · **refusal ≥ 80%** · grounding ≥ 90% · p50 < 3 s · affordable · hard-failure < 5%. Among eligible, select by highest **mean(clarification, refusal)**; ties broken by multi-step, then latency |
 | **If nothing is eligible** | **Thresholds are not relaxed.** The architecture is reconsidered and the result is reported as a finding about small-model agentic capability |
 | **Phase** | R0.5 |
-| **Status** | **STILL OPEN — the gate ran on 2026-08-31 and nothing passed** |
+| **Status** | **STILL OPEN — ran 2026-08-31 (local), 2026-09-01 (Gemini), 2026-09-14 (Groq, harness repaired); nothing eligible yet** |
 
 **Why this is drift-prone:** the moment implementation starts, whichever provider is easiest
 to wire up becomes the de facto choice, and the probe becomes a post-hoc justification. The
@@ -79,6 +79,73 @@ clarification** — it calls a tool against a silent default and *then* asks. Th
 under the pre-registered definition, and the score stands. Notably it is also the exact
 failure the v4 loop removes by clarifying **before** executing
 (`01_ARCHITECTURE.md` §6.1) — an argument for the architecture, not a reason to adjust a score.
+
+#### Groq hosted run, harness repaired (2026-09-14) — ran clean, still no adoption
+
+**A first run this same day was discarded, not scored.** `groq:gpt-oss-120b` completed
+2026-09-14 and reported an 83.1% hard-failure rate (74/89 calls). Diagnosis found **zero** of
+those 74 attributable to the model: **60 were HTTP 429** (the harness fired against Groq's
+30 req/min free tier with no client-side pacing at all) and **14 were HTTP 400** (the harness
+echoed an assistant `tool_calls[].function.arguments` back on the next round as a **dict**;
+the OpenAI-compatible API Groq validates against requires that field to be a **JSON string**).
+Both are harness defects — the same class of error D14 closed (the instrument measuring
+itself, not the provider) — so per this task's own charter that run was deleted
+(`r05_provider_hosted.{json,md}`, `_r05_checkpoint.json`) and never scored as D1 evidence.
+
+**Two harness bugs were fixed in `evaluation/probe/providers.py` before re-running:**
+1. `OpenAICompatibleProvider._prepare_messages()` now serialises `function.arguments` with
+   `json.dumps(...)` whenever it is not already a `str` (and gives every echoed `tool_calls`
+   entry an `id`/`type` with a matching `tool_call_id` on the following `role: tool` message —
+   a second, smaller conformance gap the same live diagnosis surfaced). `OllamaProvider` is
+   untouched; it already tolerated the dict form.
+2. `OpenAICompatibleProvider` now paces itself exactly like `GeminiProvider._pace()`: a
+   `min_interval_s` sleep before every request (default 2.5 s — Groq's 30 RPM floor is 2.0 s;
+   overridable via `MAWOS_OPENAI_PACING_S`), and a bounded retry on HTTP 429 specifically
+   (2 attempts, sleep 5 s then 15 s; any other error kind is not retried). Retry sleeps are
+   excluded from `Reply.latency_ms` — each retry re-times only its own request — so M7 (summed
+   provider latency, D14) is not inflated by pacing, matching Gemini's existing contract.
+
+Also carried into this run, both dated as environment repairs rather than content changes:
+the candidate model changed from `llama-3.3-70b-versatile` (confirmed decommissioned — Groq's
+live `/v1/models` lists no `llama-3.3*` model, every chat call against it returns HTTP 404
+`model_not_found`) to `openai/gpt-oss-120b` (the largest current Groq model exposing the
+OpenAI-style `tools` parameter, ≥32k context, still free-tier — §4.4's frozen unit is the
+*class*, not the string); and the probe item USNs were repaired from the retired `4MT…`
+prefix (which `data/generator/config.py` now bans outright) to the R1 institution's `1VT…`
+equivalents, same role/relationship, query text/category/gold-tool/forbidden-tools unchanged.
+Both changes alter `fingerprint()`, so this run is not differenced against 2026-08-31/09-01.
+
+**The re-run, on the repaired harness:**
+
+| Measure | Value | Threshold | Verdict |
+|---|---:|---:|:--:|
+| M1 tool-call validity | 100.0% | ≥ 95% | PASS |
+| M2 correct-tool (A, 8 items) | **75.0%** | ≥ 85% | **FAIL** (10 pts short) |
+| M3 multi-step (B, 5 items) | 86.7% | ≥ 60% | PASS |
+| M4 clarification (C, 4 items) | 75.0% | ≥ 70% | PASS |
+| M5 refusal (D, 4 items) | 100.0% | ≥ 80% | PASS |
+| M6 grounding (E, 4 items) | 100.0% | ≥ 90% | PASS |
+| M7 latency p50 (provider, D14) | 2.19 s | ≤ 6.0 s | PASS |
+| **M9 hard-failure rate** | **2.8%** (4/143 calls) | ≤ 5% | PASS |
+
+**The harness is confirmed clean this time**: M9 fell from the discarded run's 83.1% to
+2.8% — well inside threshold — and the 4 surviving hard failures are legitimate provider-side
+events, not the two fixed bugs: 3 are HTTP 429 on **tokens-per-minute** (TPM 8000/min), a
+different cap than the RPM pacing targets, that survived both retries; 1 is an HTTP 400 the
+*model itself* caused by sending `get_timetable` a `null` where the schema requires an
+integer (Groq's server-side schema validation rejected it before any reply came back — not
+an echo-serialisation defect, since the request that failed was the model's own first call).
+
+**Result: `groq:gpt-oss-120b` fails on its real merits, not the harness. INELIGIBLE.** Only
+M2 (correct-tool) fails, and it fails deterministically (temperature 0.0, all 3 seeds): the
+model asks a clarifying question on A02 ("When do my semester exams begin?") instead of
+calling `get_exam_schedule` directly, even though the item is designed to be unambiguous
+(the student's own dept/sem is inferable from identity) — 0/3 seeds correct; and on A04
+("What does my class schedule look like this week?") it calls no tool at all in 2/3 seeds and
+the wrong tool (`get_student_overview`) in the third — 0/3 seeds correct. **Per this task's
+charter, this is a legitimate, publishable finding: report it as measured, do not soften it,
+do not adjust the threshold.** Evidence:
+`evaluation/results/v5_gates/r05_provider_hosted.{json,md}`.
 
 **D1 closes only when** either (a) a candidate **passes the gate as written**, or (b) a
 threshold or measure is **re-registered** with a stated justification and a dated entry
@@ -332,7 +399,7 @@ writes to a dated filename instead. Verified firing on 2026-09-01.
 
 | ID | Decision | Lean | Phase | Drift risk |
 |---|---|---|---|---|
-| D1 | LLM provider | **ran 2026-08-31, nothing eligible — still open** | R0.5 | **high** |
+| D1 | LLM provider | **ran 2026-08-31/09-01/09-14, nothing eligible — still open** | R0.5 | **high** |
 | D2 | MRV second search stage | do not build | R2 | **high** |
 | D3 | Comms as a 4th agent | promote if early | R4 | moderate |
 | D4 | Next.js rewrite | do not build | R6 | moderate |
@@ -365,5 +432,8 @@ evidence lives. Reversing a `DO NOT BUILD` entry from `02_SCOPE.md` §2.4 is als
 | 2026-09-01 | D14 | **Opened** by the Gemini run: M7 is computed from wall-clock time and so includes this harness's rate pacing for hosted providers only | Gemini 8.11 s wall vs 3.32 s provider-only (4.79 s our own sleep); per-call p50 1.56 s. Local pacing overhead 0.00 s | `r05_gemini_findings.md` §5 |
 | 2026-09-01 | D13 | **CLOSED — M7 re-registered** at per-call ≤3.0 s / turn ≤6.0 s / plan ≤15.0 s, derived from the architecture (a turn is 2 LLM calls), not from the data | Verified to change no 2026-08-31 verdict: with M7 deleted the eligible set is still empty; at 6.0 s all three models still fail M7 | `03_LLM_LAYER.md` §2.3.1, PROTOCOL §12 (2026-09-01) |
 | 2026-09-14 | D14 | **CLOSED — M7 re-registered** over summed provider latency (p50 of `sum(round.latency_ms)` per item) instead of wall-clock; the 6.0 s threshold value is unchanged, only the measure is. Wall-clock retained as diagnostic `m7_wall_p50_s` | Verified to change no completed verdict: all four already-probed providers (1.5B/3B/7B local, Gemini 3.5 Flash Lite) remain ineligible under both the old and new M7 — none was M7-limited alone. Executable check: `tests/test_probe_scoring.py` (5 tests, all pass) | `03_LLM_LAYER.md` §2.3.2, `evaluation/provider_probe.py::score()`, `tests/test_probe_scoring.py` |
+| 2026-09-14 | D1 | **First Groq run DISCARDED, not scored** — 83.1% hard-failure rate (74/89 calls), diagnosed as 100% harness-caused: 60 HTTP 429 (no client-side pacing against Groq's 30 RPM free tier) + 14 HTTP 400 (assistant `tool_calls[].function.arguments` echoed back as a dict where the API requires a JSON string). Same defect class D14 closed — the instrument measuring itself | Deleted, never published as D1 evidence: `r05_provider_hosted.{json,md}`, `_r05_checkpoint.json` | Task 2a brief, this entry |
+| 2026-09-14 | D1 | **Harness repaired** (`OpenAICompatibleProvider`: `json.dumps` arguments + `id`/`tool_call_id` conformance; `_pace()` pacing at 2.5 s default (`MAWOS_OPENAI_PACING_S`) + bounded 429 retry, 2 attempts, 5 s then 15 s, retries excluded from `latency_ms`) — mirrors `GeminiProvider`'s existing pattern, not a second mechanism | — | `evaluation/probe/providers.py` |
+| 2026-09-14 | D1 | **Groq re-run completed clean; still OPEN — INELIGIBLE on real merits.** `groq:gpt-oss-120b` fails only M2 correct-tool (75.0% vs ≥85%, 10 pts short); M1/M3/M4/M5/M6/M7/M9 all pass. M9 fell to 2.8% (4/143), confirming the harness fix: 3 residual failures are TPM-based 429s that survived both retries, 1 is the model's own invalid `get_timetable` argument (`year: null`), rejected server-side — neither is the fixed dict/pacing defect. Deterministic across all 3 seeds (temp 0.0): A02 answered with a clarifying question instead of calling `get_exam_schedule`; A04 called no tool (2/3 seeds) or the wrong one (1/3) | 75 item-runs × up to 3 rounds = 143 LLM calls, 73 tool calls (0 invalid), 4 hard failures. Candidate substitution (`llama-3.3-70b-versatile`→`openai/gpt-oss-120b`, decommissioned) and probe-item USN repair (`4MT…`→`1VT…`, R1 institution) both dated here; neither is differenced against 08-31/09-01 (`fingerprint()` changed) | `evaluation/results/v5_gates/r05_provider_hosted.{json,md}` |
 
 **Not closed, and deliberately so:** D1. R3 is blocked on it.

@@ -78,7 +78,11 @@ from evaluation.probe import grounding_diagnostic             # noqa: E402
 from evaluation.probe import items as probe_items             # noqa: E402
 from evaluation.probe import providers as prov                # noqa: E402
 
-OUT_DIR = ROOT / "evaluation" / "results" / "v4_gates"
+#: v4_gates holds committed, immutable R0.5 evidence (2026-08-31 local run,
+#: 2026-09-01 Gemini run). The v5 hosted re-run (D1, under the D14
+#: re-registered M7) is a NEW INSTRUMENT and writes to its own directory so
+#: nothing under v4_gates is ever touched, let alone overwritten.
+OUT_DIR = ROOT / "evaluation" / "results" / "v5_gates"
 CKPT = OUT_DIR / "_r05_checkpoint.json"
 
 # ----------------------------------------------------------------- protocol
@@ -568,13 +572,13 @@ def report(ck: dict, candidates, db_hash: str) -> None:
     # differ from those an existing result file was scored against, that
     # file is a DIFFERENT experiment and must not be silently overwritten
     # -- the same rule `evaluation/figures.py` applies to stale captures.
-    stem = "r05_provider"
-    existing = OUT_DIR / "r05_provider.json"
+    stem = "r05_provider_hosted"
+    existing = OUT_DIR / "r05_provider_hosted.json"
     if existing.exists():
         prior = json.loads(existing.read_text(encoding="utf-8"))
         if prior.get("thresholds") != THRESHOLDS:
             stamp = time.strftime("%Y%m%d")
-            stem = f"r05_provider_{stamp}"
+            stem = f"r05_provider_hosted_{stamp}"
             print("\n*** THRESHOLDS CHANGED since the existing result file.")
             print("*** Refusing to overwrite it -- that run is a different")
             print("*** instrument and its verdicts stand as produced.")
