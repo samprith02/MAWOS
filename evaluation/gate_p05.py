@@ -55,7 +55,7 @@ sys.path.insert(0, str(ROOT))
 from evaluation.baselines import lexicon_v2  # noqa: E402
 from evaluation.benchmark.tasks import DEV_TASKS  # noqa: E402
 
-OUT_DIR = ROOT / "evaluation" / "results" / "v3_gates"
+OUT_DIR = ROOT / "evaluation" / "results" / "v3_archive" / "v3_gates"
 HISTORICAL = ROOT / "evaluation" / "results" / "v2_historical" / "RESULTS.md"
 
 #: Pre-registered in PROTOCOL.md §9.1. Not revisable after seeing data.

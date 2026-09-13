@@ -38,8 +38,8 @@ from evaluation.baselines import lexicon_v2  # noqa: E402
 from evaluation.benchmark.tasks import DEV_TASKS  # noqa: E402
 from evaluation.gate_p05 import MAX_ESCALATION, margins  # noqa: E402
 
-LLM_DIR = ROOT / "evaluation" / "results" / "v3_llm"
-OUT_DIR = ROOT / "evaluation" / "results" / "v3_gates"
+LLM_DIR = ROOT / "evaluation" / "results" / "v3_archive" / "v3_llm"
+OUT_DIR = ROOT / "evaluation" / "results" / "v3_archive" / "v3_gates"
 
 
 def mcnemar(a_ok: dict, b_ok: dict) -> dict:

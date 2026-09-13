@@ -53,7 +53,7 @@ from backend.app.models import User  # noqa: E402
 from evaluation.benchmark.instrumentation import TrialRecord, score, summarise  # noqa: E402
 from evaluation.benchmark.tasks import tasks as get_tasks  # noqa: E402
 
-OUT_DIR = ROOT / "evaluation" / "results" / "v3_llm"
+OUT_DIR = ROOT / "evaluation" / "results" / "v3_archive" / "v3_llm"
 SHIPPED_DB = ROOT / "mawos.db"
 
 SEEDS = [0, 1, 2]              # PROTOCOL.md §7

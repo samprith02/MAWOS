@@ -660,6 +660,25 @@ $("login-btn").onclick = () => login();
 $("login-password").addEventListener("keydown", e => e.key === "Enter" && login());
 document.querySelectorAll(".demo-chips button").forEach(b =>
   b.onclick = () => login(b.dataset.u, b.dataset.p));
+
+/* Branding and the demo student come from data/institution.yaml via the
+   server -- nothing about the institution is hardcoded in the client. */
+(async () => {
+  try {
+    const i = await (await fetch("/api/institution")).json();
+    const nameEl = $("inst-name"), shortEl = $("brand-short"),
+          footEl = $("inst-foot");
+    if (nameEl) nameEl.textContent = i.name;
+    if (shortEl) shortEl.textContent = i.short_name;
+    if (footEl) footEl.textContent = i.name;
+    document.title = `${i.short_name} · MAWOS — University Portal`;
+    const chip = document.querySelector('.demo-chips button[data-demo="student"]');
+    if (chip && i.demo_student) {
+      chip.dataset.u = i.demo_student;
+      chip.onclick = () => login(i.demo_student, chip.dataset.p);
+    }
+  } catch (e) { /* offline: the portal still works, just unbranded */ }
+})();
 $("logout-btn").onclick = logout;
 
 if (TOKEN && USER) showApp();

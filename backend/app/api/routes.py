@@ -7,7 +7,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from .. import llm, metrics
+from .. import config, llm, metrics
 from ..agents import get_agents
 from ..auth import create_token, get_current_user, require_role, verify_password
 from ..database import get_session
@@ -15,6 +15,23 @@ from ..models import (Department, HallTicket, ScholarshipAssessment, Student,
                       TeachingAssignment, User)
 
 router = APIRouter(prefix="/api")
+
+
+# ---------- institution identity (public) --------------------------------
+@router.get("/institution")
+def institution(db: Session = Depends(get_session)):
+    """Public branding + a demo student login.
+
+    R1: the front end must not hardcode an institution name or a USN --
+    identity lives only in `data/institution.yaml`
+    (docs/v4/04_DATA_MODEL.md §3). The demo student is looked up rather
+    than baked into the HTML, so it stays correct after any reseed.
+    """
+    demo = (db.query(User).filter(User.role == "student")
+              .order_by(User.username).first())
+    return {"name": config.INSTITUTION_NAME,
+            "short_name": config.INSTITUTION_SHORT,
+            "demo_student": demo.username if demo else None}
 
 
 # ---------- auth ------------------------------------------------------------
@@ -77,7 +94,7 @@ def student_dashboard(user: User = Depends(require_role("student")),
         "fees": agents["finance_agent"].student_fees(db, user.usn),
         "hall_ticket": ({"eligible": ht.eligible, "reasons": ht.reasons}
                         if ht else None),
-        "scholarship": ({"status": sch.status, "ml_score": sch.ml_score,
+        "scholarship": ({"status": sch.status,
                          "reasons": sch.reasons} if sch else None),
         "placements": agents["placement_agent"].student_view(db, user.usn),
         "timetable": agents["timetable_agent"].grid(db, s.dept_code, s.year,
@@ -240,48 +257,7 @@ def principal_analytics(user: User = Depends(require_role("principal", "admin"))
     agents = get_agents()
     return {"departments": agents["academic_agent"].institution_analytics(db),
             "fee_collection": agents["finance_agent"].collection_stats(db),
-            "placements": agents["placement_agent"].stats(db),
-            "admissions": agents["admission_agent"].funnel(db)}
-
-
-# ---------- admissions (admin) ---------------------------------------------------------------
-@router.get("/admin/admissions")
-def admissions_list(status: str | None = None, dept: str | None = None,
-                    user: User = Depends(require_role("admin", "principal")),
-                    db: Session = Depends(get_session)):
-    agents = get_agents()
-    return {"funnel": agents["admission_agent"].funnel(db),
-            "applications": agents["admission_agent"].list_applications(
-                db, status=status, dept=dept)}
-
-
-@router.post("/admin/admissions/verify-all")
-def admissions_verify(user: User = Depends(require_role("admin")),
-                      db: Session = Depends(get_session)):
-    return get_agents()["admission_agent"].verify_all(db)
-
-
-@router.post("/admin/admissions/run-merit")
-def admissions_merit(user: User = Depends(require_role("admin")),
-                     db: Session = Depends(get_session)):
-    return get_agents()["admission_agent"].run_merit(db)
-
-
-@router.post("/admin/admissions/allot")
-async def admissions_allot(user: User = Depends(require_role("admin")),
-                           db: Session = Depends(get_session)):
-    return await get_agents()["admission_agent"].allot_seats(db)
-
-
-class EnrolRequest(BaseModel):
-    application_id: int
-
-
-@router.post("/admin/admissions/enrol")
-async def admissions_enrol(body: EnrolRequest,
-                           user: User = Depends(require_role("admin")),
-                           db: Session = Depends(get_session)):
-    return await get_agents()["admission_agent"].enrol(db, body.application_id)
+            "placements": agents["placement_agent"].stats(db)}
 
 
 @router.post("/admin/simulate-day")

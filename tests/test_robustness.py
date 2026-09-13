@@ -13,6 +13,8 @@ import asyncio
 import datetime as dt
 
 from backend.app.models import WorkflowEvent
+from tests.fixtures.mini_institution import (  # noqa: E402
+    STUDENT_OK, SUBJECT_LAB)
 
 
 def test_failing_agent_does_not_kill_cascade(agents, db):
@@ -32,7 +34,7 @@ def test_failing_agent_does_not_kill_cascade(agents, db):
         d, made = dt.date(2026, 4, 6), 0
         while made < 5:
             if d.weekday() < 5:
-                records.append({"usn": "4MT23AI001", "subject_code": "23AI52",
+                records.append({"usn": STUDENT_OK, "subject_code": SUBJECT_LAB,
                                 "date": d.isoformat(), "present": True})
                 made += 1
             d += dt.timedelta(days=1)

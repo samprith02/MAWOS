@@ -1,0 +1,184 @@
+{
+  "generated": "2026-08-31T23:13:10",
+  "required_ctx": 32768,
+  "host": "http://localhost:11434",
+  "prompt": "Reply with the single word: ready.",
+  "measurements": [
+    {
+      "model": "qwen2.5:1.5b-instruct",
+      "num_ctx": 4096,
+      "ok": true,
+      "error": null,
+      "error_kind": null,
+      "latency_ms": 8060.1,
+      "gpu_fraction": 1.0,
+      "fully_resident": true,
+      "vram_bytes": 1166236712,
+      "size_bytes": 1166236712,
+      "reply": "Ready."
+    },
+    {
+      "model": "qwen2.5:1.5b-instruct",
+      "num_ctx": 8192,
+      "ok": true,
+      "error": null,
+      "error_kind": null,
+      "latency_ms": 5798.7,
+      "gpu_fraction": 1.0,
+      "fully_resident": true,
+      "vram_bytes": 1360758046,
+      "size_bytes": 1360758046,
+      "reply": "Ready."
+    },
+    {
+      "model": "qwen2.5:1.5b-instruct",
+      "num_ctx": 16384,
+      "ok": true,
+      "error": null,
+      "error_kind": null,
+      "latency_ms": 5632.6,
+      "gpu_fraction": 1.0,
+      "fully_resident": true,
+      "vram_bytes": 1612416286,
+      "size_bytes": 1612416286,
+      "reply": "Ready."
+    },
+    {
+      "model": "qwen2.5:1.5b-instruct",
+      "num_ctx": 32768,
+      "ok": true,
+      "error": null,
+      "error_kind": null,
+      "latency_ms": 5594.2,
+      "gpu_fraction": 1.0,
+      "fully_resident": true,
+      "vram_bytes": 2115732766,
+      "size_bytes": 2115732766,
+      "reply": "Ready."
+    },
+    {
+      "model": "qwen2.5:3b-instruct",
+      "num_ctx": 4096,
+      "ok": true,
+      "error": null,
+      "error_kind": null,
+      "latency_ms": 7387.7,
+      "gpu_fraction": 1.0,
+      "fully_resident": true,
+      "vram_bytes": 2159374499,
+      "size_bytes": 2159374499,
+      "reply": "ready"
+    },
+    {
+      "model": "qwen2.5:3b-instruct",
+      "num_ctx": 8192,
+      "ok": true,
+      "error": null,
+      "error_kind": null,
+      "latency_ms": 5434.6,
+      "gpu_fraction": 1.0,
+      "fully_resident": true,
+      "vram_bytes": 2314563747,
+      "size_bytes": 2314563747,
+      "reply": "ready"
+    },
+    {
+      "model": "qwen2.5:3b-instruct",
+      "num_ctx": 16384,
+      "ok": true,
+      "error": null,
+      "error_kind": null,
+      "latency_ms": 5589.8,
+      "gpu_fraction": 1.0,
+      "fully_resident": true,
+      "vram_bytes": 2624942243,
+      "size_bytes": 2624942243,
+      "reply": "ready"
+    },
+    {
+      "model": "qwen2.5:3b-instruct",
+      "num_ctx": 32768,
+      "ok": true,
+      "error": null,
+      "error_kind": null,
+      "latency_ms": 7369.9,
+      "gpu_fraction": 1.0,
+      "fully_resident": true,
+      "vram_bytes": 3359480217,
+      "size_bytes": 3359480217,
+      "reply": "ready"
+    },
+    {
+      "model": "qwen2.5:7b-instruct",
+      "num_ctx": 4096,
+      "ok": true,
+      "error": null,
+      "error_kind": null,
+      "latency_ms": 15732.4,
+      "gpu_fraction": 0.8169172902745583,
+      "fully_resident": false,
+      "vram_bytes": 4185758105,
+      "size_bytes": 5123845651,
+      "reply": "ready"
+    },
+    {
+      "model": "qwen2.5:7b-instruct",
+      "num_ctx": 8192,
+      "ok": true,
+      "error": null,
+      "error_kind": null,
+      "latency_ms": 14177.3,
+      "gpu_fraction": 0.7602249799622741,
+      "fully_resident": false,
+      "vram_bytes": 4088880168,
+      "size_bytes": 5378513303,
+      "reply": "ready"
+    },
+    {
+      "model": "qwen2.5:7b-instruct",
+      "num_ctx": 16384,
+      "ok": true,
+      "error": null,
+      "error_kind": null,
+      "latency_ms": 13691.8,
+      "gpu_fraction": 0.6997238421903655,
+      "fully_resident": false,
+      "vram_bytes": 4067656990,
+      "size_bytes": 5813231942,
+      "reply": "ready"
+    },
+    {
+      "model": "qwen2.5:7b-instruct",
+      "num_ctx": 32768,
+      "ok": true,
+      "error": null,
+      "error_kind": null,
+      "latency_ms": 14756.7,
+      "gpu_fraction": 0.6149497304220939,
+      "fully_resident": false,
+      "vram_bytes": 4193874083,
+      "size_bytes": 6819864902,
+      "reply": "ready"
+    }
+  ],
+  "verdict": {
+    "qwen2.5:1.5b-instruct": {
+      "meets_32k_requirement": true,
+      "fully_resident_at_32k": true,
+      "latency_ms_at_32k": 5594.2,
+      "largest_fully_resident_ctx": 32768
+    },
+    "qwen2.5:3b-instruct": {
+      "meets_32k_requirement": true,
+      "fully_resident_at_32k": true,
+      "latency_ms_at_32k": 7369.9,
+      "largest_fully_resident_ctx": 32768
+    },
+    "qwen2.5:7b-instruct": {
+      "meets_32k_requirement": true,
+      "fully_resident_at_32k": false,
+      "latency_ms_at_32k": 14756.7,
+      "largest_fully_resident_ctx": null
+    }
+  }
+}

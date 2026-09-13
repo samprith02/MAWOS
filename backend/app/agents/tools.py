@@ -49,9 +49,14 @@ def tool(name, description, params=None, roles=ALL_ROLES):
     return wrap
 
 
+#: No realistic example value here, deliberately. R0.5 measured two local
+#: models copying the example USN straight out of this description and then
+#: answering about a student nobody had asked about
+#: (evaluation/results/v4_gates/r05_findings.md 3.1).
 USN_PARAM = {"usn": {"type": "string",
-                     "description": "Student USN, e.g. 4MT23AI049 "
-                                    "(staff only; students get their own)"}}
+                     "description": "Student USN in the institution's format "
+                                    "(staff only; students always get their "
+                                    "own record and must not pass this)"}}
 
 
 @tool("get_student_overview",
@@ -128,7 +133,7 @@ def get_scholarship(db, agents, user, args):
 
 
 @tool("get_placements", "Upcoming placement drives and the student's "
-      "eligibility/success probability (final years).", USN_PARAM)
+      "eligibility against each drive's cutoffs (final years).", USN_PARAM)
 def get_placements(db, agents, user, args):
     if user.role == "student":
         return {"drives": agents["placement_agent"].student_view(db, user.usn)}

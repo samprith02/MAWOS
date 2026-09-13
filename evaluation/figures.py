@@ -47,9 +47,9 @@ sys.path.insert(0, str(ROOT))
 RESULTS = ROOT / "evaluation" / "results"
 OUT = RESULTS / "figures"
 
-GATES = RESULTS / "v3_gates"
-LLM = RESULTS / "v3_llm"
-SCHED = RESULTS / "v3_scheduler"
+GATES = RESULTS / "v3_archive" / "v3_gates"
+LLM = RESULTS / "v3_archive" / "v3_llm"
+SCHED = RESULTS / "v3_archive" / "v3_scheduler"
 V2 = RESULTS / "v2_frozen"
 
 CAPTURES = {
@@ -479,9 +479,9 @@ def f2_routing_accuracy():
             "differenced.")
     best = max(m["hybrid_accuracy"]["mean"] for m in rows if m["eligible"])
     return fig, {
-        "sources": ["evaluation/results/v3_gates/p6_sweep.json",
+        "sources": ["evaluation/results/v3_archive/v3_gates/p6_sweep.json",
                     "evaluation/results/v2_frozen/baseline.json",
-                    "evaluation/results/v3_llm/qwen2-5_3b-instruct.json"],
+                    "evaluation/results/v3_archive/v3_llm/qwen2-5_3b-instruct.json"],
         "note": "lexicon %.1f%%; best eligible hybrid %.1f%%"
                 % (lex_acc * 100, best * 100),
     }
@@ -602,7 +602,7 @@ def f3_confusion():
     return fig, {
         "sources": ["evaluation/baselines/lexicon_v2.py",
                     "evaluation/benchmark/tasks.py",
-                    "evaluation/results/v3_llm/qwen2-5_3b-instruct.json"],
+                    "evaluation/results/v3_archive/v3_llm/qwen2-5_3b-instruct.json"],
         "note": "lexicon %d/99 misrouted; LLM abstained %d, off-registry %d "
                 "(3 seeds)" % (lex_off, int(llm[:, n].sum()),
                                int(llm[:, n + 1].sum())),
@@ -734,8 +734,8 @@ def f6_pareto():
             % (lex_ms, llm_ms,
                (sel["accuracy_mean"] - p4["lexicon_accuracy"]) * 100))
     return fig, {
-        "sources": ["evaluation/results/v3_gates/p4_router.json",
-                    "evaluation/results/v3_gates/p6_sweep.json",
+        "sources": ["evaluation/results/v3_archive/v3_gates/p4_router.json",
+                    "evaluation/results/v3_archive/v3_gates/p6_sweep.json",
                     "evaluation/results/v2_frozen/baseline.json"],
         "note": "tau=%g: %.1f%% at %.0f ms vs LLM-only %.1f%% at %.0f ms"
                 % (sel["tau"], acc[k], lat[k], acc[-1], lat[-1]),
@@ -864,7 +864,7 @@ def f7_scheduler():
             % (seed, p1b["min"], p1b["max"], best[-1] - floor,
                p1b["mean"] - floor))
     return fig, {
-        "sources": ["evaluation/results/v3_scheduler/e4.json",
+        "sources": ["evaluation/results/v3_archive/v3_scheduler/e4.json",
                     "evaluation/results/v2_frozen/baseline.json"],
         "note": "P1 %.1f vs v2 %.0f, floor %.1f; trace for seed %s only"
                 % (p1b["mean"], v2b["mean"], floor, seed),
@@ -967,9 +967,9 @@ def f8_latency_cdf():
             "about the agent cascade, not this classification path."
             % (lex_ms, float(np.median([x for x in hv if x > 1]))))
     return fig, {
-        "sources": ["evaluation/results/v3_llm/*.json",
+        "sources": ["evaluation/results/v3_archive/v3_llm/*.json",
                     "evaluation/results/v2_frozen/baseline.json",
-                    "evaluation/results/v3_gates/p6_sweep.json"],
+                    "evaluation/results/v3_archive/v3_gates/p6_sweep.json"],
         "note": "%.1f%% of queries answered in %.2f ms; escalated tail "
                 "median %.0f ms" % (100 - esc, lex_ms,
                                     float(np.median([x for x in hv if x > 1]))),

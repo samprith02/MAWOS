@@ -1,5 +1,6 @@
 """Notification Agent — event-driven, context-aware alerts for every cascade
 topic, including the proactive scans and admissions events."""
+from .. import config
 from ..models import Notification
 from .base import BaseAgent
 
@@ -79,7 +80,7 @@ class NotificationAgent(BaseAgent):
     async def on_admission_enrolled(self, payload: dict):
         db = self.session()
         try:
-            self._notify(db, "Welcome to MITE",
+            self._notify(db, f"Welcome to {config.INSTITUTION_SHORT}",
                          f"Admission confirmed. Your USN is {payload['usn']} "
                          f"({payload['dept']}). First-term fee is due within "
                          f"21 days.", usn=payload["usn"])

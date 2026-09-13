@@ -44,6 +44,21 @@ N_DAYS, N_PERIODS = 5, 6
 SOLVER_ITERS = 120_000
 
 
+def _strip_cosmetic_room(slots: list[dict]) -> list[dict]:
+    """The frozen solver emits `room="AIML-3A"`, a cosmetic label that was
+    never a real space (RESEARCH_PLAN_V3.md §0.2b). R1 replaces the column
+    with a FK to `rooms`; **R2** makes room allocation an actual solver
+    decision. Until then the field is left NULL rather than filled with a
+    string that does not name a room.
+
+    `scheduler.py` is deliberately not modified -- the R1 gate requires the
+    existing solver to still place 100% of periods on the new schema.
+    """
+    for s in slots:
+        s.pop("room", None)
+    return slots
+
+
 class TimetableAgent(BaseAgent):
     name = "timetable_agent"
     description = ("Conflict-free weekly timetable generation "
@@ -83,7 +98,7 @@ class TimetableAgent(BaseAgent):
                                           blocked=blocked)
         except scheduler.Unplaceable as exc:
             return {"ok": False, "error": f"no feasible timetable: {exc}"}
-        placed = sched.slots()
+        placed = _strip_cosmetic_room(sched.slots())
 
         # replace scope atomically
         dq = db.query(TimetableSlot)
@@ -145,7 +160,7 @@ class TimetableAgent(BaseAgent):
         except scheduler.Unplaceable as exc:
             return {"ok": False, "error": f"no feasible timetable: {exc}"}
         sched = info.pop("sched")
-        placed = sched.slots()
+        placed = _strip_cosmetic_room(sched.slots())
 
         dq = db.query(TimetableSlot)
         if dept_code:
@@ -189,7 +204,8 @@ class TimetableAgent(BaseAgent):
         for s in slots:
             cells[f"{s.day}-{s.period}"] = {
                 "subject": s.subject_code, "subject_name": s.subject.name,
-                "faculty": s.faculty.name, "room": s.room}
+                "faculty": s.faculty.name,
+                "room": s.room.name if s.room else None}
         return {"dept": dept_code, "year": year, "section": section,
                 "days": DAYS, "periods": PERIODS, "cells": cells}
 
@@ -199,7 +215,7 @@ class TimetableAgent(BaseAgent):
         for s in slots:
             cells[f"{s.day}-{s.period}"] = {
                 "subject": s.subject_code, "subject_name": s.subject.name,
-                "room": s.room,
+                "room": s.room.name if s.room else None,
                 "class": f"{s.dept_code} {s.year}{s.section}"}
         return {"days": DAYS, "periods": PERIODS, "cells": cells}
 

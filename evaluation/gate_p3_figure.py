@@ -22,8 +22,8 @@ import matplotlib.pyplot as plt   # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-GATES = ROOT / "evaluation" / "results" / "v3_gates"
-LLM = ROOT / "evaluation" / "results" / "v3_llm"
+GATES = ROOT / "evaluation" / "results" / "v3_archive" / "v3_gates"
+LLM = ROOT / "evaluation" / "results" / "v3_archive" / "v3_llm"
 OUT = GATES / "p3_diagnostic.png"
 
 C_CATCH = "#1b7f79"

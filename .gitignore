@@ -1,4 +1,9 @@
 __pycache__/
+# Secrets. The provider probe reads credentials from the environment or from
+# a local .env; neither may ever be committed (docs/v4/08_DEPLOYMENT.md §4).
+.env
+.env.*
+!.env.example
 *.pyc
 .pytest_cache/
 mawos.db
@@ -17,6 +22,9 @@ ml/data/*.csv
 #   v3_llm/        - frozen-protocol model captures
 #   v3_gates/      - pre-registered gate and sweep decisions
 evaluation/results/**/_scratch.db
+# R0.5 probe resume artifact: pure scratch. Every record it holds is also
+# embedded in the tracked r05_provider.json, which is the citable evidence.
+evaluation/results/**/_r05_checkpoint.json
 fl/results/
 .venv/
 venv/
@@ -26,3 +34,18 @@ venv/
 # the competition instances are not ours to redistribute.
 evaluation/itc2007/vendor/
 evaluation/itc2007/instances/*.ctt
+
+# Local DB snapshots taken before risky migrations. `mawos.db` was already
+# ignored; the dated backups are the same file under another name and are
+# ~30 MB each, so they must never enter history.
+mawos.db.*
+
+# Node dependencies, wherever they appear.
+node_modules/
+
+# A teammate's separate Next.js/Postgres reference app. Untouched and NOT
+# integrated into MAWOS -- it is here only because its live-trace UI inspired
+# `backend/app/scheduler_live.py` (CLAUDE.md). It carries its own node_modules
+# and is tracked in its own repo, so it is not vendored into this history.
+# Reverse by deleting this line if the team decides to fold it in.
+teacher-erp-with-timetable-simulation/

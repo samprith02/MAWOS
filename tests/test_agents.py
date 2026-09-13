@@ -6,6 +6,8 @@ from backend.app import config
 from backend.app.agents.attendance import overall_percentage
 from backend.app.agents.finance import fees_cleared
 from backend.app.models import AttendanceSummary, FeeRecord, HallTicket
+from tests.fixtures.mini_institution import (  # noqa: E402
+    STUDENT_OK, STUDENT_RISK, SUBJECT_THEORY)
 
 
 def _upload(agents, db, records):
@@ -26,16 +28,16 @@ def _mk_records(usn, subject, n_days, n_present, start=None):
 
 
 def test_attendance_percentage_and_shortage(agents, db):
-    result = _upload(agents, db, _mk_records("4MT23AI002", "23AI51", 20, 12))
+    result = _upload(agents, db, _mk_records(STUDENT_RISK, SUBJECT_THEORY, 20, 12))
     assert result["accepted"] == 20
-    assert overall_percentage(db, "4MT23AI002") == 60.0
+    assert overall_percentage(db, STUDENT_RISK) == 60.0
     summary = db.query(AttendanceSummary).filter_by(
-        usn="4MT23AI002", subject_code="23AI51").first()
+        usn=STUDENT_RISK, subject_code=SUBJECT_THEORY).first()
     assert summary.percentage == 60.0 and summary.shortage is True
 
 
 def test_duplicate_attendance_rejected(agents, db):
-    recs = _mk_records("4MT23AI001", "23AI51", 5, 5)
+    recs = _mk_records(STUDENT_OK, SUBJECT_THEORY, 5, 5)
     assert _upload(agents, db, recs)["accepted"] == 5
     second = _upload(agents, db, recs)
     assert second["accepted"] == 0
@@ -45,34 +47,34 @@ def test_duplicate_attendance_rejected(agents, db):
 def test_fee_fine_and_clearance(agents, db):
     fin = agents["finance_agent"]
     today = dt.date.today()
-    fee = db.query(FeeRecord).filter_by(usn="4MT23AI002",
+    fee = db.query(FeeRecord).filter_by(usn=STUDENT_RISK,
                                         status="pending").first() \
-        or db.query(FeeRecord).filter_by(usn="4MT23AI002").first()
-    fin.refresh_status(db, "4MT23AI002", today=today)
+        or db.query(FeeRecord).filter_by(usn=STUDENT_RISK).first()
+    fin.refresh_status(db, STUDENT_RISK, today=today)
     db.refresh(fee)
     days_late = (today - (fee.due_date
                           + dt.timedelta(days=config.FEE_GRACE_DAYS))).days
     assert fee.status == "overdue"
     assert fee.fine == days_late * config.FEE_LATE_FINE_PER_DAY
-    assert fees_cleared(db, "4MT23AI002") is False
-    assert fees_cleared(db, "4MT23AI001") is True
+    assert fees_cleared(db, STUDENT_RISK) is False
+    assert fees_cleared(db, STUDENT_OK) is True
 
 
 def test_exam_eligibility(agents, db):
     elig = agents["eligibility_agent"]
-    blocked = elig.evaluate_hall_ticket(db, "4MT23AI002")   # 60% attendance + overdue fee
+    blocked = elig.evaluate_hall_ticket(db, STUDENT_RISK)   # 60% attendance + overdue fee
     db.commit()
     assert blocked["eligible"] is False
     assert any("attendance" in r for r in blocked["reasons"])
     assert any("fees" in r for r in blocked["reasons"])
-    ok = elig.evaluate_hall_ticket(db, "4MT23AI001")        # 100% attendance, paid
+    ok = elig.evaluate_hall_ticket(db, STUDENT_OK)        # 100% attendance, paid
     db.commit()
     assert ok["eligible"] is True
-    assert db.query(HallTicket).filter_by(usn="4MT23AI001").first().eligible
+    assert db.query(HallTicket).filter_by(usn=STUDENT_OK).first().eligible
 
 
 def test_scholarship_rule_prefilter(agents, db):
-    result = agents["eligibility_agent"].evaluate_scholarship(db, "4MT23AI002")
+    result = agents["eligibility_agent"].evaluate_scholarship(db, STUDENT_RISK)
     db.commit()
     assert result["status"] == "not_eligible"
     assert len(result["reasons"]) >= 2

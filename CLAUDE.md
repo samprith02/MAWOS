@@ -9,7 +9,53 @@ source of truth. Academic/Admission/Finance/Placement/Notification are
 still real, still in the registry, still called by tools.py and the REST
 routes — just not counted as agents (§7 of `docs/RESEARCH_PLAN_V3.md`).
 
-## Status (updated 2026-08-21 — keep this current every session)
+---
+
+## ⚠ READ FIRST — the project is being re-aimed (v4, R0 signed off 2026-08-31)
+
+**`docs/v4/` is the current blueprint. Start there, not with the v3 status table below.**
+
+v3 built the university system as an *experimental platform* for a tool-space-restriction
+study (`RESEARCH_PLAN_V3.md`, top). v4 re-aims it at **bounded LLM autonomy over a real
+institutional system** — the model plans and delegates across agents, a deterministic guard
+authorises every action, writes require confirmation, and the whole chain is traced and
+measured. Verdict on the rework: **GO WITH REDUCTIONS**.
+
+| Read this | For |
+|---|---|
+| `docs/v4/README.md` | index + why the re-aim |
+| `docs/v4/02_SCOPE.md` | **the MVRS scope contract** — MUST / SHOULD / NICE / DO-NOT-BUILD |
+| `docs/v4/OPEN_DECISIONS.md` | **12 decisions deliberately NOT locked**, each with its experiment and a pre-registered threshold |
+| `docs/v4/09_ROADMAP.md` | R0–R8, critical path, phase gates |
+
+**Phase state:** R0 (decision freeze) **done** — documents only, zero code changed.
+**R1 (foundations) done 2026-09-01.** New schema (rooms, faculty availability,
+requests, conversations, traces, guard decisions); `data/institution.yaml` +
+`data/generator/` replacing the v2 inline seeder; Alembic; test fixtures;
+v3 results archived. Admissions, `fl/` and **both ML models** deleted — the
+CART/RF were trained on labels our own rules generated. 63 tests pass.
+**R0.5 (provider viability gate) done 2026-08-31 — and NOTHING PASSED.** All three
+local models fail the pre-registered thresholds (1.5B 7/8, 3B 5/8, 7B 4/8); both
+hosted candidates were untestable (no API key in the environment) and are recorded
+as untested, not estimated. Per the gate's own clause the thresholds were **not**
+relaxed, so **no provider is adopted and D1 stays OPEN**. Evidence:
+`evaluation/results/v4_gates/r05_provider.{json,md}` + `r05_findings.md`.
+**R3 is blocked on D1.** R2 (timetable) is unblocked and is the next phase.
+M7's latency threshold was re-registered 2026-09-01 (D13 closed,
+`03_LLM_LAYER.md` §2.3.1) — verified to change no 2026-08-31 verdict.
+
+**Four things a session must not quietly decide** (see `OPEN_DECISIONS.md`): the LLM
+provider (D1 — closed by the R0.5 probe), a second timetable search algorithm (D2 — only if
+seed failure > 5% over 10 seeds), a fourth agent (D3), and a frontend rewrite (D4). Each is
+adopted only by recording the measurement that justified it.
+
+**Everything in "Rules that matter here" and "Gotchas" below still applies verbatim.** The
+v3 phase table is **historical record** — accurate for what was built up to 2026-08-25, and
+no longer the plan.
+
+---
+
+## Status — v3 phases (HISTORICAL, frozen 2026-08-25; superseded by `docs/v4/09_ROADMAP.md`)
 
 | Phase | What | State |
 |---|---|---|
@@ -64,10 +110,18 @@ If P6 or a similar live-Ollama capture ever needs re-running and dies
 repeatedly, reach for that resumable script rather than the plain one —
 it's safe to just keep re-invoking the identical command.
 
-P3's dev-only pass and P6 are both done as of 2026-08-25. Next unstarted
-work: scaling P3 to the 3-seed convention once real annotated data
-exists (tracks with P5), or P5 itself once external co-authors are
-unblocked. P2, P4 and now P6 are done; don't restart that work.
+P3's dev-only pass and P6 are both done as of 2026-08-25. P2, P4 and P6
+are done; don't restart that work.
+
+**Superseded 2026-08-31.** v3's remaining phases (P5 held-out set, P8 doc
+rewrite) are **not** the next work — the project was re-aimed at R0. P5's
+external-author blocker is carried into v4 with the bar corrected from
+"external co-authors" to "authors blind to the implementation"
+(`docs/v4/06_BENCHMARK.md` §6), and recruitment moves from late-phase to
+R1. P8's doc rewrite becomes R8. The v3 routing, sweep and gate results
+stay citable **for their own instrument** and are archived at R1 to
+`evaluation/results/v3_archive/` — no v4 number may ever be differenced
+against one of them.
 
 ## Run it
 
@@ -75,6 +129,21 @@ unblocked. P2, P4 and now P6 are done; don't restart that work.
 %LOCALAPPDATA%\Ollama\ollama.exe serve     # FIRST — portable install, not a service
 python run.py                              # -> http://localhost:8000
 ```
+
+**R1 changed how data is made.** The institution is defined entirely by
+`data/institution.yaml` and built by `data/generator/` — deterministic,
+scale-parameterised, and feasibility-asserting. `backend/app/seed.py` is now a
+thin adapter, so `run.py` is unchanged. Useful commands:
+
+```bash
+python -m data.generator.build --digest --date 2026-09-01   # reproducibility check
+alembic upgrade head                                        # apply migrations
+```
+
+The institution name in `institution.yaml` is a **placeholder** pending
+`OPEN_DECISIONS.md` D12 — changing it is one edit plus a reseed. Nothing in
+`backend/`, `frontend/` or `data/` hardcodes an institution identity any more;
+`data/generator/config.py` refuses to load a config that reintroduces the v3 one.
 
 `llm.py` caches the Ollama availability check at startup, so the header badge
 only flips to `AI · hybrid router` if Ollama was already serving when MAWOS

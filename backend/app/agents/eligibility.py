@@ -1,5 +1,9 @@
 """Eligibility Agent — hall-ticket (exam) eligibility and scholarship
-scoring, merged under P2 (docs/RESEARCH_PLAN_V3.md §7).
+assessment, merged under P2 (docs/RESEARCH_PLAN_V3.md §7).
+
+R1: the scholarship CART was removed (docs/v4/04_DATA_MODEL.md §2). Both
+verdicts are now deterministic policy rules with reason codes, which is
+what the domain actually is.
 
 Exam and Scholarship were split in v2 but own the same two upstream
 triggers (attendance.updated, fees.updated) and the same shape of policy
@@ -10,8 +14,6 @@ they are one agent, not two. Merging the agent does not merge the tools:
 `get_hall_ticket` and `get_scholarship` stay two distinct tools (§7.1),
 so the dev benchmark's gold labels are untouched.
 """
-import joblib
-
 from .. import config
 from ..models import ExamSchedule, HallTicket, ScholarshipAssessment, Student
 from .attendance import overall_percentage
@@ -19,20 +21,12 @@ from .base import BaseAgent
 from .finance import fees_cleared
 
 SCHEME = "Merit-cum-Means"
-_MODEL_PATH = config.ML_MODELS_DIR / "scholarship_cart.joblib"
 
 
 class EligibilityAgent(BaseAgent):
     name = "eligibility_agent"
     description = ("Hall-ticket eligibility and scholarship scoring "
                    "(rules + CART), with reason codes")
-
-    def __init__(self, bus):
-        super().__init__(bus)
-        self.model = None
-        if _MODEL_PATH.exists():
-            # Safe: artifact produced locally by ml/train.py in this repo.
-            self.model = joblib.load(_MODEL_PATH)
 
     def register_subscriptions(self):
         self.bus.subscribe("attendance.updated", self.name, self.on_upstream_change)
@@ -100,32 +94,26 @@ class EligibilityAgent(BaseAgent):
             reasons.append("outstanding overdue fees")
         if 0 < student.cgpa < 6.0:
             reasons.append(f"CGPA {student.cgpa} below 6.0 minimum")
-        ml_score = None
+        # R1: the CART is deleted. It was trained on a label our own banded
+        # rule generated (docs/v4/04_DATA_MODEL.md §2) -- learning our own
+        # rule and calling the output AI. Scholarship eligibility is a
+        # policy decision, so it is stated as one, with reason codes.
         if reasons:
             status = "not_eligible"
-        elif self.model is not None:
-            features = [[student.cgpa, attendance, student.family_income,
-                         student.backlogs, 1 if cleared else 0]]
-            ml_score = float(self.model.predict_proba(features)[0][1])
-            if ml_score >= 0.60:
-                status = "eligible"
-                reasons.append(f"CART score {ml_score:.2f} >= 0.60")
-            elif ml_score >= 0.40:
-                status = "waitlist"
-                reasons.append(f"CART score {ml_score:.2f} in waitlist band")
-            else:
-                status = "not_eligible"
-                reasons.append(f"CART score {ml_score:.2f} < 0.40")
+        elif student.cgpa >= 8.0:
+            status = "eligible"
+            reasons.append(f"CGPA {student.cgpa} >= 8.0 merit band")
+        elif student.cgpa >= 7.0:
+            status = "waitlist"
+            reasons.append(f"CGPA {student.cgpa} in the 7.0-8.0 waitlist band")
         else:
-            status = "eligible" if student.cgpa >= 7.5 else "waitlist"
-            reasons.append("rules-only evaluation (model unavailable)")
+            status = "not_eligible"
+            reasons.append(f"CGPA {student.cgpa} below the 7.0 merit floor")
         assessment = db.query(ScholarshipAssessment).filter_by(
             usn=usn, scheme=SCHEME).first()
         if assessment is None:
             assessment = ScholarshipAssessment(usn=usn, scheme=SCHEME, status=status)
             db.add(assessment)
         assessment.status = status
-        assessment.ml_score = ml_score
         assessment.reasons = "; ".join(reasons)
-        return {"usn": usn, "status": status, "ml_score": ml_score,
-                "reasons": reasons}
+        return {"usn": usn, "status": status, "reasons": reasons}

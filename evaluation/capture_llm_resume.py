@@ -33,7 +33,8 @@ sys.path.insert(0, str(ROOT))
 
 from evaluation import capture_llm as cl  # noqa: E402
 
-CKPT = ROOT / "evaluation" / "results" / "v3_gates" / "_p6_checkpoint.json"
+CKPT = (ROOT / "evaluation" / "results" / "v3_archive" / "v3_gates"
+        / "_p6_checkpoint.json")
 OUT_DIR = cl.OUT_DIR
 
 
