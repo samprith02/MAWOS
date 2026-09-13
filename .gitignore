@@ -1,0 +1,28 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+mawos.db
+ml/models/*.joblib
+ml/data/*.csv
+# evaluation/results/ IS tracked. A result that is not version controlled
+# cannot be cited -- v2 ignored this whole tree, so none of its published
+# numbers were ever committed, and the P0.5 gate output was briefly in the
+# same state. An allowlist was tried first and failed the moment a new
+# results directory appeared, so the rule is inverted: everything is kept
+# except scratch artifacts.
+#
+# The subdirectories mean different things and must never be conflated:
+#   v2_historical/ - what v2 originally reported, preserved unmodified
+#   v2_frozen/     - the same system re-measured under PROTOCOL.md
+#   v3_llm/        - frozen-protocol model captures
+#   v3_gates/      - pre-registered gate and sweep decisions
+evaluation/results/**/_scratch.db
+fl/results/
+.venv/
+venv/
+
+# ITC-2007 harness: third-party validator source/binary is fetched, never
+# vendored (evaluation/itc2007/build.py records its URL and sha256), and
+# the competition instances are not ours to redistribute.
+evaluation/itc2007/vendor/
+evaluation/itc2007/instances/*.ctt

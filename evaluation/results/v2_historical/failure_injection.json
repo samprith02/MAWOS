@@ -1,0 +1,54 @@
+{
+  "baseline_topics": [
+    "attendance.updated",
+    "attendance.uploaded",
+    "exam.updated",
+    "notification.sent",
+    "placement.updated",
+    "scholarship.updated"
+  ],
+  "injected_topics": [
+    "agent.error",
+    "attendance.updated",
+    "attendance.uploaded",
+    "exam.updated",
+    "notification.sent",
+    "placement.updated"
+  ],
+  "siblings_survived": true,
+  "error_audited": true,
+  "recovery_replay_workflow": "96217641-bbcf-4b8d-b572-59c253d64c9c",
+  "recovery_reassessed": true,
+  "injected_trace": [
+    {
+      "topic": "attendance.uploaded",
+      "agent": "attendance_agent",
+      "elapsed_ms": 0.0
+    },
+    {
+      "topic": "attendance.updated",
+      "agent": "attendance_agent",
+      "elapsed_ms": 41.68
+    },
+    {
+      "topic": "exam.updated",
+      "agent": "exam_agent",
+      "elapsed_ms": 75.72
+    },
+    {
+      "topic": "agent.error",
+      "agent": "scholarship_agent",
+      "elapsed_ms": 80.61
+    },
+    {
+      "topic": "placement.updated",
+      "agent": "placement_agent",
+      "elapsed_ms": 91.1
+    },
+    {
+      "topic": "notification.sent",
+      "agent": "notification_agent",
+      "elapsed_ms": 105.56
+    }
+  ]
+}

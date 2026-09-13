@@ -1,0 +1,1169 @@
+{
+  "rule": "dev-only engineering pass, H2 (RESEARCH_PLAN_V3.md \u00a73.2)",
+  "model": "qwen2.5:3b-instruct",
+  "split": "dev",
+  "seed": 0,
+  "n_numeric_dev_tasks": 54,
+  "n_genuine_checked": 51,
+  "n_corrupted_checked": 39,
+  "n_skipped": 3,
+  "skipped": [
+    {
+      "task_id": "att-h03",
+      "reason": "no_tool_called"
+    },
+    {
+      "task_id": "ana-h03",
+      "reason": "no_tool_called"
+    },
+    {
+      "task_id": "prf-h03",
+      "reason": "no_tool_called"
+    }
+  ],
+  "block_rate_on_genuine_answers": 0.23529411764705882,
+  "catch_rate_on_synthetic_corruption": 1.0,
+  "mean_gate_overhead_us": 468.0509802853396,
+  "genuine_records": [
+    {
+      "task_id": "att-s01",
+      "query": "What is my attendance percentage?",
+      "gold_tool": "get_attendance",
+      "text": "Your overall attendance percentage is 82.67%. Here are the details for each subject:\n\n- **23AI51**: 83.33% (No shortage)\n- **23AI52**: 66.67% (Shortage of 9.33%)\n- **23AI53**: 76.67% (No shortage)\n- **23AI54**: 93.33% (No shortage)\n- **23AI55**: 93.33% (No shortage)",
+      "tools_used": [
+        "get_attendance"
+      ],
+      "blocked": true,
+      "claims_checked": 12,
+      "ungrounded": [
+        9.33
+      ]
+    },
+    {
+      "task_id": "att-s02",
+      "query": "Am I short of attendance?",
+      "gold_tool": "get_attendance",
+      "text": "Based on the information provided by the get_student_overview function call:\n\n- Your overall attendance percentage is 82.67%.\n- You are not eligible for a hall ticket due to outstanding fees (\u20b91,03,340.55).\n\nSince your attendance is below 90%, you are considered short of attendance. Please ensure that all your pending fees are cleared as this affects your eligibility for important documents like the hall ticket.",
+      "tools_used": [
+        "get_student_overview"
+      ],
+      "blocked": true,
+      "claims_checked": 3,
+      "ungrounded": [
+        90.0
+      ]
+    },
+    {
+      "task_id": "att-s03",
+      "query": "Do I have attendance shortage in any subject?",
+      "gold_tool": "get_attendance",
+      "text": "You have an attendance shortage in any subject as your overall attendance percentage is below 100%. Specifically, you currently have an overall attendance of 82.67%.\n\nAdditionally, due to overdue fees pending, you are not eligible for a hall ticket and therefore cannot attend exams this semester. Please ensure all outstanding fees are cleared to avoid further issues.",
+      "tools_used": [
+        "get_student_overview"
+      ],
+      "blocked": true,
+      "claims_checked": 2,
+      "ungrounded": [
+        100.0
+      ]
+    },
+    {
+      "task_id": "att-s04",
+      "query": "Was I marked absent yesterday?",
+      "gold_tool": "get_attendance",
+      "text": "Yesterday you were marked absent in the subject 23AI52 due to shortage of attendance. Please ensure you attend all classes to avoid any further absences. Your overall attendance percentage is 82.67%.",
+      "tools_used": [
+        "get_attendance"
+      ],
+      "blocked": false,
+      "claims_checked": 2,
+      "ungrounded": []
+    },
+    {
+      "task_id": "att-s05",
+      "query": "Is my attendance above 75%?",
+      "gold_tool": "get_attendance",
+      "text": "Your overall attendance percentage is 82.67%. Here are the details for each subject:\n- 23AI51: 83.33% (No shortage)\n- 23AI52: 66.67% (Shortage of 3 days)\n- 23AI53: 76.67% (No shortage)\n- 23AI54: 93.33% (No shortage)\n- 23AI55: 93.33% (No shortage)\n\nSince your overall percentage is above 75%, you have met the requirement for attendance. However, there are shortages in your attendance for subject 23AI52.",
+      "tools_used": [
+        "get_attendance"
+      ],
+      "blocked": false,
+      "claims_checked": 9,
+      "ungrounded": []
+    },
+    {
+      "task_id": "att-s06",
+      "query": "attendance status",
+      "gold_tool": "get_attendance",
+      "text": "The student's attendance status is as follows:\n\n- In the subject 23AI51, they have attended 25 out of 30 classes (83.33%).\n- In the subject 23AI52, they have attended 20 out of 30 classes (66.67%, shortage of 10%).\n- In the subject 23AI53, they have attended 23 out of 30 classes (76.67%).\n- In the subject 23AI54, they have attended 28 out of 30 classes (93.33%).\n- In the subject 23AI55, they have attended 28 out of 30 classes (93.33%).\n\nThey are short on attendance in one subject: 23AI52.",
+      "tools_used": [
+        "get_attendance"
+      ],
+      "blocked": true,
+      "claims_checked": 22,
+      "ungrounded": [
+        10.0
+      ]
+    },
+    {
+      "task_id": "fee-s01",
+      "query": "Do I have any pending fees?",
+      "gold_tool": "get_fees",
+      "text": "You have some pending fees that are overdue. The total outstanding amount is \u20b9103,340.55. Here's a breakdown of the items with their status and due dates:\n\n- Tuition: \u20b997,590.55 (overdue as of 2026-04-25)\n- Exam fee: \u20b91,797.75 (paid as of 2026-04-25)\n- Development fee: \u20b911,789.25 (paid as of 2026-04-25)\n- Library fee: \u20b9612.44 (paid as of 2026-04-25)",
+      "tools_used": [
+        "get_fees"
+      ],
+      "blocked": false,
+      "claims_checked": 9,
+      "ungrounded": []
+    },
+    {
+      "task_id": "fee-s02",
+      "query": "How much tuition fee is due?",
+      "gold_tool": "get_fees",
+      "text": "The tuition fee is due in the amount of \u20b997,590.55 and is overdue with a fine of \u20b95,750.0. All other fees are either paid or not yet due. Please ensure to clear this outstanding fee as soon as possible.",
+      "tools_used": [
+        "get_fees"
+      ],
+      "blocked": false,
+      "claims_checked": 2,
+      "ungrounded": []
+    },
+    {
+      "task_id": "fee-s03",
+      "query": "What is my fine amount?",
+      "gold_tool": "get_fees",
+      "text": "Your fine amount is \u20b95750 for the tuition fee which is overdue as of April 25, 2026. All other fees have been paid and are up to date. Please ensure you pay the outstanding amount by the due date to avoid further penalties.",
+      "tools_used": [
+        "get_fees"
+      ],
+      "blocked": false,
+      "claims_checked": 3,
+      "ungrounded": []
+    },
+    {
+      "task_id": "fee-s04",
+      "query": "Have I paid my exam fees?",
+      "gold_tool": "get_fees",
+      "text": "Your exam fees have not been paid yet. The outstanding amount is \u20b91797.75 which is due on 2026-04-25. Please make the payment as soon as possible to avoid any delays in your examination process.",
+      "tools_used": [
+        "get_fees"
+      ],
+      "blocked": false,
+      "claims_checked": 2,
+      "ungrounded": []
+    },
+    {
+      "task_id": "fee-s05",
+      "query": "Show the fee defaulter list",
+      "gold_tool": "get_fees",
+      "text": "The fee defaulter list includes the following students with outstanding fees:\n\n1. **USN: 4MT23AI049**\n   - Total Outstanding Amount: \u20b9103,340.55\n   - Tuition Fee (Overdue): \u20b997,590.55\n   - Library Fine: \u20b9612.44\n\nPlease ensure these students are reminded to clear their outstanding fees as they are overdue.",
+      "tools_used": [
+        "get_fees"
+      ],
+      "blocked": true,
+      "claims_checked": 5,
+      "ungrounded": [
+        1.0
+      ]
+    },
+    {
+      "task_id": "fee-s06",
+      "query": "fee status",
+      "gold_tool": "get_fees",
+      "text": "The fee status for the student with USN 4MT23AI049 is as follows:\n\n- Tuition: Overdue amount due \u20b997,590.55 (fine \u20b95,750)\n- Exam: Paid amount due \u20b91,797.75\n- Development: Paid amount due \u20b911,789.25\n- Library: Paid amount due \u20b9612.44\n\nTotal outstanding fee is \u20b9103,340.55. Please ensure to clear these dues as soon as possible.",
+      "tools_used": [
+        "get_fees"
+      ],
+      "blocked": false,
+      "claims_checked": 7,
+      "ungrounded": []
+    },
+    {
+      "task_id": "mrk-s01",
+      "query": "Show my internal marks",
+      "gold_tool": "get_marks",
+      "text": "Your internal marks for the subjects are as follows:\n\n- **Neural Networks (23AI51)**: CIE-1 = 32.0, CIE-2 = 44.0 with an average of 38.0.\n- **Data Visualization (23AI52)**: CIE-1 = 44.0, CIE-2 = 45.0 with an average of 44.5.\n- **Statistics for ML (23AI53)**: CIE-1 = 33.0, CIE-2 = 40.0 with an average of 36.5.\n- **Python Programming (23AI54)**: CIE-1 = 47.0, CIE-2 = 43.0 with an average of 45.0.\n- **Discrete Mathematics (23AI55)**: CIE-1 = 32.0, CIE-2 = 39.0 with an average of 35.5.\n\nPlease review these details.",
+      "tools_used": [
+        "get_marks"
+      ],
+      "blocked": false,
+      "claims_checked": 20,
+      "ungrounded": []
+    },
+    {
+      "task_id": "mrk-s02",
+      "query": "What did I score in CIE 2?",
+      "gold_tool": "get_marks",
+      "text": "In CIE 2, you scored an average of 38 in the subject Neural Networks (23AI51).",
+      "tools_used": [
+        "get_marks"
+      ],
+      "blocked": false,
+      "claims_checked": 3,
+      "ungrounded": []
+    },
+    {
+      "task_id": "mrk-s03",
+      "query": "My DBMS internal marks",
+      "gold_tool": "get_marks",
+      "text": "Your internal marks for DBMS are as follows:\n\n- Neural Networks: CIE-1 = 32.0, CIE-2 = 44.0 with an average of 38.0\n- Data Visualization: CIE-1 = 44.0, CIE-2 = 45.0 with an average of 44.5\n- Statistics for ML: CIE-1 = 33.0, CIE-2 = 40.0 with an average of 36.5\n- Python Programming: CIE-1 = 47.0, CIE-2 = 43.0 with an average of 45.0\n- Discrete Mathematics: CIE-1 = 32.0, CIE-2 = 39.0 with an average of 35.5",
+      "tools_used": [
+        "get_marks"
+      ],
+      "blocked": false,
+      "claims_checked": 15,
+      "ungrounded": []
+    },
+    {
+      "task_id": "mrk-s04",
+      "query": "Show my CIE scores",
+      "gold_tool": "get_marks",
+      "text": "Your CIE scores are as follows:\n\n- Neural Networks: Average of CIE-1 and CIE-2 is 38.0\n- Data Visualization: Average of CIE-1 and CIE-2 is 44.5\n- Statistics for ML: Average of CIE-1 and CIE-2 is 36.5\n- Python Programming: Average of CIE-1 and CIE-2 is 45.0\n- Discrete Mathematics: Average of CIE-1 and CIE-2 is 35.5",
+      "tools_used": [
+        "get_marks"
+      ],
+      "blocked": false,
+      "claims_checked": 5,
+      "ungrounded": []
+    },
+    {
+      "task_id": "mrk-s05",
+      "query": "How much did I get in the internals?",
+      "gold_tool": "get_marks",
+      "text": "Your internal marks in each subject are as follows:\n- Neural Networks: CIE-1 = 32.0, CIE-2 = 44.0 with a CIE average of 38.0\n- Data Visualization: CIE-1 = 44.0, CIE-2 = 45.0 with a CIE average of 44.5\n- Statistics for ML: CIE-1 = 33.0, CIE-2 = 40.0 with a CIE average of 36.5\n- Python Programming: CIE-1 = 47.0, CIE-2 = 43.0 with a CIE average of 45.0\n- Discrete Mathematics: CIE-1 = 32.0, CIE-2 = 39.0 with a CIE average of 35.5\n\nYour overall CIE average across all subjects is 38.0.",
+      "tools_used": [
+        "get_marks"
+      ],
+      "blocked": false,
+      "claims_checked": 16,
+      "ungrounded": []
+    },
+    {
+      "task_id": "mrk-s06",
+      "query": "internal marks please",
+      "gold_tool": "get_marks",
+      "text": "Here are the internal (CIE) marks for each subject of your course:\n\n- **Neural Networks**:\n  - CIE-1: 32.0\n  - CIE-2: 44.0\n  - CIE Average: 38.0\n\n- **Data Visualization**:\n  - CIE-1: 44.0\n  - CIE-2: 45.0\n  - CIE Average: 44.5\n\n- **Statistics for ML**:\n  - CIE-1: 33.0\n  - CIE-2: 40.0\n  - CIE Average: 36.5\n\n- **Python Programming**:\n  - CIE-1: 47.0\n  - CIE-2: 43.0\n  - CIE Average: 45.0\n\n- **Discrete Mathematics**:\n  - CIE-1: 32.0\n  - CIE-2: 39.0\n  - CIE Average: 35.5",
+      "tools_used": [
+        "get_marks"
+      ],
+      "blocked": false,
+      "claims_checked": 15,
+      "ungrounded": []
+    },
+    {
+      "task_id": "plc-s01",
+      "query": "Which placement drives am I eligible for?",
+      "gold_tool": "get_placements",
+      "text": "You are not eligible for any placement drives as they are all open to students in their final year. Please check again next semester or if you have completed your studies. If you need further assistance, feel free to ask.",
+      "tools_used": [
+        "get_placements"
+      ],
+      "blocked": false,
+      "claims_checked": 0,
+      "ungrounded": []
+    },
+    {
+      "task_id": "plc-s02",
+      "query": "When is the next campus drive?",
+      "gold_tool": "get_placements",
+      "text": "None of the campus drives are currently eligible for you. They are all open to students in their final year. Please check again later or contact placement office if your status changes.\n\nIf you need assistance with other details like your eligibility, feel free to ask!",
+      "tools_used": [
+        "get_placements"
+      ],
+      "blocked": false,
+      "claims_checked": 0,
+      "ungrounded": []
+    },
+    {
+      "task_id": "plc-s03",
+      "query": "What companies are coming this month?",
+      "gold_tool": "get_placements",
+      "text": "This month (August), the following companies are coming for placements:\n\n1. **IBM**\n   - Role: Systems Engineer / Design Engineer\n   - Package per LPA: \u20b912.00 / \u20b95.00\n   - Date: August 18, 19, 24, 26, 29\n\n2. **Cisco**\n   - Role: QA Engineer\n   - Package per LPA: \u20b94.00\n   - Date: August 24, 26, 29\n\n3. **SAP Labs**\n   - Role: ML Engineer\n   - Package per LPA: \u20b94.50\n   - Date: August 24, 26, 29\n\n4. **Wipro**\n   - Role: Software Engineer\n   - Package per LPA: \u20b95.00\n   - Date: August 26\n\n5. **TCS**\n   - Role: GET\n   - Package per LPA: \u20b97.50\n   - Date: August 29\n\n6. **Bosch**\n   - Role: GET\n   - Package per LPA: \u20b94.00\n   - Date: August 29\n\n7. **IBM**\n   - Role: ML Engineer\n   - Package per LPA: \u20b94.50\n   - Date: August 29\n\n8. **Cisco**\n   - Role: Design Engineer\n   - Package per LPA: \u20b95.00\n   - Date: August 29\n\n9. **Tata Elxsi**\n   - Role: QA Engineer / Software Engineer\n   - Package per LPA: \u20b94.50 / \u20b97.50\n   - Date: August 31\n\n10. **Nokia**\n    - Role: Software Engineer\n    - Package per LPA: \u20b97.50\n    - Date: August 31\n\n11. **Tata Elxsi**\n    - Role: Systems Engineer\n    - Package per LPA: \u20b95.00\n    - Date: August 31\n\n12. **SAP Labs**\n    - Role: GET\n    - Package per LPA: \u20b94.00\n    - Date: September 2\n\n13. **IBM**\n    - Role: GET\n    - Package per LPA: \u20b93.50\n    - Date: September 2\n\n14. **Toyota**\n    - Role: GET\n    - Package per LPA: \u20b97.50\n    - Date: September 7\n\nNone of these companies are eligible for you as placements are open only in the final year. Please check with your department or faculty if this is applicable to your current year.",
+      "tools_used": [
+        "get_placements"
+      ],
+      "blocked": true,
+      "claims_checked": 39,
+      "ungrounded": [
+        1.0
+      ]
+    },
+    {
+      "task_id": "plc-s04",
+      "query": "Show my placement eligibility",
+      "gold_tool": "get_placements",
+      "text": "Your placement eligibility is currently not available as all placements are open for the final year students. Please check back later or contact your department office for more information.",
+      "tools_used": [
+        "get_placements"
+      ],
+      "blocked": false,
+      "claims_checked": 0,
+      "ungrounded": []
+    },
+    {
+      "task_id": "plc-s05",
+      "query": "Any job opportunities for me?",
+      "gold_tool": "get_placements",
+      "text": "There are no current job opportunities available for you as placements are only open in the final year. Please check again after your final year of studies. You may also want to explore other career options or internships during this time.",
+      "tools_used": [
+        "get_placements"
+      ],
+      "blocked": false,
+      "claims_checked": 0,
+      "ungrounded": []
+    },
+    {
+      "task_id": "plc-s06",
+      "query": "placement drive list",
+      "gold_tool": "get_placements",
+      "text": "The placement drive list for the academic year is as follows. As of now, placements are open only for the final year students and there are no drives eligible for you (USN: 4MT23AI049). The reasons provided are \"placements open in final year\". Here's a summary:\n\n- IBM: Systems Engineer - Package LPA: 12.0, Date: 2026-08-18\n- IBM: Design Engineer - Package LPA: 5.0, Date: 2026-08-19\n- Cisco: QA Engineer - Package LPA: 4.0, Date: 2026-08-24\n- SAP Labs: ML Engineer - Package LPA: 4.5, Date: 2026-08-24\n- Wipro: Software Engineer - Package LPA: 5.0, Date: 2026-08-26\n- TCS: GET - Package LPA: 7.5, Date: 2026-08-29\n- Bosch: GET - Package LPA: 4.0, Date: 2026-08-29\n- IBM: ML Engineer - Package LPA: 4.5, Date: 2026-08-29\n- Cisco: Design Engineer - Package LPA: 5.0, Date: 2026-08-29\n- Tata Elxsi: QA Engineer - Package LPA: 4.5, Date: 2026-08-31\n- Nokia: Software Engineer - Package LPA: 7.5, Date: 2026-08-31\n- Tata Elxsi: Systems Engineer - Package LPA: 5.0, Date: 2026-08-31\n- SAP Labs: GET - Package LPA: 4.0, Date: 2026-09-02\n- IBM: GET - Package LPA: 3.5, Date: 2026-09-02\n- Toyota: GET - Package LPA: 7.5, Date: 2026-09-07\n\nPlease check back for updates as the placement process continues.",
+      "tools_used": [
+        "get_placements"
+      ],
+      "blocked": false,
+      "claims_checked": 31,
+      "ungrounded": []
+    },
+    {
+      "task_id": "ana-s01",
+      "query": "Show department analytics",
+      "gold_tool": "get_dept_analytics",
+      "text": "The department analytics for AIML are as follows:\n\n- Total Students: 240\n- Shortage of Students: 94\n- Average Attendance: 84.4%\n- Average CGPA: 7.37\n\nBy Year:\n- First Year (1): 60 students\n- Second Year (2): 60 students\n- Third Year (3): 60 students\n- Fourth Year (4): 60 students\n\nFee Defaulters:\n1. USN: 4MT25AI003, Name: Shreya Hegde, Amount Due: \u20b912,315.85, Fine: \u20b94,700.0\n2. USN: 4MT25AI006, Name: Prerana Pai, Amount Due: \u20b91,00,494.7, Fine: \u20b94,700.0\n3. USN: 4MT25AI006, Name: Prerana Nayak, Amount Due: \u20b998,915.71, Fine: \u20b94,700.0\n4. USN: 4MT25AI017, Name: Tejas Amin, Amount Due: \u20b996,171.63, Fine: \u20b94,700.0\n5. USN: 4MT25AI018, Name: Om Devadiga, Amount Due: \u20b911,728.05, Fine: \u20b94,700.0\n6. USN: 4MT25AI020, Name: Ramya Ballal, Amount Due: \u20b918,30.75, Fine: \u20b94,700.0\n\nPlease note that the amounts are in Indian Rupees (\u20b9).",
+      "tools_used": [
+        "get_dept_analytics"
+      ],
+      "blocked": false,
+      "claims_checked": 27,
+      "ungrounded": []
+    },
+    {
+      "task_id": "ana-s02",
+      "query": "How is my department performing?",
+      "gold_tool": "get_dept_analytics",
+      "text": "The department of AIML has a student headcount of 240. There are 94 shortage students this year.\n\nIn terms of attendance and CGPA:\n- The average class attendance is 84.4%.\n- The average CGPA across all years (1st, 2nd, 3rd, and 4th) is 7.37.\n\nRegarding fees, there are some fee defaulters this semester:\n- Shreya Hegde from the 1st year has an amount due of \u20b912,315.85 with a fine of \u20b94,700.\n- Prerana Pai and Prerana Nayak both in the 1st year have amounts due for different fee types (\u20b91,00,494.70 and \u20b998,915.71 respectively) along with fines.\n- Tejas Amin from the 1st year has a development fee amount due of \u20b911,858.01 and a fine of \u20b94,700.\n- Om Devadiga in the 1st year has a development fee amount due of \u20b911,728.05 with a fine of \u20b94,700.\n- Ishita Kini from the 1st year has an amount due for a library fee of \u20b95,86.26 and a fine of \u20b94,700.\n- Ramya Ballal in the 1st year has an exam fee amount due of \u20b91,830.75 with a fine of \u20b94,700.\n\nPlease review these details to address any issues promptly.",
+      "tools_used": [
+        "get_dept_analytics"
+      ],
+      "blocked": true,
+      "claims_checked": 26,
+      "ungrounded": [
+        2.0
+      ]
+    },
+    {
+      "task_id": "ana-s03",
+      "query": "What is the average attendance in AIML?",
+      "gold_tool": "get_dept_analytics",
+      "text": "The average attendance in the AIML department is 84.4%.",
+      "tools_used": [
+        "get_dept_analytics"
+      ],
+      "blocked": false,
+      "claims_checked": 1,
+      "ungrounded": []
+    },
+    {
+      "task_id": "ana-s04",
+      "query": "Department report please",
+      "gold_tool": "get_dept_analytics",
+      "text": "The department report for AIML is as follows:\n\n- Total number of students: 240\n- Number of shortage students (students who are below the average attendance): 94\n\nAverage Attendance and CGPA:\n- Average attendance across all years: 84.4%\n- Average CGPA across all years: 7.37\n\nDistribution by year:\n- Year 1: 60 students\n- Year 2: 60 students\n- Year 3: 60 students\n- Year 4: 60 students\n\nFee Defaulters:\n- Shreya Hegde (Year 1, Tuition Fee): \u20b912,315.85 due, \u20b94,700 fine\n- Prerana Pai (Year 1, Tuition Fee): \u20b91,00,494.70 due, \u20b94,700 fine\n- Prerana Nayak (Year 1, Tuition Fee): \u20b998,915.71 due, \u20b94,700 fine\n- Tejas Amin (Year 1, Tuition Fee): \u20b996,171.63 due, \u20b94,700 fine\n- Om Devadiga (Year 1, Development Fee): \u20b912,215.43 due, \u20b94,700 fine\n- Ishita Kini (Year 1, Development Fee): \u20b912,215.43 due, \u20b94,700 fine\n- Ramya Ballal (Year 1, Exam Fee): \u20b91,830.75 due, \u20b94,700 fine\n\nPlease review the details and let me know if you need further information or assistance.",
+      "tools_used": [
+        "get_dept_analytics"
+      ],
+      "blocked": true,
+      "claims_checked": 33,
+      "ungrounded": [
+        2.0
+      ]
+    },
+    {
+      "task_id": "ana-s05",
+      "query": "Give me an overview of the department",
+      "gold_tool": "get_dept_analytics",
+      "text": "The department of AIML has a total student headcount of 240. There is a shortage of 94 students in the department.\n\nHere are some additional details:\n- The average attendance across all years is 84.4%.\n- The average CGPA for the department is 7.37.\n- By year, there are 60 students each in first (1st), second (2nd), third (3rd) and fourth (4th) year.\n\nAdditionally, here are some fee-related details:\n- There are currently 9 fee defaulters in the department.\n- The most significant amount due from a single student is \u20b9123,158.50 for development fees.\n- The highest fine imposed on any student is \u20b94700.0.\n\nPlease note that these figures may change as new data becomes available or as students pay their dues and fines.",
+      "tools_used": [
+        "get_dept_analytics"
+      ],
+      "blocked": true,
+      "claims_checked": 12,
+      "ungrounded": [
+        2.0,
+        9.0,
+        123158.5
+      ]
+    },
+    {
+      "task_id": "ana-s06",
+      "query": "How are the students performing this semester?",
+      "gold_tool": "get_dept_analytics",
+      "text": "This semester in the AIML department, there are a total of 240 students with an average attendance rate of 84.4%. The average CGPA is at 7.37.\n\nIn terms of fee payment status:\n- There are 94 shortage students.\n- Some notable fee defaulters include Shreya Hegde (development fee), Prerana Pai (tuition and library fees), Prerana Nayak (tuition fee), Tejas Amin (multiple types of fees), Om Devadiga (development fee), and Ramya Ballal (exam fee).\n\nAdditionally, there are multiple instances where students have accumulated fines due to non-payment. Please ensure that all outstanding payments are made as soon as possible to avoid further penalties or disruptions in academic progress.",
+      "tools_used": [
+        "get_dept_analytics"
+      ],
+      "blocked": false,
+      "claims_checked": 4,
+      "ungrounded": []
+    },
+    {
+      "task_id": "prf-s01",
+      "query": "Show my profile",
+      "gold_tool": "get_student_overview",
+      "text": "Your profile is as follows:\n\n- **USN**: 4MT23AI049  \n- **Name**: Samprith C Amin  \n- **Department**: Artificial Intelligence & Machine Learning (AIML)  \n- **Year**: 3rd Year  \n- **Semester**: 5th Semester  \n- **Section**: B  \n- **CGPA**: 9.22  \n- **Backlogs**: None  \n\nYour overall attendance percentage is 82.67%. \n\nYou have not cleared your fees, with outstanding amount of \u20b9103,340.55.\n\nRegarding your hall ticket:\n- You are not eligible due to overdue fees pending.\n- The reason for non-eligibility: Overdue fees pending.\n\nAs per the scholarship status:\n- You are not eligible for any scholarships at this moment because there is outstanding overdue fees.",
+      "tools_used": [
+        "get_student_overview"
+      ],
+      "blocked": false,
+      "claims_checked": 6,
+      "ungrounded": []
+    },
+    {
+      "task_id": "prf-s02",
+      "query": "What is my CGPA?",
+      "gold_tool": "get_student_overview",
+      "text": "Your current CGPA is 9.22. However, you have some outstanding fees which are preventing your hall ticket from being issued and affecting your scholarship eligibility. Please clear the outstanding amount to resolve these issues.",
+      "tools_used": [
+        "get_student_overview"
+      ],
+      "blocked": false,
+      "claims_checked": 1,
+      "ungrounded": []
+    },
+    {
+      "task_id": "prf-s03",
+      "query": "How many backlogs do I have?",
+      "gold_tool": "get_student_overview",
+      "text": "You do not have any backlogs according to your profile. However, you are facing issues with your hall ticket eligibility due to outstanding fees. Please clear the outstanding amount to get your hall ticket eligible. Your current outstanding fee is \u20b9103,340.55.",
+      "tools_used": [
+        "get_student_overview"
+      ],
+      "blocked": false,
+      "claims_checked": 1,
+      "ungrounded": []
+    },
+    {
+      "task_id": "prf-s04",
+      "query": "Show my details",
+      "gold_tool": "get_student_overview",
+      "text": "Your details are as follows:\n\n- **USN:** 4MT23AI049  \n- **Name:** Samprith C Amin  \n- **Department:** Artificial Intelligence & Machine Learning (AIML)  \n- **Year:** 3rd Year  \n- **Semester:** 5th Semester  \n- **Section:** B  \n- **CGPA:** 9.22  \n- **Backlogs:** None  \n\n**Attendance:** Overall attendance percentage is 82.67%\n\n**Fees Status:**\n- Fees are not cleared.\n- Outstanding fees amount is \u20b9103,340.55\n\n**Hall Ticket Eligibility:** You are not eligible due to overdue fees pending.\n\n**Scholarship Eligibility:** Not eligible as there are outstanding overdue fees.",
+      "tools_used": [
+        "get_student_overview"
+      ],
+      "blocked": false,
+      "claims_checked": 6,
+      "ungrounded": []
+    },
+    {
+      "task_id": "prf-s05",
+      "query": "Give me my overall summary",
+      "gold_tool": "get_student_overview",
+      "text": "Your overall summary is as follows:\n\n- **Profile**: \n  - USN: 4MT23AI049\n  - Name: Samprith C Amin\n  - Department: Artificial Intelligence & Machine Learning (AIML)\n  - Year: 3rd year\n  - Semester: 5th semester\n  - Section: B\n  - CGPA: 9.22\n  - Backlogs: None\n\n- **Attendance**: \n  - Overall Attendance Percentage: 82.67%\n\n- **Fees**:\n  - Fees Cleared Status: No (fees are outstanding)\n  - Outstanding Amount: \u20b9103,340.55\n\n- **Hall Ticket Eligibility**:\n  - Eligible: No\n  - Reasons: Overdue fees pending\n\n- **Scholarship Eligibility**: \n  - Status: Not eligible\n  - Reason: Outstanding overdue fees\n\nPlease ensure your fees are cleared to proceed with hall ticket and scholarship processes.",
+      "tools_used": [
+        "get_student_overview"
+      ],
+      "blocked": false,
+      "claims_checked": 6,
+      "ungrounded": []
+    },
+    {
+      "task_id": "prf-s06",
+      "query": "Who am I logged in as?",
+      "gold_tool": "get_student_overview",
+      "text": "You are logged in as student with USN 4MT23AI049. Your current profile details are as follows:\n\n- Name: Samprith C Amin\n- Department: Artificial Intelligence & Machine Learning (AIML)\n- Year: 3rd year\n- Semester: 5th semester\n- Section: B\n- CGPA: 9.22\n- Backlogs: None\n\nYour overall attendance percentage is 82.67%. You have not cleared your fees, with outstanding amount of \u20b9103,340.55. Your hall ticket eligibility has been denied due to overdue fees pending. Scholarship status is 'not_eligible' because of the outstanding fees.",
+      "tools_used": [
+        "get_student_overview"
+      ],
+      "blocked": false,
+      "claims_checked": 6,
+      "ungrounded": []
+    },
+    {
+      "task_id": "att-h01",
+      "query": "If I skip tomorrow will I fall below the limit?",
+      "gold_tool": "get_attendance",
+      "text": "Based on the information available:\n\n- Your overall attendance percentage is 82.67%.\n- You are not eligible for your hall ticket due to outstanding fees (\u20b91,03,340.55).\n\nSkipping today will not help as you already fell below the limit with your current attendance and fee status. Please ensure all your dues are cleared immediately.",
+      "tools_used": [
+        "get_student_overview"
+      ],
+      "blocked": false,
+      "claims_checked": 2,
+      "ungrounded": []
+    },
+    {
+      "task_id": "att-h02",
+      "query": "The professor marked me absent even though I came",
+      "gold_tool": "get_attendance",
+      "text": "The professor marked you absent in the following subjects due to insufficient attendance:\n- 23AI52: shortage of 10% (you attended 66.67%, missed 33.33%)\n  \nYou have been present for more than 80% in all other subjects. Please ensure you attend classes regularly to avoid such issues in the future.",
+      "tools_used": [
+        "get_attendance"
+      ],
+      "blocked": true,
+      "claims_checked": 4,
+      "ungrounded": [
+        10.0,
+        33.33,
+        80.0
+      ]
+    },
+    {
+      "task_id": "fee-h01",
+      "query": "How much do I still owe the college?",
+      "gold_tool": "get_fees",
+      "text": "You still owe the college \u20b9103,340.55. The details are as follows:\n\n- A tuition fee of \u20b997,590.55 is overdue with a fine of \u20b95,750.\n- An exam fee of \u20b91,797.75 has been paid without any fine.\n- Development fees of \u20b911,789.25 have been fully paid without any fine.\n- A library fee of \u20b9612.44 has also been paid without any fine.\n\nPlease ensure to pay the outstanding amount as soon as possible to avoid further penalties.",
+      "tools_used": [
+        "get_fees"
+      ],
+      "blocked": false,
+      "claims_checked": 6,
+      "ungrounded": []
+    },
+    {
+      "task_id": "fee-h02",
+      "query": "Is there a penalty added to my dues?",
+      "gold_tool": "get_fees",
+      "text": "There is a penalty added to your dues. Specifically, there's an overdue tuition fee of \u20b997,590.55 with a fine of \u20b95,750.0. All other fees are either paid or not due yet. Please pay the outstanding amount by April 25, 2026.",
+      "tools_used": [
+        "get_fees"
+      ],
+      "blocked": false,
+      "claims_checked": 4,
+      "ungrounded": []
+    },
+    {
+      "task_id": "fee-h03",
+      "query": "The accounts office is asking for money again, what's pending?",
+      "gold_tool": "get_fees",
+      "text": "There are some pending fees that need to be addressed:\n\n- Tuition: \u20b997,590.55 (overdue)\n  - Fine: \u20b95,750.0\n- Exam fee: \u20b91,797.75 (paid)\n- Development fee: \u20b911,789.25 (paid)\n- Library fee: \u20b9612.44 (paid)\n\nPlease ensure these are cleared as soon as possible to avoid further penalties.",
+      "tools_used": [
+        "get_fees"
+      ],
+      "blocked": false,
+      "claims_checked": 5,
+      "ungrounded": []
+    },
+    {
+      "task_id": "mrk-h01",
+      "query": "How did I do in the second internals?",
+      "gold_tool": "get_marks",
+      "text": "In the second internals, your marks were as follows:\n\n- **Neural Networks (23AI51)**: CIE-1 = 32.0, CIE-2 = 44.0 with an average of 38.0.\n- **Data Visualization (23AI52)**: CIE-1 = 44.0, CIE-2 = 45.0 with an average of 44.5.\n- **Statistics for ML (23AI53)**: CIE-1 = 33.0, CIE-2 = 40.0 with an average of 36.5.\n- **Python Programming (23AI54)**: CIE-1 = 47.0, CIE-2 = 43.0 with an average of 45.0.\n- **Discrete Mathematics (23AI55)**: CIE-1 = 32.0, CIE-2 = 39.0 with an average of 35.5.\n\nYour overall internal average across all subjects is 38.0.",
+      "tools_used": [
+        "get_marks"
+      ],
+      "blocked": false,
+      "claims_checked": 21,
+      "ungrounded": []
+    },
+    {
+      "task_id": "mrk-h02",
+      "query": "How did the ML test go for me?",
+      "gold_tool": "get_marks",
+      "text": "Your marks for the ML test subjects are as follows:\n- Neural Networks: CIE average is 38.0\n- Data Visualization: CIE average is 44.5\n- Statistics for ML: CIE average is 36.5\n- Python Programming: CIE average is 45.0\n- Discrete Mathematics: CIE average is 35.5\n\nPlease note that these are the internal (CIE) averages and not the final grades or results. Your overall performance in ML subjects can be considered satisfactory with a focus on improving your Statistics for ML subject as it has the lowest CIE average of 36.5.",
+      "tools_used": [
+        "get_marks"
+      ],
+      "blocked": false,
+      "claims_checked": 6,
+      "ungrounded": []
+    },
+    {
+      "task_id": "mrk-h03",
+      "query": "Are my CIE scores decent?",
+      "gold_tool": "get_marks",
+      "text": "Your CIE scores are as follows:\n- Neural Networks: Average = 38.0\n- Data Visualization: Average = 44.5\n- Statistics for ML: Average = 36.5\n- Python Programming: Average = 45.0\n- Discrete Mathematics: Average = 35.5\n\nPlease note that these are averages and you can have different scores in each CIE assessment. If you need more detailed analysis or specific subject scores, please let me know!",
+      "tools_used": [
+        "get_marks"
+      ],
+      "blocked": false,
+      "claims_checked": 5,
+      "ungrounded": []
+    },
+    {
+      "task_id": "plc-h01",
+      "query": "Which firms can I sit for?",
+      "gold_tool": "get_placements",
+      "text": "Based on the information provided by the get_placements function call for your USN 4MT23AI049:\n\nThe following companies have placement drives scheduled but are currently not eligible due to being placements open only for final year students:\n- IBM: Systems Engineer, Design Engineer roles\n- Cisco: QA Engineer role\n- SAP Labs: ML Engineer role\n- Wipro: Software Engineer role\n- TCS: GET role\n- Bosch: GET role\n\nPlease check back as eligibility may change.",
+      "tools_used": [
+        "get_placements"
+      ],
+      "blocked": false,
+      "claims_checked": 1,
+      "ungrounded": []
+    },
+    {
+      "task_id": "plc-h02",
+      "query": "Do I meet the cutoff for the next drive?",
+      "gold_tool": "get_placements",
+      "text": "You do not meet the cutoff for any of the upcoming placement drives as they are all marked as 'placements open in final year'. Please check back later or contact placement office for further information.",
+      "tools_used": [
+        "get_placements"
+      ],
+      "blocked": false,
+      "claims_checked": 0,
+      "ungrounded": []
+    },
+    {
+      "task_id": "plc-h03",
+      "query": "What are my chances of getting hired?",
+      "gold_tool": "get_placements",
+      "text": "Based on the information provided by the get_placements function, you are not eligible for any of the placement drives as they are all open to students in their final year. Therefore, your chances of getting hired at these companies are currently unknown due to the placements being restricted to final-year students.\n\nHowever, I recommend checking back soon or contacting the placement office directly for updates on eligibility criteria and upcoming opportunities.",
+      "tools_used": [
+        "get_placements"
+      ],
+      "blocked": false,
+      "claims_checked": 0,
+      "ungrounded": []
+    },
+    {
+      "task_id": "ana-h01",
+      "query": "Give me a health check of the department",
+      "gold_tool": "get_dept_analytics",
+      "text": "The health check of the AIML department reveals that there are currently 240 students enrolled in the department. However, there is a shortage of 94 students.\n\nIn terms of academic performance, the average CGPA across all years (1st to 4th) is 7.37. The distribution by year shows an even headcount with 60 students each year.\n\nRegarding fees and financial status, there are several fee defaulters:\n- Shreya Hegde from 1st Year has a total amount due of \u20b912,315.85 including fines.\n- Prerana Pai from 1st Year has multiple amounts due: \u20b9100,494.7 for tuition and \u20b9598.72 for library fees, with a total fine of \u20b94,700.\n- Prerana Nayak from 1st Year owes \u20b998,915.71 for tuition fees and a fine of \u20b94,700.\n- Tejas Amin from 1st Year has amounts due for both tuition (\u20b996,171.63) and development (\u20b911,858.01), with a total fine of \u20b94,700.\n- Ishita Kini from 1st Year owes \u20b912,215.43 for development fees and a fine of \u20b94,700.\n- Ramya Ballal from 1st Year has an amount due for exam fees of \u20b9183.075.\n\nThese details provide insight into the current financial health and academic performance of the AIML department.",
+      "tools_used": [
+        "get_dept_analytics"
+      ],
+      "blocked": true,
+      "claims_checked": 24,
+      "ungrounded": [
+        183.075
+      ]
+    },
+    {
+      "task_id": "ana-h02",
+      "query": "Which section is struggling the most?",
+      "gold_tool": "get_dept_analytics",
+      "text": "The section with the most students struggling is Section 1 of Department AIML with a shortage count of 94 students. The average attendance for this department is 84.4%, and the average CGPA is 7.37. There are fee defaulters in different categories such as development, tuition, library, etc., amounting to \u20b92,056,194.85 with fines applied.",
+      "tools_used": [
+        "get_dept_analytics"
+      ],
+      "blocked": true,
+      "claims_checked": 5,
+      "ungrounded": [
+        2056194.85
+      ]
+    },
+    {
+      "task_id": "prf-h01",
+      "query": "Give me a rundown of where I stand",
+      "gold_tool": "get_student_overview",
+      "text": "Your academic profile is as follows:\n- USN: 4MT23AI049\n- Name: Samprith C Amin\n- Department: Artificial Intelligence & Machine Learning (AIML)\n- Year: 3rd year\n- Semester: 5th semester\n- Section: B\n- CGPA: 9.22\n- Backlogs: None\n\nYour overall attendance percentage is 82.67%.\n\nRegarding fees:\n- Fees have not been cleared.\n- There are outstanding fees amounting to \u20b9103,340.55.\n\nHall ticket eligibility status:\n- Not eligible due to overdue fees pending payment.\n\nScholarship status:\n- Not eligible based on outstanding overdue fees.\n\nPlease ensure all your dues are settled and check the hall ticket eligibility conditions.",
+      "tools_used": [
+        "get_student_overview"
+      ],
+      "blocked": false,
+      "claims_checked": 6,
+      "ungrounded": []
+    },
+    {
+      "task_id": "prf-h02",
+      "query": "How am I doing overall this semester?",
+      "gold_tool": "get_student_overview",
+      "text": "Overall this semester:\n- Your CGPA is 9.22.\n- You have no backlogs.\n- You are in CAT-1 category and admitted in the year 2023.\n\nIn terms of attendance, you've maintained an overall percentage of 82.67%.\n\nHowever, there seems to be a significant issue with your fees status:\n- Fees are not cleared as they still have outstanding amounts totaling \u20b9103,340.55.\n- You are also not eligible for hall ticket due to overdue fees pending.\n\nPlease address these issues promptly to avoid further complications.",
+      "tools_used": [
+        "get_student_overview"
+      ],
+      "blocked": false,
+      "claims_checked": 4,
+      "ungrounded": []
+    }
+  ],
+  "corrupted_records": [
+    {
+      "task_id": "att-s01",
+      "text": "Your overall attendance percentage is 1082.67%. Here are the details for each subject:\n\n- **23AI51**: 83.33% (No shortage)\n- **23AI52**: 66.67% (Shortage of 9.33%)\n- **23AI53**: 76.67% (No shortage)\n- **23AI54**: 93.33% (No shortage)\n- **23AI55**: 93.33% (No shortage)",
+      "blocked": true,
+      "ungrounded": [
+        1082.67,
+        9.33
+      ]
+    },
+    {
+      "task_id": "att-s02",
+      "text": "Based on the information provided by the get_student_overview function call:\n\n- Your overall attendance percentage is 1082.67%.\n- You are not eligible for a hall ticket due to outstanding fees (\u20b91,03,340.55).\n\nSince your attendance is below 90%, you are considered short of attendance. Please ensure that all your pending fees are cleared as this affects your eligibility for important documents like the hall ticket.",
+      "blocked": true,
+      "ungrounded": [
+        1082.67,
+        90.0
+      ]
+    },
+    {
+      "task_id": "att-s03",
+      "text": "You have an attendance shortage in any subject as your overall attendance percentage is below 1100%. Specifically, you currently have an overall attendance of 82.67%.\n\nAdditionally, due to overdue fees pending, you are not eligible for a hall ticket and therefore cannot attend exams this semester. Please ensure all outstanding fees are cleared to avoid further issues.",
+      "blocked": true,
+      "ungrounded": [
+        1100.0
+      ]
+    },
+    {
+      "task_id": "att-s04",
+      "text": "Yesterday you were marked absent in the subject 1023AI52 due to shortage of attendance. Please ensure you attend all classes to avoid any further absences. Your overall attendance percentage is 82.67%.",
+      "blocked": true,
+      "ungrounded": [
+        1023.0
+      ]
+    },
+    {
+      "task_id": "att-s05",
+      "text": "Your overall attendance percentage is 1082.67%. Here are the details for each subject:\n- 23AI51: 83.33% (No shortage)\n- 23AI52: 66.67% (Shortage of 3 days)\n- 23AI53: 76.67% (No shortage)\n- 23AI54: 93.33% (No shortage)\n- 23AI55: 93.33% (No shortage)\n\nSince your overall percentage is above 75%, you have met the requirement for attendance. However, there are shortages in your attendance for subject 23AI52.",
+      "blocked": true,
+      "ungrounded": [
+        1082.67
+      ]
+    },
+    {
+      "task_id": "att-s06",
+      "text": "The student's attendance status is as follows:\n\n- In the subject 1023AI51, they have attended 25 out of 30 classes (83.33%).\n- In the subject 23AI52, they have attended 20 out of 30 classes (66.67%, shortage of 10%).\n- In the subject 23AI53, they have attended 23 out of 30 classes (76.67%).\n- In the subject 23AI54, they have attended 28 out of 30 classes (93.33%).\n- In the subject 23AI55, they have attended 28 out of 30 classes (93.33%).\n\nThey are short on attendance in one subject: 23AI52.",
+      "blocked": true,
+      "ungrounded": [
+        1023.0,
+        10.0
+      ]
+    },
+    {
+      "task_id": "fee-s03",
+      "text": "Your fine amount is \u20b9824.57 for the tuition fee which is overdue as of April 25, 2026. All other fees have been paid and are up to date. Please ensure you pay the outstanding amount by the due date to avoid further penalties.",
+      "blocked": true,
+      "ungrounded": [
+        824.57
+      ]
+    },
+    {
+      "task_id": "fee-s04",
+      "text": "Your exam fees have not been paid yet. The outstanding amount is \u20b9259.963 which is due on 2026-04-25. Please make the payment as soon as possible to avoid any delays in your examination process.",
+      "blocked": true,
+      "ungrounded": [
+        259.963
+      ]
+    },
+    {
+      "task_id": "fee-s05",
+      "text": "The fee defaulter list includes the following students with outstanding fees:\n\n1001. **USN: 4MT23AI049**\n   - Total Outstanding Amount: \u20b9103,340.55\n   - Tuition Fee (Overdue): \u20b997,590.55\n   - Library Fine: \u20b9612.44\n\nPlease ensure these students are reminded to clear their outstanding fees as they are overdue.",
+      "blocked": true,
+      "ungrounded": [
+        1001.0
+      ]
+    },
+    {
+      "task_id": "fee-s06",
+      "text": "The fee status for the student with USN 1004MT23AI049 is as follows:\n\n- Tuition: Overdue amount due \u20b997,590.55 (fine \u20b95,750)\n- Exam: Paid amount due \u20b91,797.75\n- Development: Paid amount due \u20b911,789.25\n- Library: Paid amount due \u20b9612.44\n\nTotal outstanding fee is \u20b9103,340.55. Please ensure to clear these dues as soon as possible.",
+      "blocked": true,
+      "ungrounded": [
+        1004.0
+      ]
+    },
+    {
+      "task_id": "mrk-s01",
+      "text": "Your internal marks for the subjects are as follows:\n\n- **Neural Networks (1023AI51)**: CIE-1 = 32.0, CIE-2 = 44.0 with an average of 38.0.\n- **Data Visualization (23AI52)**: CIE-1 = 44.0, CIE-2 = 45.0 with an average of 44.5.\n- **Statistics for ML (23AI53)**: CIE-1 = 33.0, CIE-2 = 40.0 with an average of 36.5.\n- **Python Programming (23AI54)**: CIE-1 = 47.0, CIE-2 = 43.0 with an average of 45.0.\n- **Discrete Mathematics (23AI55)**: CIE-1 = 32.0, CIE-2 = 39.0 with an average of 35.5.\n\nPlease review these details.",
+      "blocked": true,
+      "ungrounded": [
+        1023.0
+      ]
+    },
+    {
+      "task_id": "mrk-s02",
+      "text": "In CIE 1002, you scored an average of 38 in the subject Neural Networks (23AI51).",
+      "blocked": true,
+      "ungrounded": [
+        1002.0
+      ]
+    },
+    {
+      "task_id": "mrk-s03",
+      "text": "Your internal marks for DBMS are as follows:\n\n- Neural Networks: CIE-1 = 1032.0, CIE-2 = 44.0 with an average of 38.0\n- Data Visualization: CIE-1 = 44.0, CIE-2 = 45.0 with an average of 44.5\n- Statistics for ML: CIE-1 = 33.0, CIE-2 = 40.0 with an average of 36.5\n- Python Programming: CIE-1 = 47.0, CIE-2 = 43.0 with an average of 45.0\n- Discrete Mathematics: CIE-1 = 32.0, CIE-2 = 39.0 with an average of 35.5",
+      "blocked": true,
+      "ungrounded": [
+        1032.0
+      ]
+    },
+    {
+      "task_id": "mrk-s04",
+      "text": "Your CIE scores are as follows:\n\n- Neural Networks: Average of CIE-1 and CIE-2 is 1038.0\n- Data Visualization: Average of CIE-1 and CIE-2 is 44.5\n- Statistics for ML: Average of CIE-1 and CIE-2 is 36.5\n- Python Programming: Average of CIE-1 and CIE-2 is 45.0\n- Discrete Mathematics: Average of CIE-1 and CIE-2 is 35.5",
+      "blocked": true,
+      "ungrounded": [
+        1038.0
+      ]
+    },
+    {
+      "task_id": "mrk-s05",
+      "text": "Your internal marks in each subject are as follows:\n- Neural Networks: CIE-1 = 1032.0, CIE-2 = 44.0 with a CIE average of 38.0\n- Data Visualization: CIE-1 = 44.0, CIE-2 = 45.0 with a CIE average of 44.5\n- Statistics for ML: CIE-1 = 33.0, CIE-2 = 40.0 with a CIE average of 36.5\n- Python Programming: CIE-1 = 47.0, CIE-2 = 43.0 with a CIE average of 45.0\n- Discrete Mathematics: CIE-1 = 32.0, CIE-2 = 39.0 with a CIE average of 35.5\n\nYour overall CIE average across all subjects is 38.0.",
+      "blocked": true,
+      "ungrounded": [
+        1032.0
+      ]
+    },
+    {
+      "task_id": "mrk-s06",
+      "text": "Here are the internal (CIE) marks for each subject of your course:\n\n- **Neural Networks**:\n  - CIE-1: 1032.0\n  - CIE-2: 44.0\n  - CIE Average: 38.0\n\n- **Data Visualization**:\n  - CIE-1: 44.0\n  - CIE-2: 45.0\n  - CIE Average: 44.5\n\n- **Statistics for ML**:\n  - CIE-1: 33.0\n  - CIE-2: 40.0\n  - CIE Average: 36.5\n\n- **Python Programming**:\n  - CIE-1: 47.0\n  - CIE-2: 43.0\n  - CIE Average: 45.0\n\n- **Discrete Mathematics**:\n  - CIE-1: 32.0\n  - CIE-2: 39.0\n  - CIE Average: 35.5",
+      "blocked": true,
+      "ungrounded": [
+        1032.0
+      ]
+    },
+    {
+      "task_id": "plc-s03",
+      "text": "This month (August), the following companies are coming for placements:\n\n1001. **IBM**\n   - Role: Systems Engineer / Design Engineer\n   - Package per LPA: \u20b912.00 / \u20b95.00\n   - Date: August 18, 19, 24, 26, 29\n\n2. **Cisco**\n   - Role: QA Engineer\n   - Package per LPA: \u20b94.00\n   - Date: August 24, 26, 29\n\n3. **SAP Labs**\n   - Role: ML Engineer\n   - Package per LPA: \u20b94.50\n   - Date: August 24, 26, 29\n\n4. **Wipro**\n   - Role: Software Engineer\n   - Package per LPA: \u20b95.00\n   - Date: August 26\n\n5. **TCS**\n   - Role: GET\n   - Package per LPA: \u20b97.50\n   - Date: August 29\n\n6. **Bosch**\n   - Role: GET\n   - Package per LPA: \u20b94.00\n   - Date: August 29\n\n7. **IBM**\n   - Role: ML Engineer\n   - Package per LPA: \u20b94.50\n   - Date: August 29\n\n8. **Cisco**\n   - Role: Design Engineer\n   - Package per LPA: \u20b95.00\n   - Date: August 29\n\n9. **Tata Elxsi**\n   - Role: QA Engineer / Software Engineer\n   - Package per LPA: \u20b94.50 / \u20b97.50\n   - Date: August 31\n\n10. **Nokia**\n    - Role: Software Engineer\n    - Package per LPA: \u20b97.50\n    - Date: August 31\n\n11. **Tata Elxsi**\n    - Role: Systems Engineer\n    - Package per LPA: \u20b95.00\n    - Date: August 31\n\n12. **SAP Labs**\n    - Role: GET\n    - Package per LPA: \u20b94.00\n    - Date: September 2\n\n13. **IBM**\n    - Role: GET\n    - Package per LPA: \u20b93.50\n    - Date: September 2\n\n14. **Toyota**\n    - Role: GET\n    - Package per LPA: \u20b97.50\n    - Date: September 7\n\nNone of these companies are eligible for you as placements are open only in the final year. Please check with your department or faculty if this is applicable to your current year.",
+      "blocked": true,
+      "ungrounded": [
+        1001.0
+      ]
+    },
+    {
+      "task_id": "plc-s06",
+      "text": "The placement drive list for the academic year is as follows. As of now, placements are open only for the final year students and there are no drives eligible for you (USN: 1004MT23AI049). The reasons provided are \"placements open in final year\". Here's a summary:\n\n- IBM: Systems Engineer - Package LPA: 12.0, Date: 2026-08-18\n- IBM: Design Engineer - Package LPA: 5.0, Date: 2026-08-19\n- Cisco: QA Engineer - Package LPA: 4.0, Date: 2026-08-24\n- SAP Labs: ML Engineer - Package LPA: 4.5, Date: 2026-08-24\n- Wipro: Software Engineer - Package LPA: 5.0, Date: 2026-08-26\n- TCS: GET - Package LPA: 7.5, Date: 2026-08-29\n- Bosch: GET - Package LPA: 4.0, Date: 2026-08-29\n- IBM: ML Engineer - Package LPA: 4.5, Date: 2026-08-29\n- Cisco: Design Engineer - Package LPA: 5.0, Date: 2026-08-29\n- Tata Elxsi: QA Engineer - Package LPA: 4.5, Date: 2026-08-31\n- Nokia: Software Engineer - Package LPA: 7.5, Date: 2026-08-31\n- Tata Elxsi: Systems Engineer - Package LPA: 5.0, Date: 2026-08-31\n- SAP Labs: GET - Package LPA: 4.0, Date: 2026-09-02\n- IBM: GET - Package LPA: 3.5, Date: 2026-09-02\n- Toyota: GET - Package LPA: 7.5, Date: 2026-09-07\n\nPlease check back for updates as the placement process continues.",
+      "blocked": true,
+      "ungrounded": [
+        1004.0
+      ]
+    },
+    {
+      "task_id": "ana-s01",
+      "text": "The department analytics for AIML are as follows:\n\n- Total Students: 1240\n- Shortage of Students: 94\n- Average Attendance: 84.4%\n- Average CGPA: 7.37\n\nBy Year:\n- First Year (1): 60 students\n- Second Year (2): 60 students\n- Third Year (3): 60 students\n- Fourth Year (4): 60 students\n\nFee Defaulters:\n1. USN: 4MT25AI003, Name: Shreya Hegde, Amount Due: \u20b912,315.85, Fine: \u20b94,700.0\n2. USN: 4MT25AI006, Name: Prerana Pai, Amount Due: \u20b91,00,494.7, Fine: \u20b94,700.0\n3. USN: 4MT25AI006, Name: Prerana Nayak, Amount Due: \u20b998,915.71, Fine: \u20b94,700.0\n4. USN: 4MT25AI017, Name: Tejas Amin, Amount Due: \u20b996,171.63, Fine: \u20b94,700.0\n5. USN: 4MT25AI018, Name: Om Devadiga, Amount Due: \u20b911,728.05, Fine: \u20b94,700.0\n6. USN: 4MT25AI020, Name: Ramya Ballal, Amount Due: \u20b918,30.75, Fine: \u20b94,700.0\n\nPlease note that the amounts are in Indian Rupees (\u20b9).",
+      "blocked": true,
+      "ungrounded": [
+        1240.0
+      ]
+    },
+    {
+      "task_id": "ana-s02",
+      "text": "The department of AIML has a student headcount of 1240. There are 94 shortage students this year.\n\nIn terms of attendance and CGPA:\n- The average class attendance is 84.4%.\n- The average CGPA across all years (1st, 2nd, 3rd, and 4th) is 7.37.\n\nRegarding fees, there are some fee defaulters this semester:\n- Shreya Hegde from the 1st year has an amount due of \u20b912,315.85 with a fine of \u20b94,700.\n- Prerana Pai and Prerana Nayak both in the 1st year have amounts due for different fee types (\u20b91,00,494.70 and \u20b998,915.71 respectively) along with fines.\n- Tejas Amin from the 1st year has a development fee amount due of \u20b911,858.01 and a fine of \u20b94,700.\n- Om Devadiga in the 1st year has a development fee amount due of \u20b911,728.05 with a fine of \u20b94,700.\n- Ishita Kini from the 1st year has an amount due for a library fee of \u20b95,86.26 and a fine of \u20b94,700.\n- Ramya Ballal in the 1st year has an exam fee amount due of \u20b91,830.75 with a fine of \u20b94,700.\n\nPlease review these details to address any issues promptly.",
+      "blocked": true,
+      "ungrounded": [
+        1240.0,
+        2.0
+      ]
+    },
+    {
+      "task_id": "ana-s03",
+      "text": "The average attendance in the AIML department is 1084.4%.",
+      "blocked": true,
+      "ungrounded": [
+        1084.4
+      ]
+    },
+    {
+      "task_id": "ana-s04",
+      "text": "The department report for AIML is as follows:\n\n- Total number of students: 1240\n- Number of shortage students (students who are below the average attendance): 94\n\nAverage Attendance and CGPA:\n- Average attendance across all years: 84.4%\n- Average CGPA across all years: 7.37\n\nDistribution by year:\n- Year 1: 60 students\n- Year 2: 60 students\n- Year 3: 60 students\n- Year 4: 60 students\n\nFee Defaulters:\n- Shreya Hegde (Year 1, Tuition Fee): \u20b912,315.85 due, \u20b94,700 fine\n- Prerana Pai (Year 1, Tuition Fee): \u20b91,00,494.70 due, \u20b94,700 fine\n- Prerana Nayak (Year 1, Tuition Fee): \u20b998,915.71 due, \u20b94,700 fine\n- Tejas Amin (Year 1, Tuition Fee): \u20b996,171.63 due, \u20b94,700 fine\n- Om Devadiga (Year 1, Development Fee): \u20b912,215.43 due, \u20b94,700 fine\n- Ishita Kini (Year 1, Development Fee): \u20b912,215.43 due, \u20b94,700 fine\n- Ramya Ballal (Year 1, Exam Fee): \u20b91,830.75 due, \u20b94,700 fine\n\nPlease review the details and let me know if you need further information or assistance.",
+      "blocked": true,
+      "ungrounded": [
+        1240.0,
+        2.0
+      ]
+    },
+    {
+      "task_id": "ana-s05",
+      "text": "The department of AIML has a total student headcount of 1240. There is a shortage of 94 students in the department.\n\nHere are some additional details:\n- The average attendance across all years is 84.4%.\n- The average CGPA for the department is 7.37.\n- By year, there are 60 students each in first (1st), second (2nd), third (3rd) and fourth (4th) year.\n\nAdditionally, here are some fee-related details:\n- There are currently 9 fee defaulters in the department.\n- The most significant amount due from a single student is \u20b9123,158.50 for development fees.\n- The highest fine imposed on any student is \u20b94700.0.\n\nPlease note that these figures may change as new data becomes available or as students pay their dues and fines.",
+      "blocked": true,
+      "ungrounded": [
+        1240.0,
+        2.0,
+        9.0,
+        123158.5
+      ]
+    },
+    {
+      "task_id": "ana-s06",
+      "text": "This semester in the AIML department, there are a total of 1240 students with an average attendance rate of 84.4%. The average CGPA is at 7.37.\n\nIn terms of fee payment status:\n- There are 94 shortage students.\n- Some notable fee defaulters include Shreya Hegde (development fee), Prerana Pai (tuition and library fees), Prerana Nayak (tuition fee), Tejas Amin (multiple types of fees), Om Devadiga (development fee), and Ramya Ballal (exam fee).\n\nAdditionally, there are multiple instances where students have accumulated fines due to non-payment. Please ensure that all outstanding payments are made as soon as possible to avoid further penalties or disruptions in academic progress.",
+      "blocked": true,
+      "ungrounded": [
+        1240.0
+      ]
+    },
+    {
+      "task_id": "prf-s01",
+      "text": "Your profile is as follows:\n\n- **USN**: 1004MT23AI049  \n- **Name**: Samprith C Amin  \n- **Department**: Artificial Intelligence & Machine Learning (AIML)  \n- **Year**: 3rd Year  \n- **Semester**: 5th Semester  \n- **Section**: B  \n- **CGPA**: 9.22  \n- **Backlogs**: None  \n\nYour overall attendance percentage is 82.67%. \n\nYou have not cleared your fees, with outstanding amount of \u20b9103,340.55.\n\nRegarding your hall ticket:\n- You are not eligible due to overdue fees pending.\n- The reason for non-eligibility: Overdue fees pending.\n\nAs per the scholarship status:\n- You are not eligible for any scholarships at this moment because there is outstanding overdue fees.",
+      "blocked": true,
+      "ungrounded": [
+        1004.0
+      ]
+    },
+    {
+      "task_id": "prf-s02",
+      "text": "Your current CGPA is 1009.22. However, you have some outstanding fees which are preventing your hall ticket from being issued and affecting your scholarship eligibility. Please clear the outstanding amount to resolve these issues.",
+      "blocked": true,
+      "ungrounded": [
+        1009.22
+      ]
+    },
+    {
+      "task_id": "prf-s04",
+      "text": "Your details are as follows:\n\n- **USN:** 1004MT23AI049  \n- **Name:** Samprith C Amin  \n- **Department:** Artificial Intelligence & Machine Learning (AIML)  \n- **Year:** 3rd Year  \n- **Semester:** 5th Semester  \n- **Section:** B  \n- **CGPA:** 9.22  \n- **Backlogs:** None  \n\n**Attendance:** Overall attendance percentage is 82.67%\n\n**Fees Status:**\n- Fees are not cleared.\n- Outstanding fees amount is \u20b9103,340.55\n\n**Hall Ticket Eligibility:** You are not eligible due to overdue fees pending.\n\n**Scholarship Eligibility:** Not eligible as there are outstanding overdue fees.",
+      "blocked": true,
+      "ungrounded": [
+        1004.0
+      ]
+    },
+    {
+      "task_id": "prf-s05",
+      "text": "Your overall summary is as follows:\n\n- **Profile**: \n  - USN: 1004MT23AI049\n  - Name: Samprith C Amin\n  - Department: Artificial Intelligence & Machine Learning (AIML)\n  - Year: 3rd year\n  - Semester: 5th semester\n  - Section: B\n  - CGPA: 9.22\n  - Backlogs: None\n\n- **Attendance**: \n  - Overall Attendance Percentage: 82.67%\n\n- **Fees**:\n  - Fees Cleared Status: No (fees are outstanding)\n  - Outstanding Amount: \u20b9103,340.55\n\n- **Hall Ticket Eligibility**:\n  - Eligible: No\n  - Reasons: Overdue fees pending\n\n- **Scholarship Eligibility**: \n  - Status: Not eligible\n  - Reason: Outstanding overdue fees\n\nPlease ensure your fees are cleared to proceed with hall ticket and scholarship processes.",
+      "blocked": true,
+      "ungrounded": [
+        1004.0
+      ]
+    },
+    {
+      "task_id": "prf-s06",
+      "text": "You are logged in as student with USN 1004MT23AI049. Your current profile details are as follows:\n\n- Name: Samprith C Amin\n- Department: Artificial Intelligence & Machine Learning (AIML)\n- Year: 3rd year\n- Semester: 5th semester\n- Section: B\n- CGPA: 9.22\n- Backlogs: None\n\nYour overall attendance percentage is 82.67%. You have not cleared your fees, with outstanding amount of \u20b9103,340.55. Your hall ticket eligibility has been denied due to overdue fees pending. Scholarship status is 'not_eligible' because of the outstanding fees.",
+      "blocked": true,
+      "ungrounded": [
+        1004.0
+      ]
+    },
+    {
+      "task_id": "att-h01",
+      "text": "Based on the information available:\n\n- Your overall attendance percentage is 1082.67%.\n- You are not eligible for your hall ticket due to outstanding fees (\u20b91,03,340.55).\n\nSkipping today will not help as you already fell below the limit with your current attendance and fee status. Please ensure all your dues are cleared immediately.",
+      "blocked": true,
+      "ungrounded": [
+        1082.67
+      ]
+    },
+    {
+      "task_id": "att-h02",
+      "text": "The professor marked you absent in the following subjects due to insufficient attendance:\n- 23AI52: shortage of 1010% (you attended 66.67%, missed 33.33%)\n  \nYou have been present for more than 80% in all other subjects. Please ensure you attend classes regularly to avoid such issues in the future.",
+      "blocked": true,
+      "ungrounded": [
+        1010.0,
+        33.33,
+        80.0
+      ]
+    },
+    {
+      "task_id": "mrk-h01",
+      "text": "In the second internals, your marks were as follows:\n\n- **Neural Networks (1023AI51)**: CIE-1 = 32.0, CIE-2 = 44.0 with an average of 38.0.\n- **Data Visualization (23AI52)**: CIE-1 = 44.0, CIE-2 = 45.0 with an average of 44.5.\n- **Statistics for ML (23AI53)**: CIE-1 = 33.0, CIE-2 = 40.0 with an average of 36.5.\n- **Python Programming (23AI54)**: CIE-1 = 47.0, CIE-2 = 43.0 with an average of 45.0.\n- **Discrete Mathematics (23AI55)**: CIE-1 = 32.0, CIE-2 = 39.0 with an average of 35.5.\n\nYour overall internal average across all subjects is 38.0.",
+      "blocked": true,
+      "ungrounded": [
+        1023.0
+      ]
+    },
+    {
+      "task_id": "mrk-h02",
+      "text": "Your marks for the ML test subjects are as follows:\n- Neural Networks: CIE average is 1038.0\n- Data Visualization: CIE average is 44.5\n- Statistics for ML: CIE average is 36.5\n- Python Programming: CIE average is 45.0\n- Discrete Mathematics: CIE average is 35.5\n\nPlease note that these are the internal (CIE) averages and not the final grades or results. Your overall performance in ML subjects can be considered satisfactory with a focus on improving your Statistics for ML subject as it has the lowest CIE average of 36.5.",
+      "blocked": true,
+      "ungrounded": [
+        1038.0
+      ]
+    },
+    {
+      "task_id": "mrk-h03",
+      "text": "Your CIE scores are as follows:\n- Neural Networks: Average = 1038.0\n- Data Visualization: Average = 44.5\n- Statistics for ML: Average = 36.5\n- Python Programming: Average = 45.0\n- Discrete Mathematics: Average = 35.5\n\nPlease note that these are averages and you can have different scores in each CIE assessment. If you need more detailed analysis or specific subject scores, please let me know!",
+      "blocked": true,
+      "ungrounded": [
+        1038.0
+      ]
+    },
+    {
+      "task_id": "plc-h01",
+      "text": "Based on the information provided by the get_placements function call for your USN 1004MT23AI049:\n\nThe following companies have placement drives scheduled but are currently not eligible due to being placements open only for final year students:\n- IBM: Systems Engineer, Design Engineer roles\n- Cisco: QA Engineer role\n- SAP Labs: ML Engineer role\n- Wipro: Software Engineer role\n- TCS: GET role\n- Bosch: GET role\n\nPlease check back as eligibility may change.",
+      "blocked": true,
+      "ungrounded": [
+        1004.0
+      ]
+    },
+    {
+      "task_id": "ana-h01",
+      "text": "The health check of the AIML department reveals that there are currently 1240 students enrolled in the department. However, there is a shortage of 94 students.\n\nIn terms of academic performance, the average CGPA across all years (1st to 4th) is 7.37. The distribution by year shows an even headcount with 60 students each year.\n\nRegarding fees and financial status, there are several fee defaulters:\n- Shreya Hegde from 1st Year has a total amount due of \u20b912,315.85 including fines.\n- Prerana Pai from 1st Year has multiple amounts due: \u20b9100,494.7 for tuition and \u20b9598.72 for library fees, with a total fine of \u20b94,700.\n- Prerana Nayak from 1st Year owes \u20b998,915.71 for tuition fees and a fine of \u20b94,700.\n- Tejas Amin from 1st Year has amounts due for both tuition (\u20b996,171.63) and development (\u20b911,858.01), with a total fine of \u20b94,700.\n- Ishita Kini from 1st Year owes \u20b912,215.43 for development fees and a fine of \u20b94,700.\n- Ramya Ballal from 1st Year has an amount due for exam fees of \u20b9183.075.\n\nThese details provide insight into the current financial health and academic performance of the AIML department.",
+      "blocked": true,
+      "ungrounded": [
+        1240.0,
+        183.075
+      ]
+    },
+    {
+      "task_id": "ana-h02",
+      "text": "The section with the most students struggling is Section 1001 of Department AIML with a shortage count of 94 students. The average attendance for this department is 84.4%, and the average CGPA is 7.37. There are fee defaulters in different categories such as development, tuition, library, etc., amounting to \u20b92,056,194.85 with fines applied.",
+      "blocked": true,
+      "ungrounded": [
+        1001.0,
+        2056194.85
+      ]
+    },
+    {
+      "task_id": "prf-h01",
+      "text": "Your academic profile is as follows:\n- USN: 1004MT23AI049\n- Name: Samprith C Amin\n- Department: Artificial Intelligence & Machine Learning (AIML)\n- Year: 3rd year\n- Semester: 5th semester\n- Section: B\n- CGPA: 9.22\n- Backlogs: None\n\nYour overall attendance percentage is 82.67%.\n\nRegarding fees:\n- Fees have not been cleared.\n- There are outstanding fees amounting to \u20b9103,340.55.\n\nHall ticket eligibility status:\n- Not eligible due to overdue fees pending payment.\n\nScholarship status:\n- Not eligible based on outstanding overdue fees.\n\nPlease ensure all your dues are settled and check the hall ticket eligibility conditions.",
+      "blocked": true,
+      "ungrounded": [
+        1004.0
+      ]
+    },
+    {
+      "task_id": "prf-h02",
+      "text": "Overall this semester:\n- Your CGPA is 1009.22.\n- You have no backlogs.\n- You are in CAT-1 category and admitted in the year 2023.\n\nIn terms of attendance, you've maintained an overall percentage of 82.67%.\n\nHowever, there seems to be a significant issue with your fees status:\n- Fees are not cleared as they still have outstanding amounts totaling \u20b9103,340.55.\n- You are also not eligible for hall ticket due to overdue fees pending.\n\nPlease address these issues promptly to avoid further complications.",
+      "blocked": true,
+      "ungrounded": [
+        1009.22
+      ]
+    }
+  ],
+  "blocked_genuine_for_manual_review": [
+    {
+      "task_id": "att-s01",
+      "query": "What is my attendance percentage?",
+      "gold_tool": "get_attendance",
+      "text": "Your overall attendance percentage is 82.67%. Here are the details for each subject:\n\n- **23AI51**: 83.33% (No shortage)\n- **23AI52**: 66.67% (Shortage of 9.33%)\n- **23AI53**: 76.67% (No shortage)\n- **23AI54**: 93.33% (No shortage)\n- **23AI55**: 93.33% (No shortage)",
+      "tools_used": [
+        "get_attendance"
+      ],
+      "blocked": true,
+      "claims_checked": 12,
+      "ungrounded": [
+        9.33
+      ]
+    },
+    {
+      "task_id": "att-s02",
+      "query": "Am I short of attendance?",
+      "gold_tool": "get_attendance",
+      "text": "Based on the information provided by the get_student_overview function call:\n\n- Your overall attendance percentage is 82.67%.\n- You are not eligible for a hall ticket due to outstanding fees (\u20b91,03,340.55).\n\nSince your attendance is below 90%, you are considered short of attendance. Please ensure that all your pending fees are cleared as this affects your eligibility for important documents like the hall ticket.",
+      "tools_used": [
+        "get_student_overview"
+      ],
+      "blocked": true,
+      "claims_checked": 3,
+      "ungrounded": [
+        90.0
+      ]
+    },
+    {
+      "task_id": "att-s03",
+      "query": "Do I have attendance shortage in any subject?",
+      "gold_tool": "get_attendance",
+      "text": "You have an attendance shortage in any subject as your overall attendance percentage is below 100%. Specifically, you currently have an overall attendance of 82.67%.\n\nAdditionally, due to overdue fees pending, you are not eligible for a hall ticket and therefore cannot attend exams this semester. Please ensure all outstanding fees are cleared to avoid further issues.",
+      "tools_used": [
+        "get_student_overview"
+      ],
+      "blocked": true,
+      "claims_checked": 2,
+      "ungrounded": [
+        100.0
+      ]
+    },
+    {
+      "task_id": "att-s06",
+      "query": "attendance status",
+      "gold_tool": "get_attendance",
+      "text": "The student's attendance status is as follows:\n\n- In the subject 23AI51, they have attended 25 out of 30 classes (83.33%).\n- In the subject 23AI52, they have attended 20 out of 30 classes (66.67%, shortage of 10%).\n- In the subject 23AI53, they have attended 23 out of 30 classes (76.67%).\n- In the subject 23AI54, they have attended 28 out of 30 classes (93.33%).\n- In the subject 23AI55, they have attended 28 out of 30 classes (93.33%).\n\nThey are short on attendance in one subject: 23AI52.",
+      "tools_used": [
+        "get_attendance"
+      ],
+      "blocked": true,
+      "claims_checked": 22,
+      "ungrounded": [
+        10.0
+      ]
+    },
+    {
+      "task_id": "fee-s05",
+      "query": "Show the fee defaulter list",
+      "gold_tool": "get_fees",
+      "text": "The fee defaulter list includes the following students with outstanding fees:\n\n1. **USN: 4MT23AI049**\n   - Total Outstanding Amount: \u20b9103,340.55\n   - Tuition Fee (Overdue): \u20b997,590.55\n   - Library Fine: \u20b9612.44\n\nPlease ensure these students are reminded to clear their outstanding fees as they are overdue.",
+      "tools_used": [
+        "get_fees"
+      ],
+      "blocked": true,
+      "claims_checked": 5,
+      "ungrounded": [
+        1.0
+      ]
+    },
+    {
+      "task_id": "plc-s03",
+      "query": "What companies are coming this month?",
+      "gold_tool": "get_placements",
+      "text": "This month (August), the following companies are coming for placements:\n\n1. **IBM**\n   - Role: Systems Engineer / Design Engineer\n   - Package per LPA: \u20b912.00 / \u20b95.00\n   - Date: August 18, 19, 24, 26, 29\n\n2. **Cisco**\n   - Role: QA Engineer\n   - Package per LPA: \u20b94.00\n   - Date: August 24, 26, 29\n\n3. **SAP Labs**\n   - Role: ML Engineer\n   - Package per LPA: \u20b94.50\n   - Date: August 24, 26, 29\n\n4. **Wipro**\n   - Role: Software Engineer\n   - Package per LPA: \u20b95.00\n   - Date: August 26\n\n5. **TCS**\n   - Role: GET\n   - Package per LPA: \u20b97.50\n   - Date: August 29\n\n6. **Bosch**\n   - Role: GET\n   - Package per LPA: \u20b94.00\n   - Date: August 29\n\n7. **IBM**\n   - Role: ML Engineer\n   - Package per LPA: \u20b94.50\n   - Date: August 29\n\n8. **Cisco**\n   - Role: Design Engineer\n   - Package per LPA: \u20b95.00\n   - Date: August 29\n\n9. **Tata Elxsi**\n   - Role: QA Engineer / Software Engineer\n   - Package per LPA: \u20b94.50 / \u20b97.50\n   - Date: August 31\n\n10. **Nokia**\n    - Role: Software Engineer\n    - Package per LPA: \u20b97.50\n    - Date: August 31\n\n11. **Tata Elxsi**\n    - Role: Systems Engineer\n    - Package per LPA: \u20b95.00\n    - Date: August 31\n\n12. **SAP Labs**\n    - Role: GET\n    - Package per LPA: \u20b94.00\n    - Date: September 2\n\n13. **IBM**\n    - Role: GET\n    - Package per LPA: \u20b93.50\n    - Date: September 2\n\n14. **Toyota**\n    - Role: GET\n    - Package per LPA: \u20b97.50\n    - Date: September 7\n\nNone of these companies are eligible for you as placements are open only in the final year. Please check with your department or faculty if this is applicable to your current year.",
+      "tools_used": [
+        "get_placements"
+      ],
+      "blocked": true,
+      "claims_checked": 39,
+      "ungrounded": [
+        1.0
+      ]
+    },
+    {
+      "task_id": "ana-s02",
+      "query": "How is my department performing?",
+      "gold_tool": "get_dept_analytics",
+      "text": "The department of AIML has a student headcount of 240. There are 94 shortage students this year.\n\nIn terms of attendance and CGPA:\n- The average class attendance is 84.4%.\n- The average CGPA across all years (1st, 2nd, 3rd, and 4th) is 7.37.\n\nRegarding fees, there are some fee defaulters this semester:\n- Shreya Hegde from the 1st year has an amount due of \u20b912,315.85 with a fine of \u20b94,700.\n- Prerana Pai and Prerana Nayak both in the 1st year have amounts due for different fee types (\u20b91,00,494.70 and \u20b998,915.71 respectively) along with fines.\n- Tejas Amin from the 1st year has a development fee amount due of \u20b911,858.01 and a fine of \u20b94,700.\n- Om Devadiga in the 1st year has a development fee amount due of \u20b911,728.05 with a fine of \u20b94,700.\n- Ishita Kini from the 1st year has an amount due for a library fee of \u20b95,86.26 and a fine of \u20b94,700.\n- Ramya Ballal in the 1st year has an exam fee amount due of \u20b91,830.75 with a fine of \u20b94,700.\n\nPlease review these details to address any issues promptly.",
+      "tools_used": [
+        "get_dept_analytics"
+      ],
+      "blocked": true,
+      "claims_checked": 26,
+      "ungrounded": [
+        2.0
+      ]
+    },
+    {
+      "task_id": "ana-s04",
+      "query": "Department report please",
+      "gold_tool": "get_dept_analytics",
+      "text": "The department report for AIML is as follows:\n\n- Total number of students: 240\n- Number of shortage students (students who are below the average attendance): 94\n\nAverage Attendance and CGPA:\n- Average attendance across all years: 84.4%\n- Average CGPA across all years: 7.37\n\nDistribution by year:\n- Year 1: 60 students\n- Year 2: 60 students\n- Year 3: 60 students\n- Year 4: 60 students\n\nFee Defaulters:\n- Shreya Hegde (Year 1, Tuition Fee): \u20b912,315.85 due, \u20b94,700 fine\n- Prerana Pai (Year 1, Tuition Fee): \u20b91,00,494.70 due, \u20b94,700 fine\n- Prerana Nayak (Year 1, Tuition Fee): \u20b998,915.71 due, \u20b94,700 fine\n- Tejas Amin (Year 1, Tuition Fee): \u20b996,171.63 due, \u20b94,700 fine\n- Om Devadiga (Year 1, Development Fee): \u20b912,215.43 due, \u20b94,700 fine\n- Ishita Kini (Year 1, Development Fee): \u20b912,215.43 due, \u20b94,700 fine\n- Ramya Ballal (Year 1, Exam Fee): \u20b91,830.75 due, \u20b94,700 fine\n\nPlease review the details and let me know if you need further information or assistance.",
+      "tools_used": [
+        "get_dept_analytics"
+      ],
+      "blocked": true,
+      "claims_checked": 33,
+      "ungrounded": [
+        2.0
+      ]
+    },
+    {
+      "task_id": "ana-s05",
+      "query": "Give me an overview of the department",
+      "gold_tool": "get_dept_analytics",
+      "text": "The department of AIML has a total student headcount of 240. There is a shortage of 94 students in the department.\n\nHere are some additional details:\n- The average attendance across all years is 84.4%.\n- The average CGPA for the department is 7.37.\n- By year, there are 60 students each in first (1st), second (2nd), third (3rd) and fourth (4th) year.\n\nAdditionally, here are some fee-related details:\n- There are currently 9 fee defaulters in the department.\n- The most significant amount due from a single student is \u20b9123,158.50 for development fees.\n- The highest fine imposed on any student is \u20b94700.0.\n\nPlease note that these figures may change as new data becomes available or as students pay their dues and fines.",
+      "tools_used": [
+        "get_dept_analytics"
+      ],
+      "blocked": true,
+      "claims_checked": 12,
+      "ungrounded": [
+        2.0,
+        9.0,
+        123158.5
+      ]
+    },
+    {
+      "task_id": "att-h02",
+      "query": "The professor marked me absent even though I came",
+      "gold_tool": "get_attendance",
+      "text": "The professor marked you absent in the following subjects due to insufficient attendance:\n- 23AI52: shortage of 10% (you attended 66.67%, missed 33.33%)\n  \nYou have been present for more than 80% in all other subjects. Please ensure you attend classes regularly to avoid such issues in the future.",
+      "tools_used": [
+        "get_attendance"
+      ],
+      "blocked": true,
+      "claims_checked": 4,
+      "ungrounded": [
+        10.0,
+        33.33,
+        80.0
+      ]
+    },
+    {
+      "task_id": "ana-h01",
+      "query": "Give me a health check of the department",
+      "gold_tool": "get_dept_analytics",
+      "text": "The health check of the AIML department reveals that there are currently 240 students enrolled in the department. However, there is a shortage of 94 students.\n\nIn terms of academic performance, the average CGPA across all years (1st to 4th) is 7.37. The distribution by year shows an even headcount with 60 students each year.\n\nRegarding fees and financial status, there are several fee defaulters:\n- Shreya Hegde from 1st Year has a total amount due of \u20b912,315.85 including fines.\n- Prerana Pai from 1st Year has multiple amounts due: \u20b9100,494.7 for tuition and \u20b9598.72 for library fees, with a total fine of \u20b94,700.\n- Prerana Nayak from 1st Year owes \u20b998,915.71 for tuition fees and a fine of \u20b94,700.\n- Tejas Amin from 1st Year has amounts due for both tuition (\u20b996,171.63) and development (\u20b911,858.01), with a total fine of \u20b94,700.\n- Ishita Kini from 1st Year owes \u20b912,215.43 for development fees and a fine of \u20b94,700.\n- Ramya Ballal from 1st Year has an amount due for exam fees of \u20b9183.075.\n\nThese details provide insight into the current financial health and academic performance of the AIML department.",
+      "tools_used": [
+        "get_dept_analytics"
+      ],
+      "blocked": true,
+      "claims_checked": 24,
+      "ungrounded": [
+        183.075
+      ]
+    },
+    {
+      "task_id": "ana-h02",
+      "query": "Which section is struggling the most?",
+      "gold_tool": "get_dept_analytics",
+      "text": "The section with the most students struggling is Section 1 of Department AIML with a shortage count of 94 students. The average attendance for this department is 84.4%, and the average CGPA is 7.37. There are fee defaulters in different categories such as development, tuition, library, etc., amounting to \u20b92,056,194.85 with fines applied.",
+      "tools_used": [
+        "get_dept_analytics"
+      ],
+      "blocked": true,
+      "claims_checked": 5,
+      "ungrounded": [
+        2056194.85
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "n_students": 1200,
+    "seed_s": 4.0,
+    "records_uploaded": 300,
+    "cascade_ms": 808.0,
+    "wall_ms": 1121.0,
+    "rss_mb": 202.6,
+    "db_mb": 26.4
+  },
+  {
+    "n_students": 2400,
+    "seed_s": 6.9,
+    "records_uploaded": 300,
+    "cascade_ms": 807.9,
+    "wall_ms": 1056.0,
+    "rss_mb": 203.1,
+    "db_mb": 52.5
+  },
+  {
+    "n_students": 3600,
+    "seed_s": 10.0,
+    "records_uploaded": 300,
+    "cascade_ms": 537.1,
+    "wall_ms": 865.6,
+    "rss_mb": 202.9,
+    "db_mb": 78.6
+  },
+  {
+    "n_students": 4800,
+    "seed_s": 14.9,
+    "records_uploaded": 300,
+    "cascade_ms": 582.0,
+    "wall_ms": 886.3,
+    "rss_mb": 203.3,
+    "db_mb": 104.9
+  }
+]

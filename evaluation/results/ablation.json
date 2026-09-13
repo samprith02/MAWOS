@@ -1,0 +1,30 @@
+{
+  "event_bus": {
+    "students": 20,
+    "full": {
+      "upload_plus_cascade_ms": 1497.2,
+      "auto_updated": {
+        "hall_tickets": 18,
+        "scholarship": 4,
+        "placement_students": 15
+      },
+      "manual_interventions_needed": 0
+    },
+    "no_bus": {
+      "upload_only_ms": 269.0,
+      "auto_updated": {
+        "hall_tickets": 0,
+        "scholarship": 0,
+        "placement_students": 0
+      },
+      "manual_interventions_needed": 4,
+      "note": "exam cell, scholarship cell, placement cell and notification desk must each refresh manually"
+    }
+  },
+  "planner": {
+    "reps": 20,
+    "full_pipeline_ms": 16.06,
+    "direct_dispatch_ms": 5.75,
+    "orchestration_overhead_ms": 10.31
+  }
+}
