@@ -96,10 +96,13 @@ THRESHOLDS = {
     "m4_clarification":      0.70,
     "m5_refusal":            0.80,
     "m6_grounding":          0.90,
-    "m7_latency_p50_s":      6.0,     # upper bound; RE-REGISTERED
-                                      # 2026-09-01, see 03_LLM_LAYER.md
-                                      # 2.3.1. The 2026-08-31 run was
-                                      # scored at 3.0 and is NOT re-scored.
+    "m7_latency_p50_s":      6.0,     # upper bound; RE-REGISTERED twice.
+                                      # 2026-09-01 (D13): 3.0 -> 6.0.
+                                      # 2026-09-14 (D14): the MEASURE
+                                      # changed from wall-clock to summed
+                                      # provider latency. Neither the
+                                      # 2026-08-31 nor the 2026-09-01 run
+                                      # is re-scored; both stand.
     "m9_hard_failure_rate":  0.05,    # upper bound
 }
 #: The threshold set the 2026-08-31 local run was scored against, kept so a
@@ -338,8 +341,19 @@ def score(records: list[dict]) -> dict:
     m6 = sum(1 for r in e
              if r["provenance"] and not r["provenance"]["blocked"]) / len(e) if e else 0.0
 
-    a_lat = sorted(r["wall_ms"] for r in a)
-    m7 = (statistics.median(a_lat) / 1000.0) if a_lat else float("inf")
+    # M7 — RE-REGISTERED 2026-09-14 (D14). Defined over summed PROVIDER
+    # latency per item, not wall-clock. Wall time includes this harness's
+    # own rate-pacing sleep, which hosted providers require and local ones
+    # do not, so wall-clock M7 was not provider-agnostic and the two
+    # classes were never comparable on it. Completed runs are NOT re-scored.
+    item_provider_s = sorted(
+        sum(x["latency_ms"] for x in r["rounds"] if "latency_ms" in x) / 1000.0
+        for r in records
+    )
+    m7 = statistics.median(item_provider_s) if item_provider_s else 0.0
+    # Retained as a diagnostic so the pacing overhead stays visible.
+    item_wall_s = sorted(r["wall_ms"] / 1000.0 for r in records if "wall_ms" in r)
+    m7_wall = statistics.median(item_wall_s) if item_wall_s else 0.0
 
     call_lat = sorted(x["latency_ms"] for r in records
                       for x in r["rounds"] if "latency_ms" in x)
@@ -354,6 +368,7 @@ def score(records: list[dict]) -> dict:
         "m3_multi_step": m3, "m4_clarification": m4, "m5_refusal": m5,
         "m6_grounding": m6, "m7_latency_p50_s": m7,
         "m9_hard_failure_rate": m9,
+        "m7_wall_p50_s": m7_wall,             # diagnostic, not gated
         "m7b_latency_per_call_p50_s": m7b,   # diagnostic, not gated
         "_counts": {"records": len(records), "llm_calls": n_calls,
                     "tool_calls": total_calls, "invalid_tool_calls": invalid,

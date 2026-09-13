@@ -105,6 +105,39 @@ the model and the hardware. R0.5's per-call p50 was 3.79 s (1.5B), 4.16 s
 (3B), 5.36 s (7B) — all above the 3.0 s budget, so this framing does not
 flatter the local models either.
 
+#### 2.3.2 M7 re-registered (D14), 2026-09-14
+
+**What changed.** M7 is redefined from wall-clock time to **summed provider
+latency**: the p50, over items, of `sum(round.latency_ms)` for that item's
+rounds. The threshold value (6.0 s, per §2.3.1) is unchanged — only the
+*measure* changed, not the bound. `evaluation/provider_probe.py::score()`
+retains the old wall-clock figure as a diagnostic field, `m7_wall_p50_s`,
+so the harness's own pacing overhead stays visible instead of disappearing.
+
+**Why it is structural, not empirical.** Wall-clock time includes this
+harness's own rate-pacing `sleep`, inserted between calls to respect a
+hosted provider's rate limit. Local (Ollama) providers need no pacing;
+hosted providers do. That `sleep` is a property of **the harness**, not of
+any provider being measured — so wall-clock M7 was never provider-agnostic,
+and a local model's wall time was never comparable to a hosted model's wall
+time on this measure. Defining M7 over `sum(round.latency_ms)` — time the
+provider itself reports spending — removes the harness's pacing from the
+number and makes the two provider classes comparable for the first time.
+
+**No completed run is re-scored.** `r05_provider.json` (2026-08-31,
+local-only) and `r05_provider_20260901.json` (2026-09-01, adds Gemini) both
+stand exactly as produced, scored under the wall-clock M7 that was current
+when each ran. This re-registration governs only *future* probe runs.
+
+**Constraint 1 — the re-registration changes no completed verdict — is
+verified executably**, not just asserted, by `tests/test_probe_scoring.py`.
+It re-scores every completed run's records with the current `score()` and
+asserts `eligibility()` agrees with the published verdict. As of this
+re-registration all four already-probed providers (`qwen2.5:1.5b/3b/7b-instruct`
+and `gemini-3.5-flash-lite`) remain ineligible under both the old and the
+new M7 — none was eligibility-limited by M7 alone, so the redefinition
+changes a diagnostic number, not an outcome.
+
 ### 2.4 Minimum acceptable model capability
 
 **Determined by the probe, not asserted here.** One honest prior, recorded so the probe's

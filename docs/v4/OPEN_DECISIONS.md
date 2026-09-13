@@ -322,7 +322,7 @@ writes to a dated filename instead. Verified firing on 2026-09-01.
 | **Closed by** | An explicit re-registration, made *before* the next probe run, defining M7 over summed provider latency (`sum(round.latency_ms)`) rather than wall time |
 | **Pre-registered constraint on closing it** | Same four constraints D13 was held to: it must change no completed verdict, completed runs are not re-scored, it applies only to future runs (a new instrument), and the motivation must be structural. Constraint 1 is already verified |
 | **Phase** | before any R0.5 re-run |
-| **Status** | OPEN |
+| **Status** | CLOSED 2026-09-14 — re-registered before any hosted re-run |
 
 **Why this is drift-prone:** it is a change that would *help* the currently-preferred candidate, which is precisely when a threshold change is least trustworthy. It is therefore recorded, left unapplied, and noted as not affecting the outcome.
 
@@ -345,7 +345,7 @@ writes to a dated filename instead. Verified firing on 2026-09-01.
 | D11 | Postgres vs SQLite deployed | Postgres | R7 | low |
 | D12 | Institution name | user's call | R0→R1 | — |
 | D13 | M7 latency threshold correctly specified? | **CLOSED 2026-09-01 — re-registered** | done | **high** |
-| D14 | M7 measures client pacing, not provider latency | defective, but stands | pre-re-run | **high** |
+| D14 | M7 measures client pacing, not provider latency | **CLOSED 2026-09-14 — re-registered** | done | **high** |
 
 ---
 
@@ -364,5 +364,6 @@ evidence lives. Reversing a `DO NOT BUILD` entry from `02_SCOPE.md` §2.4 is als
 | 2026-09-01 | D1 | **Hosted run completed; still OPEN.** `gemini-3.5-flash-lite` complete (75/75) and **not eligible** under either threshold set — fails M4 (0%) and M7. `gemini-2.5-flash` untestable: free-tier quota 20 req/day/model | Scored under both the 2026-08-31 (M7≤3.0 s) and current (M7≤6.0 s) sets; identical verdict. 144 LLM calls, 0 hard failures, 0 invalid tool calls | `r05_provider_20260901.{json,md}`, `r05_gemini_findings.md`, PROTOCOL §12 (2026-09-01) |
 | 2026-09-01 | D14 | **Opened** by the Gemini run: M7 is computed from wall-clock time and so includes this harness's rate pacing for hosted providers only | Gemini 8.11 s wall vs 3.32 s provider-only (4.79 s our own sleep); per-call p50 1.56 s. Local pacing overhead 0.00 s | `r05_gemini_findings.md` §5 |
 | 2026-09-01 | D13 | **CLOSED — M7 re-registered** at per-call ≤3.0 s / turn ≤6.0 s / plan ≤15.0 s, derived from the architecture (a turn is 2 LLM calls), not from the data | Verified to change no 2026-08-31 verdict: with M7 deleted the eligible set is still empty; at 6.0 s all three models still fail M7 | `03_LLM_LAYER.md` §2.3.1, PROTOCOL §12 (2026-09-01) |
+| 2026-09-14 | D14 | **CLOSED — M7 re-registered** over summed provider latency (p50 of `sum(round.latency_ms)` per item) instead of wall-clock; the 6.0 s threshold value is unchanged, only the measure is. Wall-clock retained as diagnostic `m7_wall_p50_s` | Verified to change no completed verdict: all four already-probed providers (1.5B/3B/7B local, Gemini 3.5 Flash Lite) remain ineligible under both the old and new M7 — none was M7-limited alone. Executable check: `tests/test_probe_scoring.py` (5 tests, all pass) | `03_LLM_LAYER.md` §2.3.2, `evaluation/provider_probe.py::score()`, `tests/test_probe_scoring.py` |
 
 **Not closed, and deliberately so:** D1. R3 is blocked on it.
