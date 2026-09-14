@@ -437,6 +437,13 @@ def main() -> None:
     ap.add_argument("--models", default="",
                     help="comma substrings to filter the shortlist")
     ap.add_argument("--report-only", action="store_true")
+    ap.add_argument("--out-stem", default=None,
+                    help="override the output filename stem (default: "
+                         "r05_provider_hosted, auto-suffixed if that file's "
+                         "thresholds differ). Use this when running a "
+                         "candidate subset that must not overwrite an "
+                         "existing committed evidence file for a different "
+                         "candidate.")
     args = ap.parse_args()
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -505,11 +512,13 @@ def main() -> None:
     if sha256(SHIPPED_DB) != db_before:
         raise SystemExit("ABORT: shipped mawos.db changed during the probe")
 
-    report(ck, candidates, db_before)
+    report(ck, candidates, db_before, out_stem=args.out_stem)
 
 
-def report(ck: dict, candidates, db_hash: str) -> None:
+def report(ck: dict, candidates, db_hash: str,
+           out_stem: str | None = None) -> None:
     results, per_seed = {}, {}
+    candidate_names = {p.name for p in candidates}
     for p in candidates:
         recs = [r for k, r in ck["records"].items()
                 if k.startswith(p.name + "|")]
@@ -565,28 +574,44 @@ def report(ck: dict, candidates, db_hash: str) -> None:
         "results": results,
         "eligible": eligible,
         "selected": winner,
-        "records": ck["records"],
+        # Only the records for the candidates this report actually covers --
+        # not every candidate ever checkpointed in this file (the checkpoint
+        # is shared/resumable across separate invocations, e.g. Task 2a's
+        # `groq:gpt-oss-120b` records are still in it). A report scoped to a
+        # candidate subset must not silently republish another candidate's
+        # raw records under a different result file.
+        "records": {k: r for k, r in ck["records"].items()
+                    if k.split("|", 1)[0] in candidate_names},
     }
     # ---- instrument-version guard -------------------------------------
     # A threshold set is part of the instrument. If the current thresholds
     # differ from those an existing result file was scored against, that
     # file is a DIFFERENT experiment and must not be silently overwritten
     # -- the same rule `evaluation/figures.py` applies to stale captures.
-    stem = "r05_provider_hosted"
-    existing = OUT_DIR / "r05_provider_hosted.json"
-    if existing.exists():
-        prior = json.loads(existing.read_text(encoding="utf-8"))
-        if prior.get("thresholds") != THRESHOLDS:
-            stamp = time.strftime("%Y%m%d")
-            stem = f"r05_provider_hosted_{stamp}"
-            print("\n*** THRESHOLDS CHANGED since the existing result file.")
-            print("*** Refusing to overwrite it -- that run is a different")
-            print("*** instrument and its verdicts stand as produced.")
-            for k in THRESHOLDS:
-                if prior["thresholds"].get(k) != THRESHOLDS[k]:
-                    print(f"***   {k}: {prior['thresholds'].get(k)} "
-                          f"-> {THRESHOLDS[k]}")
-            print(f"*** Writing to {stem}.json/.md instead.\n")
+    #
+    # An explicit `--out-stem` always wins and skips this check entirely:
+    # it is the caller declaring "this is a different result file," e.g.
+    # Task 2b running a candidate subset that must never collide with the
+    # committed `r05_provider_hosted.{json,md}` evidence for a candidate
+    # this invocation did not even run.
+    if out_stem:
+        stem = out_stem
+    else:
+        stem = "r05_provider_hosted"
+        existing = OUT_DIR / "r05_provider_hosted.json"
+        if existing.exists():
+            prior = json.loads(existing.read_text(encoding="utf-8"))
+            if prior.get("thresholds") != THRESHOLDS:
+                stamp = time.strftime("%Y%m%d")
+                stem = f"r05_provider_hosted_{stamp}"
+                print("\n*** THRESHOLDS CHANGED since the existing result file.")
+                print("*** Refusing to overwrite it -- that run is a different")
+                print("*** instrument and its verdicts stand as produced.")
+                for k in THRESHOLDS:
+                    if prior["thresholds"].get(k) != THRESHOLDS[k]:
+                        print(f"***   {k}: {prior['thresholds'].get(k)} "
+                              f"-> {THRESHOLDS[k]}")
+                print(f"*** Writing to {stem}.json/.md instead.\n")
 
     (OUT_DIR / f"{stem}.json").write_text(
         json.dumps(out, indent=2, default=str), encoding="utf-8")

@@ -412,6 +412,18 @@ def shortlist() -> list[Provider]:
         OpenAICompatibleProvider("openai/gpt-oss-120b",
                                  "https://api.groq.com/openai/v1",
                                  "GROQ_API_KEY", label="groq:gpt-oss-120b"),
+        # Task 2b (2026-09-14): two more Groq-served candidates, added after
+        # `openai/gpt-oss-120b` was measured INELIGIBLE (fails M2 75.0% vs
+        # >=85%) so D1 can close on evidence rather than stay open by
+        # default. Controller-verified live via `GET /v1/models` the same
+        # day. Same base URL / credential / provider class as the entry
+        # above; only the model id and label differ.
+        OpenAICompatibleProvider("qwen/qwen3.8-27b",
+                                 "https://api.groq.com/openai/v1",
+                                 "GROQ_API_KEY", label="groq:qwen3.8-27b"),
+        OpenAICompatibleProvider("openai/gpt-oss-20b",
+                                 "https://api.groq.com/openai/v1",
+                                 "GROQ_API_KEY", label="groq:gpt-oss-20b"),
         OpenAICompatibleProvider("meta-llama/llama-3.3-70b-instruct",
                                  "https://openrouter.ai/api/v1",
                                  "OPENROUTER_API_KEY",
