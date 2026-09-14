@@ -22,7 +22,38 @@ def clarify(state: TurnState) -> dict:
 
 
 def guard_step(state: TurnState) -> dict:
-    return {}
+    """Authorise every planned task before anything runs. A denial becomes a
+    Refusal outcome; it never becomes an exception and never silently
+    disappears."""
+    from ..agents.tools import write_tool_names
+    from ..contracts import Refusal
+    from ..database import SessionLocal
+    from ..guard import authorise
+    from ..models import User
+
+    writes = set(write_tool_names())
+    refusals, allowed, needs_confirm = [], [], False
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter_by(username=state["actor"]).one()
+        for task in state.get("plan", []):
+            v = authorise(db, user, task["capability"], task.get("args", {}),
+                          turn_id=state.get("turn_id"))
+            if not v.allowed:
+                refusals.append(Refusal(agent=task.get("agent", ""),
+                                        reason_code=v.reason_code,
+                                        detail=v.detail).model_dump())
+                continue
+            allowed.append(task)
+            if task["capability"] in writes:
+                needs_confirm = True
+        db.commit()
+    finally:
+        db.close()
+
+    pending = dict(state.get("pending") or {})
+    pending["write"] = needs_confirm
+    return {"plan": allowed, "outcomes": refusals, "pending": pending}
 
 
 def after_guard(state: TurnState) -> str:
@@ -32,6 +63,16 @@ def after_guard(state: TurnState) -> str:
 
 
 def confirm(state: TurnState) -> dict:
+    """Pause for a human. The value passed to Command(resume=...) becomes
+    this call's return value (LangGraph HITL)."""
+    from langgraph.types import interrupt
+
+    proposal = [{"capability": t["capability"], "args": t.get("args", {})}
+                for t in state.get("plan", [])]
+    decision = interrupt({"action": "confirm_write", "proposed": proposal,
+                          "message": "Apply these changes?"})
+    if not (decision or {}).get("approve"):
+        return {"plan": [], "answer": "Cancelled. Nothing was changed."}
     return {}
 
 

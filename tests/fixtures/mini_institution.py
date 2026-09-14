@@ -45,6 +45,8 @@ ROOM_CLASS = "MAI-C001"
 ROOM_LAB = "MAI-L001"
 
 FACULTY_NAME = "Test Prof"
+FACULTY_USER = "fac.test"
+HOD_USER = "hod.test"
 
 #: Ground truth the tests may rely on.
 EXPECTED = {
@@ -113,6 +115,11 @@ def build(session, *, today: dt.date | None = None) -> dict:
         User(username=STUDENT_RISK, password_hash=hash_password("x"),
              role="student", display_name="Struggling Student",
              usn=STUDENT_RISK, dept_code=DEPT),
+        User(username=FACULTY_USER, password_hash=hash_password("x"),
+             role="faculty", display_name=FACULTY_NAME, faculty_id=fac.id,
+             dept_code=DEPT),
+        User(username=HOD_USER, password_hash=hash_password("x"),
+             role="hod", display_name="Test HOD", dept_code=DEPT),
     ])
     session.commit()
     return {"faculty_id": fac.id}

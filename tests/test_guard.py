@@ -3,6 +3,7 @@ determines safety. Every case below is an authorisation outcome that must
 be recorded in the same shape whether it allowed or denied."""
 from backend.app import guard
 from backend.app.models import GuardDecision, User
+from tests.fixtures.mini_institution import FACULTY_USER, SECTION, SUBJECT_THEORY
 
 
 def _user(db, username):
@@ -79,3 +80,22 @@ def test_role_exclusion_and_unknown_capability_are_distinguishable(db, agents, b
     # capability; an unknown one is not. was_exposed is False for both
     # (a student never sees either), so the distinguishing fact is
     # registry membership, asserted above.
+
+
+def test_faculty_without_the_assignment_is_denied_a_write(db, agents, base_data):
+    """The ownership branch: a faculty member may only write against a
+    subject-section they are actually assigned. This is the guard's only
+    data-dependent rule, and it went live in Task 6 untested."""
+    fac = db.query(User).filter_by(username=FACULTY_USER).one()
+
+    # assigned subject+section -> allowed
+    ok = guard.authorise(db, fac, "mark_attendance",
+                         {"subject_code": SUBJECT_THEORY, "section": SECTION})
+    # a subject they do NOT teach -> denied as out of scope
+    no = guard.authorise(db, fac, "mark_attendance",
+                         {"subject_code": "9ZZ99", "section": SECTION})
+    db.commit()
+
+    assert ok.allowed is True
+    assert no.allowed is False
+    assert no.reason_code == guard.REASON_OUT_OF_SCOPE

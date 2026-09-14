@@ -24,8 +24,9 @@ from backend.app import models  # noqa: E402,F401  (registers every table
 from backend.app.database import Base, SessionLocal, engine  # noqa: E402
 from tests.fixtures import mini_institution  # noqa: E402
 from tests.fixtures.mini_institution import (  # noqa: E402,F401
-    DEPT, SECTION, SEMESTER, STUDENT_EMPTY, STUDENT_OK, STUDENT_RISK,
-    STUDENT_UNKNOWN, SUBJECT_LAB, SUBJECT_THEORY, YEAR,
+    DEPT, FACULTY_USER, HOD_USER, SECTION, SEMESTER, STUDENT_EMPTY,
+    STUDENT_OK, STUDENT_RISK, STUDENT_UNKNOWN, SUBJECT_LAB, SUBJECT_THEORY,
+    YEAR,
 )
 
 
