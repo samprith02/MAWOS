@@ -13,10 +13,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # Default: SQLite file. Set MAWOS_DATABASE_URL=postgresql://... to use Postgres.
 DATABASE_URL = os.getenv("MAWOS_DATABASE_URL", f"sqlite:///{BASE_DIR / 'mawos.db'}")
 
+# requirements.txt carries psycopg (v3), not psycopg2 -- psycopg2-binary is
+# commented out there deliberately (v5 deployment uses psycopg3 only). A
+# plain "postgresql://" URL (which is what Render's fromDatabase
+# connectionString hands us) makes SQLAlchemy default to the psycopg2
+# driver and crash at engine-creation with ModuleNotFoundError, since that
+# package is never installed. Force the driver that is actually present.
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+
 # JWT auth
 JWT_SECRET = os.getenv("MAWOS_JWT_SECRET", "mawos-dev-secret-change-in-prod")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_HOURS = 12
+
+# A real secret is MUST-tier for the deployed instance
+# (docs/v4/02_SCOPE.md). Failing loudly at boot beats shipping the
+# published dev secret to a public URL.
+ENV = os.getenv("MAWOS_ENV", "dev")
+if ENV == "production" and JWT_SECRET == "mawos-dev-secret-change-in-prod":
+    raise RuntimeError(
+        "MAWOS_JWT_SECRET must be set to a real secret when MAWOS_ENV=production")
 
 # Local LLM (optional). The system is fully functional without it —
 # the deterministic keyword classifier handles intent routing.
