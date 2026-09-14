@@ -157,7 +157,7 @@
       "task_id": "fee-s05",
       "query": "Show the fee defaulter list",
       "gold_tool": "get_fees",
-      "text": "The fee defaulter list includes the following students with outstanding fees:\n\n1. **USN: 4MT23AI049**\n   - Total Outstanding Amount: \u20b9103,340.55\n   - Tuition Fee (Overdue): \u20b997,590.55\n   - Library Fine: \u20b9612.44\n\nPlease ensure these students are reminded to clear their outstanding fees as they are overdue.",
+      "text": "The fee defaulter list includes the following students with outstanding fees:\n\n1. **USN: 1VT23AI049**\n   - Total Outstanding Amount: \u20b9103,340.55\n   - Tuition Fee (Overdue): \u20b997,590.55\n   - Library Fine: \u20b9612.44\n\nPlease ensure these students are reminded to clear their outstanding fees as they are overdue.",
       "tools_used": [
         "get_fees"
       ],
@@ -171,7 +171,7 @@
       "task_id": "fee-s06",
       "query": "fee status",
       "gold_tool": "get_fees",
-      "text": "The fee status for the student with USN 4MT23AI049 is as follows:\n\n- Tuition: Overdue amount due \u20b997,590.55 (fine \u20b95,750)\n- Exam: Paid amount due \u20b91,797.75\n- Development: Paid amount due \u20b911,789.25\n- Library: Paid amount due \u20b9612.44\n\nTotal outstanding fee is \u20b9103,340.55. Please ensure to clear these dues as soon as possible.",
+      "text": "The fee status for the student with USN 1VT23AI049 is as follows:\n\n- Tuition: Overdue amount due \u20b997,590.55 (fine \u20b95,750)\n- Exam: Paid amount due \u20b91,797.75\n- Development: Paid amount due \u20b911,789.25\n- Library: Paid amount due \u20b9612.44\n\nTotal outstanding fee is \u20b9103,340.55. Please ensure to clear these dues as soon as possible.",
       "tools_used": [
         "get_fees"
       ],
@@ -317,7 +317,7 @@
       "task_id": "plc-s06",
       "query": "placement drive list",
       "gold_tool": "get_placements",
-      "text": "The placement drive list for the academic year is as follows. As of now, placements are open only for the final year students and there are no drives eligible for you (USN: 4MT23AI049). The reasons provided are \"placements open in final year\". Here's a summary:\n\n- IBM: Systems Engineer - Package LPA: 12.0, Date: 2026-08-18\n- IBM: Design Engineer - Package LPA: 5.0, Date: 2026-08-19\n- Cisco: QA Engineer - Package LPA: 4.0, Date: 2026-08-24\n- SAP Labs: ML Engineer - Package LPA: 4.5, Date: 2026-08-24\n- Wipro: Software Engineer - Package LPA: 5.0, Date: 2026-08-26\n- TCS: GET - Package LPA: 7.5, Date: 2026-08-29\n- Bosch: GET - Package LPA: 4.0, Date: 2026-08-29\n- IBM: ML Engineer - Package LPA: 4.5, Date: 2026-08-29\n- Cisco: Design Engineer - Package LPA: 5.0, Date: 2026-08-29\n- Tata Elxsi: QA Engineer - Package LPA: 4.5, Date: 2026-08-31\n- Nokia: Software Engineer - Package LPA: 7.5, Date: 2026-08-31\n- Tata Elxsi: Systems Engineer - Package LPA: 5.0, Date: 2026-08-31\n- SAP Labs: GET - Package LPA: 4.0, Date: 2026-09-02\n- IBM: GET - Package LPA: 3.5, Date: 2026-09-02\n- Toyota: GET - Package LPA: 7.5, Date: 2026-09-07\n\nPlease check back for updates as the placement process continues.",
+      "text": "The placement drive list for the academic year is as follows. As of now, placements are open only for the final year students and there are no drives eligible for you (USN: 1VT23AI049). The reasons provided are \"placements open in final year\". Here's a summary:\n\n- IBM: Systems Engineer - Package LPA: 12.0, Date: 2026-08-18\n- IBM: Design Engineer - Package LPA: 5.0, Date: 2026-08-19\n- Cisco: QA Engineer - Package LPA: 4.0, Date: 2026-08-24\n- SAP Labs: ML Engineer - Package LPA: 4.5, Date: 2026-08-24\n- Wipro: Software Engineer - Package LPA: 5.0, Date: 2026-08-26\n- TCS: GET - Package LPA: 7.5, Date: 2026-08-29\n- Bosch: GET - Package LPA: 4.0, Date: 2026-08-29\n- IBM: ML Engineer - Package LPA: 4.5, Date: 2026-08-29\n- Cisco: Design Engineer - Package LPA: 5.0, Date: 2026-08-29\n- Tata Elxsi: QA Engineer - Package LPA: 4.5, Date: 2026-08-31\n- Nokia: Software Engineer - Package LPA: 7.5, Date: 2026-08-31\n- Tata Elxsi: Systems Engineer - Package LPA: 5.0, Date: 2026-08-31\n- SAP Labs: GET - Package LPA: 4.0, Date: 2026-09-02\n- IBM: GET - Package LPA: 3.5, Date: 2026-09-02\n- Toyota: GET - Package LPA: 7.5, Date: 2026-09-07\n\nPlease check back for updates as the placement process continues.",
       "tools_used": [
         "get_placements"
       ],
@@ -329,7 +329,7 @@
       "task_id": "ana-s01",
       "query": "Show department analytics",
       "gold_tool": "get_dept_analytics",
-      "text": "The department analytics for AIML are as follows:\n\n- Total Students: 240\n- Shortage of Students: 94\n- Average Attendance: 84.4%\n- Average CGPA: 7.37\n\nBy Year:\n- First Year (1): 60 students\n- Second Year (2): 60 students\n- Third Year (3): 60 students\n- Fourth Year (4): 60 students\n\nFee Defaulters:\n1. USN: 4MT25AI003, Name: Shreya Hegde, Amount Due: \u20b912,315.85, Fine: \u20b94,700.0\n2. USN: 4MT25AI006, Name: Prerana Pai, Amount Due: \u20b91,00,494.7, Fine: \u20b94,700.0\n3. USN: 4MT25AI006, Name: Prerana Nayak, Amount Due: \u20b998,915.71, Fine: \u20b94,700.0\n4. USN: 4MT25AI017, Name: Tejas Amin, Amount Due: \u20b996,171.63, Fine: \u20b94,700.0\n5. USN: 4MT25AI018, Name: Om Devadiga, Amount Due: \u20b911,728.05, Fine: \u20b94,700.0\n6. USN: 4MT25AI020, Name: Ramya Ballal, Amount Due: \u20b918,30.75, Fine: \u20b94,700.0\n\nPlease note that the amounts are in Indian Rupees (\u20b9).",
+      "text": "The department analytics for AIML are as follows:\n\n- Total Students: 240\n- Shortage of Students: 94\n- Average Attendance: 84.4%\n- Average CGPA: 7.37\n\nBy Year:\n- First Year (1): 60 students\n- Second Year (2): 60 students\n- Third Year (3): 60 students\n- Fourth Year (4): 60 students\n\nFee Defaulters:\n1. USN: 1VT25AI003, Name: Shreya Hegde, Amount Due: \u20b912,315.85, Fine: \u20b94,700.0\n2. USN: 1VT25AI006, Name: Prerana Pai, Amount Due: \u20b91,00,494.7, Fine: \u20b94,700.0\n3. USN: 1VT25AI006, Name: Prerana Nayak, Amount Due: \u20b998,915.71, Fine: \u20b94,700.0\n4. USN: 1VT25AI017, Name: Tejas Amin, Amount Due: \u20b996,171.63, Fine: \u20b94,700.0\n5. USN: 1VT25AI018, Name: Om Devadiga, Amount Due: \u20b911,728.05, Fine: \u20b94,700.0\n6. USN: 1VT25AI020, Name: Ramya Ballal, Amount Due: \u20b918,30.75, Fine: \u20b94,700.0\n\nPlease note that the amounts are in Indian Rupees (\u20b9).",
       "tools_used": [
         "get_dept_analytics"
       ],
@@ -409,7 +409,7 @@
       "task_id": "prf-s01",
       "query": "Show my profile",
       "gold_tool": "get_student_overview",
-      "text": "Your profile is as follows:\n\n- **USN**: 4MT23AI049  \n- **Name**: Samprith C Amin  \n- **Department**: Artificial Intelligence & Machine Learning (AIML)  \n- **Year**: 3rd Year  \n- **Semester**: 5th Semester  \n- **Section**: B  \n- **CGPA**: 9.22  \n- **Backlogs**: None  \n\nYour overall attendance percentage is 82.67%. \n\nYou have not cleared your fees, with outstanding amount of \u20b9103,340.55.\n\nRegarding your hall ticket:\n- You are not eligible due to overdue fees pending.\n- The reason for non-eligibility: Overdue fees pending.\n\nAs per the scholarship status:\n- You are not eligible for any scholarships at this moment because there is outstanding overdue fees.",
+      "text": "Your profile is as follows:\n\n- **USN**: 1VT23AI049  \n- **Name**: [REDACTED NAME]  \n- **Department**: Artificial Intelligence & Machine Learning (AIML)  \n- **Year**: 3rd Year  \n- **Semester**: 5th Semester  \n- **Section**: B  \n- **CGPA**: 9.22  \n- **Backlogs**: None  \n\nYour overall attendance percentage is 82.67%. \n\nYou have not cleared your fees, with outstanding amount of \u20b9103,340.55.\n\nRegarding your hall ticket:\n- You are not eligible due to overdue fees pending.\n- The reason for non-eligibility: Overdue fees pending.\n\nAs per the scholarship status:\n- You are not eligible for any scholarships at this moment because there is outstanding overdue fees.",
       "tools_used": [
         "get_student_overview"
       ],
@@ -445,7 +445,7 @@
       "task_id": "prf-s04",
       "query": "Show my details",
       "gold_tool": "get_student_overview",
-      "text": "Your details are as follows:\n\n- **USN:** 4MT23AI049  \n- **Name:** Samprith C Amin  \n- **Department:** Artificial Intelligence & Machine Learning (AIML)  \n- **Year:** 3rd Year  \n- **Semester:** 5th Semester  \n- **Section:** B  \n- **CGPA:** 9.22  \n- **Backlogs:** None  \n\n**Attendance:** Overall attendance percentage is 82.67%\n\n**Fees Status:**\n- Fees are not cleared.\n- Outstanding fees amount is \u20b9103,340.55\n\n**Hall Ticket Eligibility:** You are not eligible due to overdue fees pending.\n\n**Scholarship Eligibility:** Not eligible as there are outstanding overdue fees.",
+      "text": "Your details are as follows:\n\n- **USN:** 1VT23AI049  \n- **Name:** [REDACTED NAME]  \n- **Department:** Artificial Intelligence & Machine Learning (AIML)  \n- **Year:** 3rd Year  \n- **Semester:** 5th Semester  \n- **Section:** B  \n- **CGPA:** 9.22  \n- **Backlogs:** None  \n\n**Attendance:** Overall attendance percentage is 82.67%\n\n**Fees Status:**\n- Fees are not cleared.\n- Outstanding fees amount is \u20b9103,340.55\n\n**Hall Ticket Eligibility:** You are not eligible due to overdue fees pending.\n\n**Scholarship Eligibility:** Not eligible as there are outstanding overdue fees.",
       "tools_used": [
         "get_student_overview"
       ],
@@ -457,7 +457,7 @@
       "task_id": "prf-s05",
       "query": "Give me my overall summary",
       "gold_tool": "get_student_overview",
-      "text": "Your overall summary is as follows:\n\n- **Profile**: \n  - USN: 4MT23AI049\n  - Name: Samprith C Amin\n  - Department: Artificial Intelligence & Machine Learning (AIML)\n  - Year: 3rd year\n  - Semester: 5th semester\n  - Section: B\n  - CGPA: 9.22\n  - Backlogs: None\n\n- **Attendance**: \n  - Overall Attendance Percentage: 82.67%\n\n- **Fees**:\n  - Fees Cleared Status: No (fees are outstanding)\n  - Outstanding Amount: \u20b9103,340.55\n\n- **Hall Ticket Eligibility**:\n  - Eligible: No\n  - Reasons: Overdue fees pending\n\n- **Scholarship Eligibility**: \n  - Status: Not eligible\n  - Reason: Outstanding overdue fees\n\nPlease ensure your fees are cleared to proceed with hall ticket and scholarship processes.",
+      "text": "Your overall summary is as follows:\n\n- **Profile**: \n  - USN: 1VT23AI049\n  - Name: [REDACTED NAME]\n  - Department: Artificial Intelligence & Machine Learning (AIML)\n  - Year: 3rd year\n  - Semester: 5th semester\n  - Section: B\n  - CGPA: 9.22\n  - Backlogs: None\n\n- **Attendance**: \n  - Overall Attendance Percentage: 82.67%\n\n- **Fees**:\n  - Fees Cleared Status: No (fees are outstanding)\n  - Outstanding Amount: \u20b9103,340.55\n\n- **Hall Ticket Eligibility**:\n  - Eligible: No\n  - Reasons: Overdue fees pending\n\n- **Scholarship Eligibility**: \n  - Status: Not eligible\n  - Reason: Outstanding overdue fees\n\nPlease ensure your fees are cleared to proceed with hall ticket and scholarship processes.",
       "tools_used": [
         "get_student_overview"
       ],
@@ -469,7 +469,7 @@
       "task_id": "prf-s06",
       "query": "Who am I logged in as?",
       "gold_tool": "get_student_overview",
-      "text": "You are logged in as student with USN 4MT23AI049. Your current profile details are as follows:\n\n- Name: Samprith C Amin\n- Department: Artificial Intelligence & Machine Learning (AIML)\n- Year: 3rd year\n- Semester: 5th semester\n- Section: B\n- CGPA: 9.22\n- Backlogs: None\n\nYour overall attendance percentage is 82.67%. You have not cleared your fees, with outstanding amount of \u20b9103,340.55. Your hall ticket eligibility has been denied due to overdue fees pending. Scholarship status is 'not_eligible' because of the outstanding fees.",
+      "text": "You are logged in as student with USN 1VT23AI049. Your current profile details are as follows:\n\n- Name: [REDACTED NAME]\n- Department: Artificial Intelligence & Machine Learning (AIML)\n- Year: 3rd year\n- Semester: 5th semester\n- Section: B\n- CGPA: 9.22\n- Backlogs: None\n\nYour overall attendance percentage is 82.67%. You have not cleared your fees, with outstanding amount of \u20b9103,340.55. Your hall ticket eligibility has been denied due to overdue fees pending. Scholarship status is 'not_eligible' because of the outstanding fees.",
       "tools_used": [
         "get_student_overview"
       ],
@@ -581,7 +581,7 @@
       "task_id": "plc-h01",
       "query": "Which firms can I sit for?",
       "gold_tool": "get_placements",
-      "text": "Based on the information provided by the get_placements function call for your USN 4MT23AI049:\n\nThe following companies have placement drives scheduled but are currently not eligible due to being placements open only for final year students:\n- IBM: Systems Engineer, Design Engineer roles\n- Cisco: QA Engineer role\n- SAP Labs: ML Engineer role\n- Wipro: Software Engineer role\n- TCS: GET role\n- Bosch: GET role\n\nPlease check back as eligibility may change.",
+      "text": "Based on the information provided by the get_placements function call for your USN 1VT23AI049:\n\nThe following companies have placement drives scheduled but are currently not eligible due to being placements open only for final year students:\n- IBM: Systems Engineer, Design Engineer roles\n- Cisco: QA Engineer role\n- SAP Labs: ML Engineer role\n- Wipro: Software Engineer role\n- TCS: GET role\n- Bosch: GET role\n\nPlease check back as eligibility may change.",
       "tools_used": [
         "get_placements"
       ],
@@ -645,7 +645,7 @@
       "task_id": "prf-h01",
       "query": "Give me a rundown of where I stand",
       "gold_tool": "get_student_overview",
-      "text": "Your academic profile is as follows:\n- USN: 4MT23AI049\n- Name: Samprith C Amin\n- Department: Artificial Intelligence & Machine Learning (AIML)\n- Year: 3rd year\n- Semester: 5th semester\n- Section: B\n- CGPA: 9.22\n- Backlogs: None\n\nYour overall attendance percentage is 82.67%.\n\nRegarding fees:\n- Fees have not been cleared.\n- There are outstanding fees amounting to \u20b9103,340.55.\n\nHall ticket eligibility status:\n- Not eligible due to overdue fees pending payment.\n\nScholarship status:\n- Not eligible based on outstanding overdue fees.\n\nPlease ensure all your dues are settled and check the hall ticket eligibility conditions.",
+      "text": "Your academic profile is as follows:\n- USN: 1VT23AI049\n- Name: [REDACTED NAME]\n- Department: Artificial Intelligence & Machine Learning (AIML)\n- Year: 3rd year\n- Semester: 5th semester\n- Section: B\n- CGPA: 9.22\n- Backlogs: None\n\nYour overall attendance percentage is 82.67%.\n\nRegarding fees:\n- Fees have not been cleared.\n- There are outstanding fees amounting to \u20b9103,340.55.\n\nHall ticket eligibility status:\n- Not eligible due to overdue fees pending payment.\n\nScholarship status:\n- Not eligible based on outstanding overdue fees.\n\nPlease ensure all your dues are settled and check the hall ticket eligibility conditions.",
       "tools_used": [
         "get_student_overview"
       ],
@@ -736,7 +736,7 @@
     },
     {
       "task_id": "fee-s05",
-      "text": "The fee defaulter list includes the following students with outstanding fees:\n\n1001. **USN: 4MT23AI049**\n   - Total Outstanding Amount: \u20b9103,340.55\n   - Tuition Fee (Overdue): \u20b997,590.55\n   - Library Fine: \u20b9612.44\n\nPlease ensure these students are reminded to clear their outstanding fees as they are overdue.",
+      "text": "The fee defaulter list includes the following students with outstanding fees:\n\n1001. **USN: 1VT23AI049**\n   - Total Outstanding Amount: \u20b9103,340.55\n   - Tuition Fee (Overdue): \u20b997,590.55\n   - Library Fine: \u20b9612.44\n\nPlease ensure these students are reminded to clear their outstanding fees as they are overdue.",
       "blocked": true,
       "ungrounded": [
         1001.0
@@ -744,7 +744,7 @@
     },
     {
       "task_id": "fee-s06",
-      "text": "The fee status for the student with USN 1004MT23AI049 is as follows:\n\n- Tuition: Overdue amount due \u20b997,590.55 (fine \u20b95,750)\n- Exam: Paid amount due \u20b91,797.75\n- Development: Paid amount due \u20b911,789.25\n- Library: Paid amount due \u20b9612.44\n\nTotal outstanding fee is \u20b9103,340.55. Please ensure to clear these dues as soon as possible.",
+      "text": "The fee status for the student with USN 1001VT23AI049 is as follows:\n\n- Tuition: Overdue amount due \u20b997,590.55 (fine \u20b95,750)\n- Exam: Paid amount due \u20b91,797.75\n- Development: Paid amount due \u20b911,789.25\n- Library: Paid amount due \u20b9612.44\n\nTotal outstanding fee is \u20b9103,340.55. Please ensure to clear these dues as soon as possible.",
       "blocked": true,
       "ungrounded": [
         1004.0
@@ -808,7 +808,7 @@
     },
     {
       "task_id": "plc-s06",
-      "text": "The placement drive list for the academic year is as follows. As of now, placements are open only for the final year students and there are no drives eligible for you (USN: 1004MT23AI049). The reasons provided are \"placements open in final year\". Here's a summary:\n\n- IBM: Systems Engineer - Package LPA: 12.0, Date: 2026-08-18\n- IBM: Design Engineer - Package LPA: 5.0, Date: 2026-08-19\n- Cisco: QA Engineer - Package LPA: 4.0, Date: 2026-08-24\n- SAP Labs: ML Engineer - Package LPA: 4.5, Date: 2026-08-24\n- Wipro: Software Engineer - Package LPA: 5.0, Date: 2026-08-26\n- TCS: GET - Package LPA: 7.5, Date: 2026-08-29\n- Bosch: GET - Package LPA: 4.0, Date: 2026-08-29\n- IBM: ML Engineer - Package LPA: 4.5, Date: 2026-08-29\n- Cisco: Design Engineer - Package LPA: 5.0, Date: 2026-08-29\n- Tata Elxsi: QA Engineer - Package LPA: 4.5, Date: 2026-08-31\n- Nokia: Software Engineer - Package LPA: 7.5, Date: 2026-08-31\n- Tata Elxsi: Systems Engineer - Package LPA: 5.0, Date: 2026-08-31\n- SAP Labs: GET - Package LPA: 4.0, Date: 2026-09-02\n- IBM: GET - Package LPA: 3.5, Date: 2026-09-02\n- Toyota: GET - Package LPA: 7.5, Date: 2026-09-07\n\nPlease check back for updates as the placement process continues.",
+      "text": "The placement drive list for the academic year is as follows. As of now, placements are open only for the final year students and there are no drives eligible for you (USN: 1001VT23AI049). The reasons provided are \"placements open in final year\". Here's a summary:\n\n- IBM: Systems Engineer - Package LPA: 12.0, Date: 2026-08-18\n- IBM: Design Engineer - Package LPA: 5.0, Date: 2026-08-19\n- Cisco: QA Engineer - Package LPA: 4.0, Date: 2026-08-24\n- SAP Labs: ML Engineer - Package LPA: 4.5, Date: 2026-08-24\n- Wipro: Software Engineer - Package LPA: 5.0, Date: 2026-08-26\n- TCS: GET - Package LPA: 7.5, Date: 2026-08-29\n- Bosch: GET - Package LPA: 4.0, Date: 2026-08-29\n- IBM: ML Engineer - Package LPA: 4.5, Date: 2026-08-29\n- Cisco: Design Engineer - Package LPA: 5.0, Date: 2026-08-29\n- Tata Elxsi: QA Engineer - Package LPA: 4.5, Date: 2026-08-31\n- Nokia: Software Engineer - Package LPA: 7.5, Date: 2026-08-31\n- Tata Elxsi: Systems Engineer - Package LPA: 5.0, Date: 2026-08-31\n- SAP Labs: GET - Package LPA: 4.0, Date: 2026-09-02\n- IBM: GET - Package LPA: 3.5, Date: 2026-09-02\n- Toyota: GET - Package LPA: 7.5, Date: 2026-09-07\n\nPlease check back for updates as the placement process continues.",
       "blocked": true,
       "ungrounded": [
         1004.0
@@ -816,7 +816,7 @@
     },
     {
       "task_id": "ana-s01",
-      "text": "The department analytics for AIML are as follows:\n\n- Total Students: 1240\n- Shortage of Students: 94\n- Average Attendance: 84.4%\n- Average CGPA: 7.37\n\nBy Year:\n- First Year (1): 60 students\n- Second Year (2): 60 students\n- Third Year (3): 60 students\n- Fourth Year (4): 60 students\n\nFee Defaulters:\n1. USN: 4MT25AI003, Name: Shreya Hegde, Amount Due: \u20b912,315.85, Fine: \u20b94,700.0\n2. USN: 4MT25AI006, Name: Prerana Pai, Amount Due: \u20b91,00,494.7, Fine: \u20b94,700.0\n3. USN: 4MT25AI006, Name: Prerana Nayak, Amount Due: \u20b998,915.71, Fine: \u20b94,700.0\n4. USN: 4MT25AI017, Name: Tejas Amin, Amount Due: \u20b996,171.63, Fine: \u20b94,700.0\n5. USN: 4MT25AI018, Name: Om Devadiga, Amount Due: \u20b911,728.05, Fine: \u20b94,700.0\n6. USN: 4MT25AI020, Name: Ramya Ballal, Amount Due: \u20b918,30.75, Fine: \u20b94,700.0\n\nPlease note that the amounts are in Indian Rupees (\u20b9).",
+      "text": "The department analytics for AIML are as follows:\n\n- Total Students: 1240\n- Shortage of Students: 94\n- Average Attendance: 84.4%\n- Average CGPA: 7.37\n\nBy Year:\n- First Year (1): 60 students\n- Second Year (2): 60 students\n- Third Year (3): 60 students\n- Fourth Year (4): 60 students\n\nFee Defaulters:\n1. USN: 1VT25AI003, Name: Shreya Hegde, Amount Due: \u20b912,315.85, Fine: \u20b94,700.0\n2. USN: 1VT25AI006, Name: Prerana Pai, Amount Due: \u20b91,00,494.7, Fine: \u20b94,700.0\n3. USN: 1VT25AI006, Name: Prerana Nayak, Amount Due: \u20b998,915.71, Fine: \u20b94,700.0\n4. USN: 1VT25AI017, Name: Tejas Amin, Amount Due: \u20b996,171.63, Fine: \u20b94,700.0\n5. USN: 1VT25AI018, Name: Om Devadiga, Amount Due: \u20b911,728.05, Fine: \u20b94,700.0\n6. USN: 1VT25AI020, Name: Ramya Ballal, Amount Due: \u20b918,30.75, Fine: \u20b94,700.0\n\nPlease note that the amounts are in Indian Rupees (\u20b9).",
       "blocked": true,
       "ungrounded": [
         1240.0
@@ -869,7 +869,7 @@
     },
     {
       "task_id": "prf-s01",
-      "text": "Your profile is as follows:\n\n- **USN**: 1004MT23AI049  \n- **Name**: Samprith C Amin  \n- **Department**: Artificial Intelligence & Machine Learning (AIML)  \n- **Year**: 3rd Year  \n- **Semester**: 5th Semester  \n- **Section**: B  \n- **CGPA**: 9.22  \n- **Backlogs**: None  \n\nYour overall attendance percentage is 82.67%. \n\nYou have not cleared your fees, with outstanding amount of \u20b9103,340.55.\n\nRegarding your hall ticket:\n- You are not eligible due to overdue fees pending.\n- The reason for non-eligibility: Overdue fees pending.\n\nAs per the scholarship status:\n- You are not eligible for any scholarships at this moment because there is outstanding overdue fees.",
+      "text": "Your profile is as follows:\n\n- **USN**: 1001VT23AI049  \n- **Name**: [REDACTED NAME]  \n- **Department**: Artificial Intelligence & Machine Learning (AIML)  \n- **Year**: 3rd Year  \n- **Semester**: 5th Semester  \n- **Section**: B  \n- **CGPA**: 9.22  \n- **Backlogs**: None  \n\nYour overall attendance percentage is 82.67%. \n\nYou have not cleared your fees, with outstanding amount of \u20b9103,340.55.\n\nRegarding your hall ticket:\n- You are not eligible due to overdue fees pending.\n- The reason for non-eligibility: Overdue fees pending.\n\nAs per the scholarship status:\n- You are not eligible for any scholarships at this moment because there is outstanding overdue fees.",
       "blocked": true,
       "ungrounded": [
         1004.0
@@ -885,7 +885,7 @@
     },
     {
       "task_id": "prf-s04",
-      "text": "Your details are as follows:\n\n- **USN:** 1004MT23AI049  \n- **Name:** Samprith C Amin  \n- **Department:** Artificial Intelligence & Machine Learning (AIML)  \n- **Year:** 3rd Year  \n- **Semester:** 5th Semester  \n- **Section:** B  \n- **CGPA:** 9.22  \n- **Backlogs:** None  \n\n**Attendance:** Overall attendance percentage is 82.67%\n\n**Fees Status:**\n- Fees are not cleared.\n- Outstanding fees amount is \u20b9103,340.55\n\n**Hall Ticket Eligibility:** You are not eligible due to overdue fees pending.\n\n**Scholarship Eligibility:** Not eligible as there are outstanding overdue fees.",
+      "text": "Your details are as follows:\n\n- **USN:** 1001VT23AI049  \n- **Name:** [REDACTED NAME]  \n- **Department:** Artificial Intelligence & Machine Learning (AIML)  \n- **Year:** 3rd Year  \n- **Semester:** 5th Semester  \n- **Section:** B  \n- **CGPA:** 9.22  \n- **Backlogs:** None  \n\n**Attendance:** Overall attendance percentage is 82.67%\n\n**Fees Status:**\n- Fees are not cleared.\n- Outstanding fees amount is \u20b9103,340.55\n\n**Hall Ticket Eligibility:** You are not eligible due to overdue fees pending.\n\n**Scholarship Eligibility:** Not eligible as there are outstanding overdue fees.",
       "blocked": true,
       "ungrounded": [
         1004.0
@@ -893,7 +893,7 @@
     },
     {
       "task_id": "prf-s05",
-      "text": "Your overall summary is as follows:\n\n- **Profile**: \n  - USN: 1004MT23AI049\n  - Name: Samprith C Amin\n  - Department: Artificial Intelligence & Machine Learning (AIML)\n  - Year: 3rd year\n  - Semester: 5th semester\n  - Section: B\n  - CGPA: 9.22\n  - Backlogs: None\n\n- **Attendance**: \n  - Overall Attendance Percentage: 82.67%\n\n- **Fees**:\n  - Fees Cleared Status: No (fees are outstanding)\n  - Outstanding Amount: \u20b9103,340.55\n\n- **Hall Ticket Eligibility**:\n  - Eligible: No\n  - Reasons: Overdue fees pending\n\n- **Scholarship Eligibility**: \n  - Status: Not eligible\n  - Reason: Outstanding overdue fees\n\nPlease ensure your fees are cleared to proceed with hall ticket and scholarship processes.",
+      "text": "Your overall summary is as follows:\n\n- **Profile**: \n  - USN: 1001VT23AI049\n  - Name: [REDACTED NAME]\n  - Department: Artificial Intelligence & Machine Learning (AIML)\n  - Year: 3rd year\n  - Semester: 5th semester\n  - Section: B\n  - CGPA: 9.22\n  - Backlogs: None\n\n- **Attendance**: \n  - Overall Attendance Percentage: 82.67%\n\n- **Fees**:\n  - Fees Cleared Status: No (fees are outstanding)\n  - Outstanding Amount: \u20b9103,340.55\n\n- **Hall Ticket Eligibility**:\n  - Eligible: No\n  - Reasons: Overdue fees pending\n\n- **Scholarship Eligibility**: \n  - Status: Not eligible\n  - Reason: Outstanding overdue fees\n\nPlease ensure your fees are cleared to proceed with hall ticket and scholarship processes.",
       "blocked": true,
       "ungrounded": [
         1004.0
@@ -901,7 +901,7 @@
     },
     {
       "task_id": "prf-s06",
-      "text": "You are logged in as student with USN 1004MT23AI049. Your current profile details are as follows:\n\n- Name: Samprith C Amin\n- Department: Artificial Intelligence & Machine Learning (AIML)\n- Year: 3rd year\n- Semester: 5th semester\n- Section: B\n- CGPA: 9.22\n- Backlogs: None\n\nYour overall attendance percentage is 82.67%. You have not cleared your fees, with outstanding amount of \u20b9103,340.55. Your hall ticket eligibility has been denied due to overdue fees pending. Scholarship status is 'not_eligible' because of the outstanding fees.",
+      "text": "You are logged in as student with USN 1001VT23AI049. Your current profile details are as follows:\n\n- Name: [REDACTED NAME]\n- Department: Artificial Intelligence & Machine Learning (AIML)\n- Year: 3rd year\n- Semester: 5th semester\n- Section: B\n- CGPA: 9.22\n- Backlogs: None\n\nYour overall attendance percentage is 82.67%. You have not cleared your fees, with outstanding amount of \u20b9103,340.55. Your hall ticket eligibility has been denied due to overdue fees pending. Scholarship status is 'not_eligible' because of the outstanding fees.",
       "blocked": true,
       "ungrounded": [
         1004.0
@@ -951,7 +951,7 @@
     },
     {
       "task_id": "plc-h01",
-      "text": "Based on the information provided by the get_placements function call for your USN 1004MT23AI049:\n\nThe following companies have placement drives scheduled but are currently not eligible due to being placements open only for final year students:\n- IBM: Systems Engineer, Design Engineer roles\n- Cisco: QA Engineer role\n- SAP Labs: ML Engineer role\n- Wipro: Software Engineer role\n- TCS: GET role\n- Bosch: GET role\n\nPlease check back as eligibility may change.",
+      "text": "Based on the information provided by the get_placements function call for your USN 1001VT23AI049:\n\nThe following companies have placement drives scheduled but are currently not eligible due to being placements open only for final year students:\n- IBM: Systems Engineer, Design Engineer roles\n- Cisco: QA Engineer role\n- SAP Labs: ML Engineer role\n- Wipro: Software Engineer role\n- TCS: GET role\n- Bosch: GET role\n\nPlease check back as eligibility may change.",
       "blocked": true,
       "ungrounded": [
         1004.0
@@ -977,7 +977,7 @@
     },
     {
       "task_id": "prf-h01",
-      "text": "Your academic profile is as follows:\n- USN: 1004MT23AI049\n- Name: Samprith C Amin\n- Department: Artificial Intelligence & Machine Learning (AIML)\n- Year: 3rd year\n- Semester: 5th semester\n- Section: B\n- CGPA: 9.22\n- Backlogs: None\n\nYour overall attendance percentage is 82.67%.\n\nRegarding fees:\n- Fees have not been cleared.\n- There are outstanding fees amounting to \u20b9103,340.55.\n\nHall ticket eligibility status:\n- Not eligible due to overdue fees pending payment.\n\nScholarship status:\n- Not eligible based on outstanding overdue fees.\n\nPlease ensure all your dues are settled and check the hall ticket eligibility conditions.",
+      "text": "Your academic profile is as follows:\n- USN: 1001VT23AI049\n- Name: [REDACTED NAME]\n- Department: Artificial Intelligence & Machine Learning (AIML)\n- Year: 3rd year\n- Semester: 5th semester\n- Section: B\n- CGPA: 9.22\n- Backlogs: None\n\nYour overall attendance percentage is 82.67%.\n\nRegarding fees:\n- Fees have not been cleared.\n- There are outstanding fees amounting to \u20b9103,340.55.\n\nHall ticket eligibility status:\n- Not eligible due to overdue fees pending payment.\n\nScholarship status:\n- Not eligible based on outstanding overdue fees.\n\nPlease ensure all your dues are settled and check the hall ticket eligibility conditions.",
       "blocked": true,
       "ungrounded": [
         1004.0
@@ -1053,7 +1053,7 @@
       "task_id": "fee-s05",
       "query": "Show the fee defaulter list",
       "gold_tool": "get_fees",
-      "text": "The fee defaulter list includes the following students with outstanding fees:\n\n1. **USN: 4MT23AI049**\n   - Total Outstanding Amount: \u20b9103,340.55\n   - Tuition Fee (Overdue): \u20b997,590.55\n   - Library Fine: \u20b9612.44\n\nPlease ensure these students are reminded to clear their outstanding fees as they are overdue.",
+      "text": "The fee defaulter list includes the following students with outstanding fees:\n\n1. **USN: 1VT23AI049**\n   - Total Outstanding Amount: \u20b9103,340.55\n   - Tuition Fee (Overdue): \u20b997,590.55\n   - Library Fine: \u20b9612.44\n\nPlease ensure these students are reminded to clear their outstanding fees as they are overdue.",
       "tools_used": [
         "get_fees"
       ],
