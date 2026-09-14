@@ -5,6 +5,10 @@
 let TOKEN = localStorage.getItem("mawos_token") || null;
 let USER = JSON.parse(localStorage.getItem("mawos_user") || "null");
 let AI_MODE = localStorage.getItem("mawos_ai") || "lexicon";
+/* Which tier actually serves escalations, as reported by the server
+ * (`ai_provider`). Never inferred client-side: the browser cannot know
+ * whether the backend is on a hosted provider or a local one. */
+let AI_PROVIDER = localStorage.getItem("mawos_ai_provider") || "the LLM tier";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
@@ -30,9 +34,11 @@ async function login(u, p) {
       username: u ?? $("login-username").value,
       password: p ?? $("login-password").value } });
     TOKEN = data.token; USER = data.user; AI_MODE = data.ai_mode;
+    AI_PROVIDER = data.ai_provider || AI_PROVIDER;
     localStorage.setItem("mawos_token", TOKEN);
     localStorage.setItem("mawos_user", JSON.stringify(USER));
     localStorage.setItem("mawos_ai", AI_MODE);
+    localStorage.setItem("mawos_ai_provider", AI_PROVIDER);
     showApp();
   } catch (e) { $("login-error").textContent = e.message; }
 }
@@ -65,9 +71,12 @@ function showApp() {
   const badge = $("ai-badge");
   badge.textContent = AI_MODE === "llm" ? "AI · hybrid router" : "AI · lexicon only";
   badge.className = "ai-badge " + AI_MODE;
+  // AI_PROVIDER names the tier actually serving escalations. The old copy
+  // hardcoded "Local LLM", which stayed wrong for the whole of v5 — the
+  // deployed instance runs a hosted provider and has no Ollama to detect.
   badge.title = AI_MODE === "llm"
-    ? "Confidence-gated router: the lexicon answers, and only low-confidence queries escalate to the local LLM"
-    : "Local LLM not detected — the lexicon answers everything, including the queries it is least sure about.";
+    ? `Confidence-gated router: the lexicon answers, and only low-confidence queries escalate to ${AI_PROVIDER}`
+    : "No LLM tier reachable — the lexicon answers everything, including the queries it is least sure about.";
   const nav = $("nav-tabs");
   nav.innerHTML = "";
   for (const [key, label] of TABS[USER.role]) {
@@ -554,8 +563,8 @@ RENDER.assistant = async (main) => {
     <div class="chat-head">
       <div><h2 class="serif">MAWOS Assistant</h2>
         <p class="muted">Orchestrator Agent · ${AI_MODE === "llm"
-          ? "confidence-gated hybrid — the lexicon answers, uncertain queries escalate to the local LLM"
-          : "lexicon only (install Ollama to enable escalation)"}</p></div>
+          ? `confidence-gated hybrid — the lexicon answers, uncertain queries escalate to ${esc(AI_PROVIDER)}`
+          : "lexicon only — no LLM tier reachable"}</p></div>
       <span class="ai-badge ${AI_MODE}">${AI_MODE === "llm" ? "hybrid" : "lexicon"}</span>
     </div>
     <div id="chat-log" class="chat-log">

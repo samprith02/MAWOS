@@ -91,7 +91,14 @@ def decide(query: str) -> tuple[llm.IntentResult, Decision]:
     if not should_escalate(r.margin):
         return r, Decision("lexicon", r.margin, False,
                            f"margin {r.margin:.2f} > tau {TAU:.2f}")
-    if not llm.check_ollama():
+    # AVAILABILITY, checked only after the policy already said "escalate".
+    # v5 swapped the escalation tier from local Ollama to a hosted provider
+    # (`llm.escalation_available`). That is deliberately the ONLY line this
+    # swap touches in the router: tau, the margin definition and the
+    # `margin <= tau` rule above are frozen (PROTOCOL 9.3), so the policy
+    # that decides WHICH queries escalate is byte-identical to what P4
+    # tuned. Only the destination of an escalation changed.
+    if not llm.escalation_available():
         return r, Decision("lexicon", r.margin, False,
                            "escalation warranted but no LLM available",
                            fallback_from="llm")
@@ -130,7 +137,18 @@ class Stats:
                 "escalation_rate": rate,
                 "escalation_rate_dev": _CFG["dev_escalation_rate"],
                 "escalation_failed": self.escalation_failed,
-                "tau": TAU, "model": _CFG["model"],
+                "tau": TAU,
+                # BOTH models are reported, and they are not the same thing.
+                # `model_tuned_against` is the model the tau curve was
+                # measured on (v3, qwen2.5:3b-instruct, frozen in
+                # router_config.json). `model_serving` is what actually
+                # receives escalations now. Reporting only the frozen field
+                # -- as this did before v5 -- would have named a model that
+                # serves none of the traffic. The gap between the two is a
+                # real limitation of the deployed router and belongs in the
+                # write-up, not hidden behind one ambiguous key.
+                "model_tuned_against": _CFG["model"],
+                "model_serving": llm.active_tier()["label"],
                 "uptime_s": round(time.time() - self._started, 1)}
 
 

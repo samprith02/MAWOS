@@ -359,7 +359,28 @@ phase re-freezes the gate.
 | **Constraint** | Must be fictional; must not be a near-collision with a real institution; must be used consistently across UI, seed data, emails and documents; must live **only** in `institution.yaml` |
 | **Interim** | R1 proceeds with a placeholder. Because it is a config value, changing it later costs one line |
 | **Phase** | R0 → R1 |
-| **Status** | OPEN |
+| **Status** | **CLOSED 2026-09-14 — the owner chose `MAWOS`** |
+
+**The decision.** The owner chose the project's own name, **MAWOS**, over the placeholder
+*Vidyut Institute of Engineering & Technology*. `data/institution.yaml` now reads
+`name: "MAWOS"`, `short_name: "MAWOS"`, `email_domain: "mawos.edu.in"`, and
+`name_is_placeholder: false`. The interim estimate held exactly: it was a three-line config
+change and no code changed, because R1's rule that the identity lives **only** in
+`institution.yaml` was real — a grep for the placeholder across `backend/`, `frontend/`,
+`data/`, `evaluation/` and `tests/` returned hits in that file alone.
+
+**`usn_prefix` was deliberately NOT changed**, and this is the part worth defending. It stays
+`1VT`. D12 is a decision about the *displayed name*; the USN prefix is an opaque fictional code
+that satisfies the same constraint either way. Changing it would invalidate
+`evaluation/probe/items.py`, whose USNs (`1VT23AI049`, `1VT23AI037`) are baked into the
+committed D1 gate evidence — re-running the probe against a renamed prefix would no longer
+reproduce the published run. A cosmetic gain does not justify silently breaking a published
+finding.
+
+**Not retroactive on an already-seeded database.** `INSTITUTION_NAME` is read from the YAML at
+import, so the name changes on redeploy with no reseed. Email addresses, however, are written
+into `users` rows at seed time and keep the old domain until the database is reseeded. Neither
+is displayed prominently; recorded here rather than left to be discovered.
 
 ---
 
@@ -430,7 +451,7 @@ writes to a dated filename instead. Verified firing on 2026-09-01.
 | D9 | Re-plan depth | N=1 | R3→R5 | low |
 | D10 | Gate false-block rate (multi-step) | **misfire located at R0.5** | R5 | low |
 | D11 | Postgres vs SQLite deployed | Postgres | R7 | low |
-| D12 | Institution name | user's call | R0→R1 | — |
+| D12 | Institution name | **CLOSED 2026-09-14 — `MAWOS`** | done | — |
 | D13 | M7 latency threshold correctly specified? | **CLOSED 2026-09-01 — re-registered** | done | **high** |
 | D14 | M7 measures client pacing, not provider latency | **CLOSED 2026-09-14 — re-registered** | done | **high** |
 

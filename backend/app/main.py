@@ -46,9 +46,15 @@ async def lifespan(app: FastAPI):
                   f"{result['solve_ms']} ms")
     finally:
         db.close()
+    # Warm the provider check here, once, so `/health` -- which Render polls
+    # as its health-check target -- never pays the network round trip, and
+    # so the boot log states the tier plainly instead of leaving it to be
+    # discovered from the UI badge during a demo.
+    tier = llm.active_tier(force=True)
     mode = (f"hybrid router, tau {hybrid_router.TAU:.2f}, escalating to "
-            f"{config.OLLAMA_MODEL}") if llm.check_ollama() else \
-        "lexicon only (install Ollama + qwen2.5 to enable escalation)"
+            f"{tier['label']}") if tier["available"] else \
+        (f"lexicon only — no LLM tier reachable (set {config.LLM_API_KEY_ENV} "
+         f"for {config.LLM_LABEL} to enable escalation)")
     print(f"[MAWOS] {len(agents)} agents online · AI mode: {mode}")
     task = asyncio.create_task(_proactive_loop(agents))
     yield
@@ -62,8 +68,17 @@ app.include_router(router)
 @app.get("/health", include_in_schema=False)
 def health():
     """Render's health check target (render.yaml). Also surfaces which
-    LLM tier is active without requiring auth."""
-    return {"status": "ok", "tier": llm_provider.active_provider()["label"]}
+    LLM tier is active without requiring auth.
+
+    `tier` used to read `llm_provider.active_provider()["label"]`, which
+    names the *configured* provider whether or not it can be reached — so a
+    missing or rejected key still reported "groq:gpt-oss-120b". It now
+    reports what is actually serving, and `llm_available` says so outright.
+    """
+    tier = llm.active_tier()
+    return {"status": "ok", "tier": tier["label"],
+            "llm_available": tier["available"], "llm_kind": tier["kind"],
+            "configured_provider": llm_provider.active_provider()["label"]}
 
 
 if config.STATIC_DIR.exists():
