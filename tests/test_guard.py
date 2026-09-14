@@ -2,8 +2,11 @@
 determines safety. Every case below is an authorisation outcome that must
 be recorded in the same shape whether it allowed or denied."""
 from backend.app import guard
-from backend.app.models import GuardDecision, User
-from tests.fixtures.mini_institution import FACULTY_USER, SECTION, SUBJECT_THEORY
+from backend.app.models import GuardDecision, TimetableSlot, User
+from tests.fixtures.mini_institution import (
+    FACULTY_USER, HOD_USER, OTHER_DEPT, SECTION, STUDENT_OK,
+    STUDENT_OTHER_DEPT, SUBJECT_THEORY,
+)
 
 
 def _user(db, username):
@@ -99,3 +102,59 @@ def test_faculty_without_the_assignment_is_denied_a_write(db, agents, base_data)
     assert ok.allowed is True
     assert no.allowed is False
     assert no.reason_code == guard.REASON_OUT_OF_SCOPE
+
+
+def test_decide_does_not_log(db, agents, base_data):
+    """`decide()` is the pure rule check `guard_step` uses to sort a plan.
+    It must never write a `GuardDecision` row -- that is what lets
+    `guard_step` decide without pre-empting `execute()`'s own log of the
+    items it actually runs (Important 3). If this regresses, the fixed
+    version of `guard_step` would go back to double-logging every allowed
+    item once it reaches `execute`."""
+    before = db.query(GuardDecision).count()
+    u = db.query(User).filter_by(role="student").first()
+    guard.decide(db, u, "get_attendance", {"usn": u.usn})       # would-allow
+    guard.decide(db, u, "mark_attendance", {})                  # would-deny
+    db.commit()
+    assert db.query(GuardDecision).count() == before
+
+
+def test_decide_and_authorise_agree(db, agents, base_data):
+    """`authorise()` must still be `decide()` plus logging, not a diverged
+    copy of the rules."""
+    u = db.query(User).filter_by(role="student").first()
+    d = guard.decide(db, u, "mark_attendance", {})
+    a = guard.authorise(db, u, "mark_attendance", {})
+    db.commit()
+    assert (d.allowed, d.reason_code) == (a.allowed, a.reason_code)
+
+
+def test_hod_write_denied_against_another_departments_student(db, agents, base_data):
+    """Important 4: `_owns_subject_section` only ever applied to faculty,
+    so a HOD could `issue_eligibility_override` a student outside their own
+    department. `principal`/`admin` stay institution-wide -- only `hod` is
+    scoped."""
+    hod = db.query(User).filter_by(username=HOD_USER).one()
+    v = guard.authorise(db, hod, "issue_eligibility_override",
+                        {"usn": STUDENT_OTHER_DEPT, "exam": "mid-sem",
+                         "reason": "test"})
+    assert v.allowed is False
+    assert v.reason_code == guard.REASON_OUT_OF_SCOPE
+
+
+def test_hod_write_denied_against_another_departments_slot(db, agents, base_data):
+    hod = db.query(User).filter_by(username=HOD_USER).one()
+    slot = db.query(TimetableSlot).filter_by(dept_code=OTHER_DEPT).one()
+    v = guard.authorise(db, hod, "apply_timetable_change",
+                        {"slot_id": slot.id, "new_day": 1, "new_period": 1})
+    assert v.allowed is False
+    assert v.reason_code == guard.REASON_OUT_OF_SCOPE
+
+
+def test_hod_write_allowed_within_own_department(db, agents, base_data):
+    """The scoping fix must not become a blanket HOD denial."""
+    hod = db.query(User).filter_by(username=HOD_USER).one()
+    v = guard.authorise(db, hod, "issue_eligibility_override",
+                        {"usn": STUDENT_OK, "exam": "mid-sem",
+                         "reason": "test"})
+    assert v.allowed is True

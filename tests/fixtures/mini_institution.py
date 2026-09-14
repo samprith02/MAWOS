@@ -38,6 +38,16 @@ STUDENT_UNKNOWN = f"{_P}23AI999"
 DEPT = "AIML"
 YEAR, SEMESTER, SECTION = 3, 5, "A"
 
+#: A second department, minimal -- exists only so a HOD-department-scoping
+#: test (Important 4) has a student and a timetable slot OUTSIDE `DEPT` to
+#: be denied against. Its subject is its own (not SUBJECT_THEORY/LAB) so it
+#: does not perturb per-subject slot counts other tests rely on; faculty and
+#: room are reused from AIML since nothing about those needs to be
+#: internally consistent for a guard-scoping check.
+OTHER_DEPT = "CSE"
+STUDENT_OTHER_DEPT = f"{_P}23CS001"
+SUBJECT_OTHER_DEPT = f"{SEMESTER}CS01"
+
 SUBJECT_THEORY = f"{SEMESTER}AI01"
 SUBJECT_LAB = f"{SEMESTER}AI02"
 
@@ -60,16 +70,20 @@ def build(session, *, today: dt.date | None = None) -> dict:
     from backend.app.auth import hash_password
     from backend.app.models import (
         Department, Faculty, FeeRecord, Room, Student, Subject,
-        TeachingAssignment, User,
+        TeachingAssignment, TimetableSlot, User,
     )
 
     today = today or dt.date.today()
     session.add(Department(code=DEPT, name="AI & ML", intake=2))
+    session.add(Department(code=OTHER_DEPT, name="Computer Science", intake=2))
     session.add_all([
         Subject(code=SUBJECT_THEORY, name="Machine Learning", dept_code=DEPT,
                 semester=SEMESTER, credits=4, kind="theory", block_size=1),
         Subject(code=SUBJECT_LAB, name="Database Systems", dept_code=DEPT,
                 semester=SEMESTER, credits=3, kind="lab", block_size=2),
+        Subject(code=SUBJECT_OTHER_DEPT, name="Data Structures",
+                dept_code=OTHER_DEPT, semester=SEMESTER, credits=4,
+                kind="theory", block_size=1),
     ])
     session.add_all([
         Room(code=ROOM_CLASS, name="Main Classroom 1", room_type="classroom",
@@ -91,6 +105,16 @@ def build(session, *, today: dt.date | None = None) -> dict:
                            dept_code=DEPT, year=YEAR, section=SECTION),
     ])
 
+    #: Lives in OTHER_DEPT so a HOD-department-scoping test (Important 4)
+    #: has a slot outside their own department to be denied against. Reuses
+    #: AIML's faculty/subject/room -- only `dept_code` needs to disagree
+    #: with the HOD's for the guard check under test.
+    other_dept_slot = TimetableSlot(
+        dept_code=OTHER_DEPT, year=YEAR, section=SECTION, day=0, period=0,
+        subject_code=SUBJECT_OTHER_DEPT, faculty_id=fac.id, room_code=ROOM_CLASS)
+    session.add(other_dept_slot)
+    session.flush()
+
     session.add_all([
         Student(usn=STUDENT_OK, name="Good Student", dept_code=DEPT,
                 year=YEAR, semester=SEMESTER, section=SECTION, cgpa=8.5,
@@ -100,6 +124,10 @@ def build(session, *, today: dt.date | None = None) -> dict:
                 year=YEAR, semester=SEMESTER, section=SECTION, cgpa=5.5,
                 backlogs=3, family_income=900000,
                 email=f"{STUDENT_RISK.lower()}@{_DOMAIN}"),
+        Student(usn=STUDENT_OTHER_DEPT, name="Other Dept Student",
+                dept_code=OTHER_DEPT, year=YEAR, semester=SEMESTER,
+                section=SECTION, cgpa=7.0, backlogs=0, family_income=400000,
+                email=f"{STUDENT_OTHER_DEPT.lower()}@{_DOMAIN}"),
     ])
     session.add_all([
         FeeRecord(usn=STUDENT_RISK, fee_type="tuition", amount_due=85000,
@@ -122,4 +150,4 @@ def build(session, *, today: dt.date | None = None) -> dict:
              role="hod", display_name="Test HOD", dept_code=DEPT),
     ])
     session.commit()
-    return {"faculty_id": fac.id}
+    return {"faculty_id": fac.id, "other_dept_slot_id": other_dept_slot.id}
