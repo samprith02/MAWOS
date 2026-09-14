@@ -38,7 +38,7 @@ from evaluation.itc2007.build import validator_path  # noqa: E402
 HERE = Path(__file__).resolve().parent
 INSTANCES = HERE / "instances"
 BESTS = INSTANCES / "BESTS.json"
-OUT = ROOT / "evaluation" / "results" / "v3_itc2007"
+OUT = ROOT / "evaluation" / "results" / "v3_archive" / "v3_itc2007"
 
 
 def validate(exe: Path, inst_path: Path, inst: ctt.Instance,

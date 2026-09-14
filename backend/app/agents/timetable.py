@@ -44,6 +44,21 @@ N_DAYS, N_PERIODS = 5, 6
 SOLVER_ITERS = 120_000
 
 
+def _strip_cosmetic_room(slots: list[dict]) -> list[dict]:
+    """The frozen solver emits `room="AIML-3A"`, a cosmetic label that was
+    never a real space (RESEARCH_PLAN_V3.md §0.2b). R1 replaces the column
+    with a FK to `rooms`; **R2** makes room allocation an actual solver
+    decision. Until then the field is left NULL rather than filled with a
+    string that does not name a room.
+
+    `scheduler.py` is deliberately not modified -- the R1 gate requires the
+    existing solver to still place 100% of periods on the new schema.
+    """
+    for s in slots:
+        s.pop("room", None)
+    return slots
+
+
 class TimetableAgent(BaseAgent):
     name = "timetable_agent"
     description = ("Conflict-free weekly timetable generation "
@@ -83,7 +98,7 @@ class TimetableAgent(BaseAgent):
                                           blocked=blocked)
         except scheduler.Unplaceable as exc:
             return {"ok": False, "error": f"no feasible timetable: {exc}"}
-        placed = sched.slots()
+        placed = _strip_cosmetic_room(sched.slots())
 
         # replace scope atomically
         dq = db.query(TimetableSlot)
@@ -145,7 +160,7 @@ class TimetableAgent(BaseAgent):
         except scheduler.Unplaceable as exc:
             return {"ok": False, "error": f"no feasible timetable: {exc}"}
         sched = info.pop("sched")
-        placed = sched.slots()
+        placed = _strip_cosmetic_room(sched.slots())
 
         dq = db.query(TimetableSlot)
         if dept_code:
@@ -171,6 +186,74 @@ class TimetableAgent(BaseAgent):
             "anneal_trace": info["anneal_trace"],
         }
 
+    def apply_change(self, db, slot_id: int, new_day: int, new_period: int) -> dict:
+        """Move ONE already-placed slot (v5 chat/guard write path). Deliberately
+        does not call `generate()`: a full regenerate would discard every other
+        manual edit made since the last solve, and re-optimise the whole grid
+        for what is meant to be a single, targeted move. Instead this moves the
+        one `TimetableSlot` row and re-checks only the constraints `generate()`
+        itself guarantees by construction -- section clash, faculty clash, room
+        clash -- against the row's new (day, period).
+        """
+        try:
+            new_day = int(new_day)
+            new_period = int(new_period)
+        except (TypeError, ValueError):
+            return {"applied": False, "changed": [],
+                    "detail": "new_day and new_period must be integers"}
+        if not (0 <= new_day < N_DAYS) or not (0 <= new_period < N_PERIODS):
+            return {"applied": False, "changed": [],
+                    "detail": f"day/period out of range (0-{N_DAYS - 1}, "
+                              f"0-{N_PERIODS - 1})"}
+        slot = db.get(TimetableSlot, slot_id)
+        if slot is None:
+            return {"applied": False, "changed": [],
+                    "detail": f"unknown timetable slot {slot_id}"}
+        if slot.day == new_day and slot.period == new_period:
+            return {"applied": False, "changed": [],
+                    "detail": "slot is already at that day/period"}
+
+        section_clash = (db.query(TimetableSlot)
+                           .filter_by(dept_code=slot.dept_code, year=slot.year,
+                                      section=slot.section, day=new_day,
+                                      period=new_period)
+                           .filter(TimetableSlot.id != slot.id).first())
+        if section_clash is not None:
+            return {"applied": False, "changed": [],
+                    "detail": f"{slot.dept_code} {slot.year}{slot.section} already "
+                              f"has a class at day {new_day} period {new_period}"}
+
+        faculty_clash = (db.query(TimetableSlot)
+                           .filter_by(faculty_id=slot.faculty_id, day=new_day,
+                                      period=new_period)
+                           .filter(TimetableSlot.id != slot.id).first())
+        if faculty_clash is not None:
+            return {"applied": False, "changed": [],
+                    "detail": f"faculty {slot.faculty_id} is already teaching "
+                              f"at day {new_day} period {new_period}"}
+
+        if slot.room_code is not None:
+            room_clash = (db.query(TimetableSlot)
+                            .filter_by(room_code=slot.room_code, day=new_day,
+                                       period=new_period)
+                            .filter(TimetableSlot.id != slot.id).first())
+            if room_clash is not None:
+                return {"applied": False, "changed": [],
+                        "detail": f"room {slot.room_code} is already booked at "
+                                  f"day {new_day} period {new_period}"}
+
+        old_day, old_period = slot.day, slot.period
+        slot.day, slot.period = new_day, new_period
+        db.commit()
+        return {"applied": True,
+                "changed": [{"slot_id": slot.id, "dept_code": slot.dept_code,
+                             "year": slot.year, "section": slot.section,
+                             "subject_code": slot.subject_code,
+                             "old_day": old_day, "old_period": old_period,
+                             "new_day": new_day, "new_period": new_period}],
+                "detail": f"moved slot {slot_id} from day {old_day} period "
+                          f"{old_period} to day {new_day} period {new_period}"}
+
     async def generate_and_announce(self, db, dept_code: str | None,
                                     triggered_by: str) -> dict:
         result = self.generate(db, dept_code)
@@ -189,7 +272,8 @@ class TimetableAgent(BaseAgent):
         for s in slots:
             cells[f"{s.day}-{s.period}"] = {
                 "subject": s.subject_code, "subject_name": s.subject.name,
-                "faculty": s.faculty.name, "room": s.room}
+                "faculty": s.faculty.name,
+                "room": s.room.name if s.room else None}
         return {"dept": dept_code, "year": year, "section": section,
                 "days": DAYS, "periods": PERIODS, "cells": cells}
 
@@ -199,7 +283,7 @@ class TimetableAgent(BaseAgent):
         for s in slots:
             cells[f"{s.day}-{s.period}"] = {
                 "subject": s.subject_code, "subject_name": s.subject.name,
-                "room": s.room,
+                "room": s.room.name if s.room else None,
                 "class": f"{s.dept_code} {s.year}{s.section}"}
         return {"days": DAYS, "periods": PERIODS, "cells": cells}
 

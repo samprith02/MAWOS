@@ -48,8 +48,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 SHIPPED_DB = ROOT / "mawos.db"
-SCRATCH_DB = ROOT / "evaluation" / "results" / "v3_gates" / "_p3_scratch.db"
-OUT_DIR = ROOT / "evaluation" / "results" / "v3_gates"
+SCRATCH_DB = ROOT / "evaluation" / "results" / "v3_archive" / "v3_gates" / "_p3_scratch.db"
+OUT_DIR = ROOT / "evaluation" / "results" / "v3_archive" / "v3_gates"
 
 NUMERIC_TOOLS = {"get_attendance", "get_fees", "get_marks",
                  "get_dept_analytics", "get_student_overview", "get_placements"}

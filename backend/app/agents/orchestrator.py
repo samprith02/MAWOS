@@ -29,8 +29,8 @@ from ..models import IntentLog
 from . import tools as toolreg
 from .base import BaseAgent
 
-SYSTEM_PROMPT = """You are MAWOS, the AI assistant of Mangalore Institute of \
-Technology & Engineering. You answer questions for {role} users by calling \
+SYSTEM_PROMPT = """You are MAWOS, the AI assistant of {institution}. \
+You answer questions for {role} users by calling \
 the provided tools and grounding every answer ONLY in tool results — never \
 invent numbers. The current user is {name} ({detail}). Be concise, warm and \
 specific; use short sentences; include the key numbers. If a tool returns an \
@@ -59,6 +59,7 @@ class OrchestratorAgent(BaseAgent):
         detail = f"USN {user.usn}" if user.usn else f"dept {user.dept_code or 'ALL'}"
         messages = [
             {"role": "system", "content": SYSTEM_PROMPT.format(
+                institution=config.INSTITUTION_NAME,
                 role=user.role, name=user.display_name, detail=detail)},
             {"role": "user", "content": message},
         ]
@@ -226,8 +227,6 @@ def _fmt_placements(r):
         status = "ELIGIBLE ✓" if d["eligible"] else "not eligible"
         line = (f"  {d['company']} · {d['role']} · {d['package_lpa']} LPA "
                 f"· {d['date']} — {status}")
-        if d.get("probability") is not None:
-            line += f" ({d['probability']:.0%} success prob.)"
         lines.append(line)
     return "\n".join(lines)
 

@@ -1,7 +1,19 @@
-"""ORM models v2 — the Shared Institutional Context Store for a full college:
-5 departments x 4 years x 2 sections, faculty with teaching assignments,
-admissions pipeline, timetables, marks, and the v1 research spine
-(attendance, fees, eligibility, workflow audit)."""
+"""ORM models v4 — the Shared Institutional Context Store.
+
+Changed at R1 per `docs/v4/04_DATA_MODEL.md` §4:
+
+  added     Room, FacultyAvailability, Request, Conversation,
+            ConversationTurn, TraceRecord, GuardDecision
+  modified  TimetableSlot.room -> FK to Room; Subject gains kind/block_size;
+            Faculty gains qualified_subjects; ScholarshipAssessment drops
+            ml_score
+  removed   Application (the admissions pipeline)
+
+`GuardDecision` exists specifically so that *attempted but blocked* actions
+are countable. `07_CONTRIBUTION.md` claim 1 -- that guard placement rather
+than model choice determines safety -- is unmeasurable without it, which is
+why it lands in R1 rather than being retrofitted at R5.
+"""
 import datetime as dt
 
 from sqlalchemy import (
@@ -38,7 +50,7 @@ class User(Base):
 
 class Student(Base):
     __tablename__ = "students"
-    usn = Column(String(16), primary_key=True)         # 4MT23AM001
+    usn = Column(String(16), primary_key=True)   # format from institution.yaml
     name = Column(String(128), nullable=False)
     dept_code = Column(String(8), ForeignKey("departments.code"), nullable=False, index=True)
     year = Column(Integer, nullable=False)              # 1-4
@@ -62,15 +74,23 @@ class Faculty(Base):
     dept_code = Column(String(8), ForeignKey("departments.code"), nullable=False, index=True)
     designation = Column(String(64), nullable=False, default="Assistant Professor")
     email = Column(String(128), nullable=True)
+    #: CSV of subject codes this member can teach. Substitution search needs
+    #: it explicitly; in v3 it was implicit in TeachingAssignment.
+    qualified_subjects = Column(Text, nullable=False, default="")
 
 
 class Subject(Base):
     __tablename__ = "subjects"
-    code = Column(String(16), primary_key=True)          # 23AM51 ...
+    code = Column(String(16), primary_key=True)
     name = Column(String(128), nullable=False)
     dept_code = Column(String(8), ForeignKey("departments.code"), nullable=False, index=True)
     semester = Column(Integer, nullable=False)
     credits = Column(Integer, nullable=False, default=4)  # = periods/week
+    #: "theory" | "lab". Lab subjects want contiguous periods. The solver
+    #: does not honour block_size until R2/SHOULD-tier; the columns land now
+    #: so the schema does not change twice (04_DATA_MODEL.md 4.3).
+    kind = Column(String(8), nullable=False, default="theory")
+    block_size = Column(Integer, nullable=False, default=1)
 
 
 class TeachingAssignment(Base):
@@ -88,6 +108,41 @@ class TeachingAssignment(Base):
     subject = relationship("Subject")
 
 
+class Room(Base):
+    """A schedulable space. New at R1 -- in v3 `room` was a cosmetic
+    f-string, which is exactly why the v3 plan had to descope ITC-2007
+    track 3 (RESEARCH_PLAN_V3.md 0.2b)."""
+    __tablename__ = "rooms"
+    code = Column(String(16), primary_key=True)       # e.g. MAIN-101
+    name = Column(String(64), nullable=False)
+    room_type = Column(String(16), nullable=False, default="classroom")
+    capacity = Column(Integer, nullable=False, default=70)
+    building = Column(String(32), nullable=False, default="Main")
+
+
+class FacultyAvailability(Base):
+    """When a faculty member cannot be scheduled, from any source.
+
+    Generalises what v3 already had as `Schedule.blocked` -- a
+    (faculty, day) -> period bitmask used only for out-of-scope
+    commitments. Making the source explicit is what allows leave-driven
+    re-solving (docs/v4/05_TIMETABLE_SCOPE.md 2.3).
+    """
+    __tablename__ = "faculty_availability"
+    __table_args__ = (UniqueConstraint("faculty_id", "day", "period",
+                                       name="uq_faculty_unavailable"),)
+    id = Column(Integer, primary_key=True)
+    faculty_id = Column(Integer, ForeignKey("faculty.id"), nullable=False,
+                        index=True)
+    day = Column(Integer, nullable=False)        # 0=Mon .. 4=Fri
+    period = Column(Integer, nullable=False)     # 0..5
+    reason = Column(String(64), nullable=False, default="")
+    source = Column(String(16), nullable=False, default="standing")
+    valid_from = Column(Date, nullable=True)
+    valid_until = Column(Date, nullable=True)
+    faculty = relationship("Faculty")
+
+
 class TimetableSlot(Base):
     __tablename__ = "timetable_slots"
     __table_args__ = (UniqueConstraint("dept_code", "year", "section",
@@ -100,32 +155,12 @@ class TimetableSlot(Base):
     period = Column(Integer, nullable=False)   # 0..5
     subject_code = Column(String(16), ForeignKey("subjects.code"), nullable=False)
     faculty_id = Column(Integer, ForeignKey("faculty.id"), nullable=False)
-    room = Column(String(16), nullable=False, default="")
+    #: R1: a real reference, not a cosmetic string.
+    room_code = Column(String(16), ForeignKey("rooms.code"), nullable=True,
+                       index=True)
     subject = relationship("Subject")
     faculty = relationship("Faculty")
-
-
-class Application(Base):
-    """Admissions pipeline record."""
-    __tablename__ = "applications"
-    id = Column(Integer, primary_key=True)
-    applicant_name = Column(String(128), nullable=False)
-    email = Column(String(128), nullable=False)
-    phone = Column(String(16), nullable=False)
-    dept_code = Column(String(8), ForeignKey("departments.code"), nullable=False, index=True)
-    category = Column(String(16), nullable=False, default="GM")
-    tenth_pct = Column(Float, nullable=False)
-    twelfth_pct = Column(Float, nullable=False)
-    entrance_score = Column(Float, nullable=False)   # 0-200 (CET-style)
-    family_income = Column(Float, nullable=False)
-    # submitted | verified | merit_listed | seat_allotted | enrolled | rejected
-    status = Column(String(16), nullable=False, default="submitted", index=True)
-    merit_score = Column(Float, nullable=True)
-    merit_rank = Column(Integer, nullable=True)
-    allotted_usn = Column(String(16), nullable=True)
-    notes = Column(Text, nullable=False, default="")
-    created_at = Column(DateTime, default=utcnow)
-    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    room = relationship("Room")
 
 
 class MarksRecord(Base):
@@ -202,6 +237,26 @@ class HallTicket(Base):
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
 
+class EligibilityOverride(Base):
+    """A manual override of a hall-ticket verdict (v5 write tool
+    `issue_eligibility_override`, hod/principal only -- the highest-
+    privilege write in the system). `EligibilityAgent.evaluate_hall_ticket`
+    checks for the latest override on (usn, semester) and lets it flip an
+    otherwise-ineligible verdict to eligible; it does not touch the
+    attendance/fees rule itself, so the original blocking reasons stay
+    visible in `HallTicket.reasons` alongside the override note -- this is
+    an audited exception, not a rewritten policy.
+    """
+    __tablename__ = "eligibility_overrides"
+    id = Column(Integer, primary_key=True)
+    usn = Column(String(16), ForeignKey("students.usn"), nullable=False, index=True)
+    semester = Column(Integer, nullable=False)
+    exam = Column(String(64), nullable=False, default="")
+    reason = Column(Text, nullable=False)
+    decided_by = Column(String(64), nullable=False)
+    created_at = Column(DateTime, default=utcnow, index=True)
+
+
 class ScholarshipAssessment(Base):
     __tablename__ = "scholarship_assessments"
     __table_args__ = (UniqueConstraint("usn", "scheme", name="uq_scholarship_scheme"),)
@@ -209,7 +264,9 @@ class ScholarshipAssessment(Base):
     usn = Column(String(16), ForeignKey("students.usn"), nullable=False, index=True)
     scheme = Column(String(64), nullable=False, default="Merit-cum-Means")
     status = Column(String(16), nullable=False)
-    ml_score = Column(Float, nullable=True)
+    #: ml_score removed at R1: the v3 CART was trained on a label our own
+    #: banded rule generated (docs/v4/04_DATA_MODEL.md 2). Scholarship
+    #: eligibility is a policy decision and is now stated as one.
     reasons = Column(Text, nullable=False, default="")
     assessed_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
@@ -234,7 +291,7 @@ class PlacementShortlist(Base):
     drive_id = Column(Integer, ForeignKey("placement_drives.id"), nullable=False)
     usn = Column(String(16), ForeignKey("students.usn"), nullable=False, index=True)
     eligible = Column(Boolean, nullable=False)
-    ml_probability = Column(Float, nullable=True)
+    #: ml_probability removed at R1 with the placement RF (04_DATA_MODEL.md 2).
     reasons = Column(Text, nullable=False, default="")
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     drive = relationship("PlacementDrive")
@@ -277,4 +334,116 @@ class IntentLog(Base):
     latency_ms = Column(Float, nullable=False, default=0.0)
     expected_intent = Column(String(64), nullable=True)
     correct = Column(Boolean, nullable=True)
+    created_at = Column(DateTime, default=utcnow)
+
+
+# ===================================================================== v4
+# Workflow, conversation and audit entities. New at R1
+# (docs/v4/04_DATA_MODEL.md 4.2).
+
+class Request(Base):
+    """The one write-bearing workflow type in MVRS.
+
+    A single table and a single state machine carry every request kind, so
+    adding re-evaluation or room-booking later is a new `kind`, not a new
+    table (docs/v4/02_SCOPE.md: the general Requests module is SHOULD-tier).
+    """
+    __tablename__ = "requests"
+    id = Column(Integer, primary_key=True)
+    kind = Column(String(32), nullable=False, index=True)   # faculty_leave | ...
+    requester = Column(String(64), nullable=False, index=True)  # username
+    subject_ref = Column(String(64), nullable=True)   # what it is about
+    payload = Column(Text, nullable=False, default="{}")
+    #: pending | approved | rejected | withdrawn | applied
+    state = Column(String(16), nullable=False, default="pending", index=True)
+    decided_by = Column(String(64), nullable=True)
+    reasons = Column(Text, nullable=False, default="")
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+class Conversation(Base):
+    """Per-user dialogue container. Persisted, not in process memory: it
+    must survive restart and be inspectable in the trace UI
+    (docs/v4/01_ARCHITECTURE.md 8)."""
+    __tablename__ = "conversations"
+    id = Column(String(36), primary_key=True)          # uuid
+    owner = Column(String(64), nullable=False, index=True)   # username
+    started_at = Column(DateTime, default=utcnow)
+    last_active_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    #: which LLM tier served each turn, newest last -- degradation is
+    #: measurable rather than anecdotal.
+    tier_history = Column(Text, nullable=False, default="[]")
+    title = Column(String(128), nullable=False, default="")
+
+
+class ConversationTurn(Base):
+    """One exchange, plus the orchestrator state that outlives it."""
+    __tablename__ = "conversation_turns"
+    id = Column(String(36), primary_key=True)          # uuid; == turn_id
+    conversation_id = Column(String(36), ForeignKey("conversations.id"),
+                             nullable=False, index=True)
+    seq = Column(Integer, nullable=False)
+    role = Column(String(16), nullable=False)          # user | assistant
+    content = Column(Text, nullable=False, default="")
+    #: What "she" / "that section" refers to. Never dropped when history is
+    #: truncated -- losing it is what makes an assistant feel amnesiac.
+    resolved_entities = Column(Text, nullable=False, default="{}")
+    pending_clarification = Column(Text, nullable=True)
+    pending_confirmation = Column(Text, nullable=True)
+    plan_state = Column(Text, nullable=False, default="{}")
+    tier = Column(String(16), nullable=False, default="")
+    created_at = Column(DateTime, default=utcnow)
+    conversation = relationship("Conversation")
+
+
+class TraceRecord(Base):
+    """One step of one turn: plan, delegation, tool call, guard verdict or
+    provenance check. This is simultaneously the debugging story, the
+    explainability feature and the evaluation instrument."""
+    __tablename__ = "trace_records"
+    id = Column(Integer, primary_key=True)
+    turn_id = Column(String(36), ForeignKey("conversation_turns.id"),
+                     nullable=False, index=True)
+    step = Column(Integer, nullable=False)
+    #: plan | delegate | tool | guard | gate | clarify | confirm | synthesise
+    kind = Column(String(16), nullable=False, index=True)
+    actor = Column(String(48), nullable=False, default="")   # agent or tool
+    verdict = Column(String(24), nullable=False, default="")
+    payload = Column(Text, nullable=False, default="{}")
+    latency_ms = Column(Float, nullable=False, default=0.0)
+    created_at = Column(DateTime, default=utcnow)
+
+    def payload_dict(self) -> dict:
+        import json
+        try:
+            return json.loads(self.payload or "{}")
+        except ValueError:
+            return {}
+
+
+class GuardDecision(Base):
+    """Every authorisation outcome -- allowed AND blocked, in the same shape.
+
+    The shape matters: if denials were exceptions and successes were silent,
+    the *attempt* rate would be uncomputable, and the attempt rate is the
+    headline of `07_CONTRIBUTION.md` claim 1. R0.5 already showed why this
+    must be explicit -- it measured 0 attempts, but only because the role
+    filter never exposed the capability, which is a different fact.
+    """
+    __tablename__ = "guard_decisions"
+    id = Column(Integer, primary_key=True)
+    turn_id = Column(String(36), nullable=True, index=True)
+    actor = Column(String(64), nullable=False, index=True)   # username
+    actor_role = Column(String(16), nullable=False, default="")
+    capability = Column(String(64), nullable=False, index=True)
+    target = Column(String(128), nullable=False, default="")
+    #: allowed | denied
+    verdict = Column(String(16), nullable=False, index=True)
+    #: NOT_PERMITTED | OUT_OF_SCOPE | PRECONDITION_FAILED | ""
+    reason_code = Column(String(32), nullable=False, default="")
+    detail = Column(Text, nullable=False, default="")
+    #: True when the capability WAS exposed to this actor's schema, so a
+    #: denial here is a real attempt rather than an impossible one.
+    was_exposed = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, default=utcnow)

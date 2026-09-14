@@ -1,0 +1,114 @@
+# MAWOS v4 — institution definition.
+#
+# This file is the ONLY place an institution's identity exists. Nothing in
+# backend/, frontend/ or data/ may hardcode an institution name, USN prefix,
+# email domain or crest. The R1 gate greps for the v3 identity and must
+# return zero hits (docs/v4/04_DATA_MODEL.md §3).
+#
+# Everything here is fictional. The system deliberately does not depend on
+# any real college's identity or data.
+#
+# >>> The name below is a PLACEHOLDER. OPEN_DECISIONS.md D12 records that
+# >>> choosing it is the project owner's call. Because it is a config value,
+# >>> changing it costs one edit here and a reseed -- no code changes.
+
+institution:
+  name:          "Vidyut Institute of Engineering & Technology"
+  short_name:    "VIET"
+  name_is_placeholder: true          # see OPEN_DECISIONS.md D12
+  usn_prefix:    "1VT"               # fictional; the loader rejects the v3 prefix
+  email_domain:  "viet.edu.in"       # fictional; the loader rejects the v3 domain
+  established:   2004
+  affiliation:   "Affiliated to a State Technological University"
+  city:          "Kadamba"           # fictional
+  motto:         "Knowledge in Practice"
+
+# ---------------------------------------------------------------- calendar
+# The teaching grid. `break_after` marks periods after which a break falls;
+# breaks are not schedulable slots but they are not modelled as periods
+# either -- the grid stays 6 teaching periods, as the frozen scheduler
+# expects (N_DAYS=5, N_PERIODS=6 in backend/app/scheduler.py).
+calendar:
+  days: ["Mon", "Tue", "Wed", "Thu", "Fri"]
+  periods:
+    - {index: 0, label: "09:00", start: "09:00", end: "09:55"}
+    - {index: 1, label: "10:00", start: "10:00", end: "10:55"}
+    - {index: 2, label: "11:15", start: "11:15", end: "12:10"}
+    - {index: 3, label: "12:15", start: "12:15", end: "13:10"}
+    - {index: 4, label: "14:00", start: "14:00", end: "14:55"}
+    - {index: 5, label: "15:00", start: "15:00", end: "15:55"}
+  break_after: [1, 3]                # short break after P1, lunch after P3
+
+# ------------------------------------------------------------- departments
+departments:
+  - {code: "AIML", name: "Artificial Intelligence & Machine Learning", letters: "AI", intake: 60}
+  - {code: "CSE",  name: "Computer Science & Engineering",             letters: "CS", intake: 60}
+  - {code: "ECE",  name: "Electronics & Communication Engineering",    letters: "EC", intake: 60}
+  - {code: "ME",   name: "Mechanical Engineering",                     letters: "ME", intake: 60}
+  - {code: "CV",   name: "Civil Engineering",                          letters: "CV", intake: 60}
+
+# ------------------------------------------------------------------- rooms
+# Room inventory is sized deliberately (04_DATA_MODEL.md §5.2): classrooms
+# comfortably exceed the number of concurrent sections so the instance stays
+# feasible, while labs are scarce so room allocation is a real constraint
+# rather than a formality.
+#
+# 5 departments x 4 years x 2 sections = 40 concurrent sections.
+rooms:
+  classroom:
+    count: 48                        # > 40 concurrent sections: feasible
+    capacity: 70
+    buildings: ["Main", "North", "South"]
+  lab:
+    count: 12                        # scarce on purpose
+    capacity: 40
+    buildings: ["Main", "Tech"]
+  seminar:
+    count: 4
+    capacity: 120
+    buildings: ["Main"]
+
+# -------------------------------------------------------------- generation
+generation:
+  seed: 20260901
+  students_per_section: 30
+  sections_per_year: ["A", "B"]
+  years: [1, 2, 3, 4]
+  year_to_semester: {1: 1, 2: 3, 3: 5, 4: 7}
+  faculty_per_department: 15
+  subjects_per_semester: 5
+  lab_subjects_per_semester: 1       # one of the five is a lab subject
+  lab_block_size: 2                  # contiguous periods (schema only in R1)
+  attendance_days: 30
+  internals_entered: 2               # CIE 1 and 2 done, CIE 3 pending
+
+  # Faculty unavailability. Must stay sparse enough that a feasible
+  # timetable still exists -- the generator asserts feasibility before it
+  # emits (04_DATA_MODEL.md §5.1 rule 5).
+  unavailability:
+    faculty_fraction: 0.35           # share of faculty with any block
+    max_blocks_per_faculty: 3        # (day, period) cells
+    reasons: ["research", "administrative duty", "departmental meeting"]
+
+  # Fees: share of students carrying at least one unpaid item. Drives the
+  # Compliance cascade.
+  fee_default_fraction: 0.15
+
+  # Attendance propensity, Beta(a, b), clipped. Mean ~0.85 leaves roughly
+  # 15-20% of the cohort below the 75% rule -- enough to exercise shortage
+  # workflows without making the institution look pathological.
+  attendance_propensity: {a: 10.0, b: 1.8, min: 0.45, max: 0.995}
+
+  # Requests: the one write-bearing workflow type in MVRS.
+  seed_requests: 12
+
+# ---------------------------------------------------------------- policies
+# Institutional business rules. These were constants in backend/app/config.py
+# in v3; they are institution facts, so they live here.
+policies:
+  attendance_threshold_pct: 75.0
+  absence_streak_alert: 3
+  fee_late_fine_per_day: 50.0
+  fee_grace_days: 7
+  scholarship_min_cgpa: 6.0
+  scholarship_scheme: "Merit-cum-Means"

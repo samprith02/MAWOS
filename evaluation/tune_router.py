@@ -53,8 +53,8 @@ from evaluation.gate_p05 import MAX_ESCALATION, auc, bootstrap_delta, margins  #
 
 #: Fixed by PROTOCOL.md §9.2. Not a choice made in this script.
 SELECTED_MODEL = "qwen2.5:3b-instruct"
-CAPTURE = ROOT / "evaluation" / "results" / "v3_llm" / "qwen2-5_3b-instruct.json"
-OUT_DIR = ROOT / "evaluation" / "results" / "v3_gates"
+CAPTURE = ROOT / "evaluation" / "results" / "v3_archive" / "v3_llm" / "qwen2-5_3b-instruct.json"
+OUT_DIR = ROOT / "evaluation" / "results" / "v3_archive" / "v3_gates"
 CONFIG = ROOT / "backend" / "app" / "router_config.json"
 
 

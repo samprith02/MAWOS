@@ -36,22 +36,33 @@ def _student_ctx(db, user: User):
 TOOLS: dict[str, dict] = {}
 
 
-def tool(name, description, params=None, roles=ALL_ROLES):
+def tool(name, description, params=None, roles=ALL_ROLES, writes=False):
     def wrap(fn):
         TOOLS[name] = {
             "name": name, "description": description,
             "parameters": {"type": "object",
                            "properties": params or {},
                            "required": []},
-            "roles": roles, "fn": fn,
+            "roles": roles, "fn": fn, "writes": writes,
         }
         return fn
     return wrap
 
 
+def write_tool_names() -> tuple[str, ...]:
+    """Capabilities that mutate institutional state. These are the ones the
+    graph must route through a human confirmation turn."""
+    return tuple(n for n, t in TOOLS.items() if t.get("writes"))
+
+
+#: No realistic example value here, deliberately. R0.5 measured two local
+#: models copying the example USN straight out of this description and then
+#: answering about a student nobody had asked about
+#: (evaluation/results/v4_gates/r05_findings.md 3.1).
 USN_PARAM = {"usn": {"type": "string",
-                     "description": "Student USN, e.g. 4MT23AI049 "
-                                    "(staff only; students get their own)"}}
+                     "description": "Student USN in the institution's format "
+                                    "(staff only; students always get their "
+                                    "own record and must not pass this)"}}
 
 
 @tool("get_student_overview",
@@ -128,7 +139,7 @@ def get_scholarship(db, agents, user, args):
 
 
 @tool("get_placements", "Upcoming placement drives and the student's "
-      "eligibility/success probability (final years).", USN_PARAM)
+      "eligibility against each drive's cutoffs (final years).", USN_PARAM)
 def get_placements(db, agents, user, args):
     if user.role == "student":
         return {"drives": agents["placement_agent"].student_view(db, user.usn)}
@@ -202,13 +213,63 @@ def schemas_for_role(role: str) -> list[dict]:
             for t in TOOLS.values() if role in t["roles"]]
 
 
-def execute(db, agents, user, name: str, args: dict) -> dict:
+def execute(db, agents, user, name: str, args: dict,
+            turn_id: str | None = None) -> dict:
+    """Every capability call passes the guard first. Role checks used to
+    live inline here; they now live in `guard.authorise`, which also logs
+    the outcome. Nothing may reach a tool function without a verdict.
+    """
+    from ..guard import authorise
     t = TOOLS.get(name)
     if t is None:
-        return {"error": f"unknown tool {name}"}
-    if user.role not in t["roles"]:
-        return {"error": f"role '{user.role}' is not permitted to use {name}"}
+        return {"error": f"unknown tool {name}", "reason_code": "NOT_PERMITTED"}
+    verdict = authorise(db, user, name, args or {}, turn_id=turn_id)
+    if not verdict.allowed:
+        return {"error": verdict.detail or f"{name} refused",
+                "reason_code": verdict.reason_code}
     try:
         return t["fn"](db, agents, user, args or {})
     except Exception as exc:  # tool errors go back to the LLM, not the user
-        return {"error": f"{type(exc).__name__}: {exc}"}
+        return {"error": f"{type(exc).__name__}: {exc}",
+                "reason_code": "PRECONDITION_FAILED"}
+
+
+# --------------------------------------------------------------- write tools
+# The three MVRS writes (spec §7.1). Each mutates institutional state and is
+# therefore gated by a human confirmation turn in the graph -- the guard
+# decides whether a write may be PROPOSED; the human decides whether it happens.
+
+@tool("mark_attendance",
+      "Mark attendance for a section on a date, naming the absentees.",
+      {"section": {"type": "string"}, "subject_code": {"type": "string"},
+       "date": {"type": "string"}, "absentees": {"type": "array",
+                                                 "items": {"type": "string"}}},
+      roles=STAFF, writes=True)
+def mark_attendance(db, agents, user, args):
+    return agents["attendance_agent"].mark(
+        db, section=args.get("section"), subject_code=args.get("subject_code"),
+        date=args.get("date"), absentees=args.get("absentees") or [],
+        marked_by=user.username)
+
+
+@tool("apply_timetable_change",
+      "Move a class to a different slot after counterfactual scoring.",
+      {"section": {"type": "string"}, "slot_id": {"type": "integer"},
+       "new_day": {"type": "integer"}, "new_period": {"type": "integer"}},
+      roles=("hod", "principal", "admin"), writes=True)
+def apply_timetable_change(db, agents, user, args):
+    return agents["timetable_agent"].apply_change(
+        db, slot_id=args.get("slot_id"), new_day=args.get("new_day"),
+        new_period=args.get("new_period"))
+
+
+@tool("issue_eligibility_override",
+      "Override a hall-ticket eligibility decision for one student, with a "
+      "recorded reason. The highest-privilege write in the system.",
+      {"usn": {"type": "string"}, "exam": {"type": "string"},
+       "reason": {"type": "string"}},
+      roles=("hod", "principal"), writes=True)
+def issue_eligibility_override(db, agents, user, args):
+    return agents["eligibility_agent"].override(
+        db, usn=args.get("usn"), exam=args.get("exam"),
+        reason=args.get("reason"), decided_by=user.username)

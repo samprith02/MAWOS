@@ -1,27 +1,21 @@
-"""Placement Agent — final-year drive eligibility (dept + criteria filters)
-with calibrated Random Forest success-probability ranking."""
+"""Placement Agent — final-year drive eligibility (dept + criteria filters).
+
+R1: the Random Forest success-probability ranking was removed
+(docs/v4/04_DATA_MODEL.md §2). It was trained on a Bernoulli label drawn
+from a logistic model we wrote ourselves, so its "prediction" recovered our
+own generator -- the same circularity as the scholarship CART. Drive
+eligibility is a published set of cutoffs and is stated as rules with
+reason codes.
+"""
 import datetime as dt
 
-import joblib
-
-from .. import config
 from ..models import PlacementDrive, PlacementShortlist, Student
 from .attendance import overall_percentage
 from .base import BaseAgent
 
-_MODEL_PATH = config.ML_MODELS_DIR / "placement_rf.joblib"
-
-
 class PlacementAgent(BaseAgent):
     name = "placement_agent"
-    description = "Final-year drive eligibility + Random Forest ranking"
-
-    def __init__(self, bus):
-        super().__init__(bus)
-        self.model = None
-        if _MODEL_PATH.exists():
-            # Safe: artifact produced locally by ml/train.py in this repo.
-            self.model = joblib.load(_MODEL_PATH)
+    description = "Final-year drive eligibility against published cutoffs"
 
     def register_subscriptions(self):
         self.bus.subscribe("attendance.updated", self.name, self.on_upstream_change)
@@ -59,10 +53,6 @@ class PlacementAgent(BaseAgent):
             return 0
         if attendance is None:
             attendance = overall_percentage(db, usn)
-        prob = None
-        if self.model is not None:
-            prob = float(self.model.predict_proba(
-                [[student.cgpa, student.backlogs, attendance]])[0][1])
         if drives is None:
             drives = self._upcoming_drives(db)
         existing = {e.drive_id: e for e in
@@ -89,7 +79,6 @@ class PlacementAgent(BaseAgent):
                                            eligible=eligible)
                 db.add(entry)
             entry.eligible = eligible
-            entry.ml_probability = prob if eligible else None
             entry.reasons = "; ".join(reasons)
             changed += 1
         return changed
@@ -110,7 +99,6 @@ class PlacementAgent(BaseAgent):
                         "package_lpa": d.package_lpa, "date": str(d.drive_date),
                         "departments": d.departments,
                         "eligible": bool(e and e.eligible),
-                        "probability": e.ml_probability if e else None,
                         "reasons": e.reasons if e else
                         ("placements open in final year" if student.year != 4 else "")})
         return out

@@ -1,0 +1,13 @@
+.git
+.venv
+venv
+__pycache__
+*.pyc
+mawos.db
+mawos.db.*
+node_modules
+teacher-erp-with-timetable-simulation
+evaluation/results
+docs
+.env
+.env.*

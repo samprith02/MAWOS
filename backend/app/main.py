@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import config, llm
+from . import config, llm, llm_provider
 from . import router as hybrid_router
 from .agents import get_agents
 from .api.routes import router
@@ -57,6 +57,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="MAWOS", version="2.0.0", lifespan=lifespan)
 app.include_router(router)
+
+
+@app.get("/health", include_in_schema=False)
+def health():
+    """Render's health check target (render.yaml). Also surfaces which
+    LLM tier is active without requiring auth."""
+    return {"status": "ok", "tier": llm_provider.active_provider()["label"]}
+
 
 if config.STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(config.STATIC_DIR)), name="static")

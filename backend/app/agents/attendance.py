@@ -6,7 +6,8 @@ import datetime as dt
 from sqlalchemy import case, func
 
 from .. import config
-from ..models import AttendanceRecord, AttendanceSummary, Student, Subject
+from ..models import (AttendanceRecord, AttendanceSummary, Student, Subject,
+                      TeachingAssignment)
 from .base import BaseAgent
 
 
@@ -63,6 +64,64 @@ class AttendanceAgent(BaseAgent):
                 "count": len(accepted)})
         return {"accepted": len(accepted), "rejected": rejected,
                 "workflow_id": workflow_id}
+
+    # ---------- write tool (v5 chat/guard path) ---------------------------------
+    def mark(self, db, section: str, subject_code: str, date: str | None,
+             absentees: list[str], marked_by: str = "system") -> dict:
+        """Synchronous write path for `execute()` (backend/app/agents/tools.py:
+        `mark_attendance`). Unlike `upload_attendance` -- the async REST intake
+        path that also publishes `attendance.uploaded` for the event cascade --
+        this is a single guarded write with no downstream announcement, so it
+        stays synchronous and calls `_recompute_student` directly rather than
+        duplicating its logic or awaiting the event bus from a sync call site.
+
+        Marks the whole roster present except the named `absentees`, mirroring
+        `POST /faculty/attendance` (routes.py `mark_attendance`).
+        """
+        section = str(section or "").upper().strip()
+        subject_code = str(subject_code or "").upper().strip()
+        if not section or not subject_code:
+            return {"applied": False, "changed": [],
+                    "detail": "section and subject_code are required"}
+        if db.get(Subject, subject_code) is None:
+            return {"applied": False, "changed": [],
+                    "detail": f"unknown subject {subject_code}"}
+        try:
+            day = dt.date.fromisoformat(str(date)) if date else dt.date.today()
+        except (TypeError, ValueError):
+            return {"applied": False, "changed": [],
+                    "detail": f"invalid date {date!r}"}
+        ta = (db.query(TeachingAssignment)
+                .filter_by(subject_code=subject_code, section=section).first())
+        if ta is None:
+            return {"applied": False, "changed": [],
+                    "detail": f"no teaching assignment for {subject_code}/{section}"}
+        roster = db.query(Student).filter_by(dept_code=ta.dept_code, year=ta.year,
+                                             section=section).all()
+        if not roster:
+            return {"applied": False, "changed": [],
+                    "detail": f"no students in {ta.dept_code} year {ta.year} "
+                              f"section {section}"}
+        absent = {str(u).upper().strip() for u in (absentees or [])}
+        touched = set()
+        for s in roster:
+            if db.query(AttendanceRecord).filter_by(
+                    usn=s.usn, subject_code=subject_code, date=day).first():
+                continue  # duplicate prevention, matches upload_attendance
+            db.add(AttendanceRecord(usn=s.usn, subject_code=subject_code, date=day,
+                                    present=s.usn not in absent,
+                                    uploaded_by=marked_by))
+            touched.add(s.usn)
+        if not touched:
+            return {"applied": False, "changed": [],
+                    "detail": "attendance already recorded for every roster "
+                              "student on this date"}
+        changed = [self._recompute_student(db, usn) for usn in sorted(touched)]
+        db.commit()
+        return {"applied": True, "changed": changed,
+                "detail": f"marked {len(touched)} students for "
+                          f"{subject_code}/{section} on {day.isoformat()} "
+                          f"({len(absent)} absent)"}
 
     # ---------- event handler ---------------------------------------------------
     async def on_attendance_uploaded(self, payload: dict):

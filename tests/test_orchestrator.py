@@ -5,6 +5,8 @@ import pytest
 
 from backend.app import llm, router
 from backend.app.models import User
+from tests.fixtures.mini_institution import (  # noqa: E402
+    STUDENT_OK)
 
 
 def test_keyword_classifier_v2_intents():
@@ -24,7 +26,7 @@ def test_keyword_classifier_v2_intents():
 
 
 def test_orchestrator_response_shape(agents, db):
-    user = db.query(User).filter_by(username="4MT23AI001").first()
+    user = db.query(User).filter_by(username=STUDENT_OK).first()
     r = asyncio.run(agents["orchestrator_agent"].handle_chat(
         db, user, "What is my attendance percentage?"))
     assert r["mode"] in ("lexicon", "llm")

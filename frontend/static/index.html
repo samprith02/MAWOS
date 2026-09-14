@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MITE · MAWOS — University Portal</title>
+<title>MAWOS — University Portal</title>
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body data-palette="#3b6bb5,#8f6a1a">
@@ -19,7 +19,7 @@
               font-size="26" fill="#f3e6c4" font-weight="bold">M</text>
       </svg>
     </div>
-    <h1 class="wordmark">Mangalore Institute of<br>Technology &amp; Engineering</h1>
+    <h1 class="wordmark" id="inst-name">University Portal</h1>
     <p class="tagline">MAWOS · Multi-Agent Workflow Orchestration System</p>
     <div class="rule"></div>
     <input id="login-username" placeholder="Username" autocomplete="username">
@@ -28,14 +28,14 @@
     <p id="login-error" class="error"></p>
     <div class="demo-chips">
       <span>Demo:</span>
-      <button data-u="4MT23AI049" data-p="student123">Student</button>
+      <button data-demo="student" data-p="student123">Student</button>
       <button data-u="aiml.f02" data-p="faculty123">Faculty</button>
       <button data-u="hod.aiml" data-p="faculty123">HOD</button>
       <button data-u="principal" data-p="principal123">Principal</button>
       <button data-u="admin" data-p="admin123">Admin</button>
     </div>
   </div>
-  <p class="login-foot">Est. 2007 · Autonomous Institute affiliated to VTU, Belagavi</p>
+  <p class="login-foot" id="inst-foot"></p>
 </div>
 
 <!-- ================= APP ================= -->
@@ -49,7 +49,7 @@
               font-size="26" fill="#f3e6c4" font-weight="bold">M</text>
       </svg>
       <div>
-        <div class="brand-name">MITE</div>
+        <div class="brand-name" id="brand-short">MAWOS</div>
         <div class="brand-sub">University Portal</div>
       </div>
     </div>
@@ -63,8 +63,7 @@
 
   <main id="main-content"></main>
 
-  <footer>MAWOS v2 · event-driven multi-agent workflow orchestration ·
-    research prototype, Dept. of AI&amp;ML</footer>
+  <footer>MAWOS · multi-agent workflow orchestration · research prototype</footer>
 </div>
 
 <script src="/static/app.js"></script>

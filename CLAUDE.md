@@ -9,7 +9,138 @@ source of truth. Academic/Admission/Finance/Placement/Notification are
 still real, still in the registry, still called by tools.py and the REST
 routes — just not counted as agents (§7 of `docs/RESEARCH_PLAN_V3.md`).
 
-## Status (updated 2026-08-21 — keep this current every session)
+---
+
+## ⚠ READ THIS BEFORE THE v4 SECTION — v5 is the current work (2026-09-14)
+
+**`docs/superpowers/specs/2026-09-13-mawos-v5-design.md` is the current spec.
+`docs/superpowers/plans/2026-09-14-mawos-v5-agentic-layer.md` is the plan being executed.**
+
+v5 is **not** a third re-aiming. The research question, `docs/v4/07_CONTRIBUTION.md`,
+`evaluation/PROTOCOL.md` and every rule below are unchanged. Four things changed, each
+with a stated cause:
+
+| Change | Cause |
+|---|---|
+| Orchestration moves to **LangGraph** (MIT) | Hand-rolled orchestration is neither a contribution nor a hiring signal. The contribution is the guard/provenance layer *above* it |
+| Provider is **hosted**, never local | R0.5 measured that no local model passes. Local also cannot be deployed: no free host provides a GPU |
+| New external surface: an **MCP server** | Puts an untrusted external LLM behind the same deterministic guard — a second experiment |
+| Dependencies must be **permissively licensed** | The project is intended for commercial use; ERPNext/Frappe is GPLv3 and Indian colleges procure on-premise, which is distribution |
+
+**Ollama is no longer used.** `%LOCALAPPDATA%\Ollama\ollama.exe serve` is historical. The
+runtime provider is configured by `MAWOS_LLM_BASE_URL` / `MAWOS_LLM_MODEL` /
+`MAWOS_LLM_KEY_ENV` (`backend/app/config.py`), reading its credential from a **gitignored
+`.env`**. No key may ever enter git.
+
+### New modules (v5)
+
+| Module | Responsibility |
+|---|---|
+| `backend/app/guard.py` | **The deterministic authorisation layer — the project's primary contribution.** Single entry point `authorise(db, user, capability, args, turn_id=None)`. Logs allowed AND denied in the same shape, and records `was_exposed` so the attempt rate stays computable |
+| `backend/app/contracts.py` | Typed delegation: `AgentTask → AgentResult \| NeedInfo \| Refusal`. Three outcomes, not two — `NeedInfo` stops the turn and asks |
+
+### ⚠ BEHAVIOUR CHANGE — student isolation is now a DENIAL, not a coercion
+
+v3: a student asking for another student's record silently received **their own** data
+(`_resolve_usn` coerced the USN).
+v5: the guard **denies** with `OUT_OF_SCOPE`.
+
+This was deliberate. Silent substitution is a grounding hazard in an LLM-driven system — the
+model would faithfully report the wrong student's name against the right student's numbers,
+which is truthfully wrong, the worst kind for claim 3. A denial also writes a
+`GuardDecision`, so the attempt is countable; a coercion never was.
+`tests/test_workflows.py::test_tool_permissions_lock_students_to_self` encodes the new contract.
+
+### Every capability call now passes the guard
+
+`backend/app/agents/tools.py::execute()` calls `guard.authorise` before reaching any tool
+function, and `execute()` is the **only** call site of `t["fn"]` anywhere in `backend/app`.
+Three write tools are registered with `writes=True` — `mark_attendance`,
+`apply_timetable_change`, `issue_eligibility_override` — and `write_tool_names()` reports them.
+
+**Circular-import hazard:** `guard.py` imports `TOOLS` from `.agents.tools`, and `execute()`
+imports `authorise` from `..guard`. **Both are function-level on purpose.** Hoisting either to
+module scope breaks the import.
+
+**`SessionLocal` is `autoflush=False`.** Calling `evaluate_hall_ticket` twice in one session
+double-inserts a `HallTicket` and raises a UNIQUE constraint error. `EligibilityAgent.override`
+calls `db.flush()` explicitly for this reason — do not remove those flushes.
+
+### Decision state (v5)
+
+- **D13 — closed** 2026-09-01 (M7 threshold 3.0 → 6.0 s).
+- **D14 — closed 2026-09-14.** M7 is re-registered as the p50, over category `A_single`
+  items, of **summed provider latency** (`sum(round.latency_ms)`), not wall-clock. Wall time
+  included this harness's own rate-pacing sleep, which hosted providers need and local ones do
+  not, so wall-clock M7 was never provider-agnostic. **Only the measure changed — the
+  population is unchanged.** Neither completed run is re-scored. Verified executably by
+  `tests/test_probe_scoring.py`. `m7_wall_p50_s` is retained as a diagnostic and reproduces the
+  historically published values to ±1e-9.
+- **D1 — STILL OPEN.** The clean hosted run of 2026-09-14 measured `groq:gpt-oss-120b`
+  INELIGIBLE: it fails **M2 correct-tool at 75.0% against a >=85% threshold**, deterministically
+  across all 3 seeds, while M1/M3/M4/M5/M6/M7/M9 all pass. Thresholds were **not** relaxed.
+  The runtime nevertheless defaults to that model — recorded in `OPEN_DECISIONS.md` as
+  *"a project decision made explicitly and recorded, not something the gate supports."*
+  The guard is the mitigation: it authorises every action regardless of which tool the model
+  picks, so a wrong-tool selection cannot produce an unauthorised effect.
+  Note the *shape* of the result — the model is strong on the hard measures (clarifying before
+  acting, refusing, grounding, multi-step) and fails on the simple one. That **inverts** v3's P6
+  finding that tool-selection could not discriminate between models.
+  An **earlier** run the same day was **discarded as harness-contaminated** (M9 = 83.1%: 60
+  rate-limit + 14 malformed-request failures, none attributable to the model). **Do not cite it.**
+
+**A number produced by a broken instrument is worse than no number.** Before reading any
+gate result, check M9 first. Two separate harness defects have now been caught this way —
+D14's pacing contamination and the 429/400 storm — and both would otherwise have been
+published as findings about a model.
+
+---
+
+## ⚠ READ FIRST — the project is being re-aimed (v4, R0 signed off 2026-08-31)
+
+**`docs/v4/` is the current blueprint. Start there, not with the v3 status table below.**
+
+v3 built the university system as an *experimental platform* for a tool-space-restriction
+study (`RESEARCH_PLAN_V3.md`, top). v4 re-aims it at **bounded LLM autonomy over a real
+institutional system** — the model plans and delegates across agents, a deterministic guard
+authorises every action, writes require confirmation, and the whole chain is traced and
+measured. Verdict on the rework: **GO WITH REDUCTIONS**.
+
+| Read this | For |
+|---|---|
+| `docs/v4/README.md` | index + why the re-aim |
+| `docs/v4/02_SCOPE.md` | **the MVRS scope contract** — MUST / SHOULD / NICE / DO-NOT-BUILD |
+| `docs/v4/OPEN_DECISIONS.md` | **12 decisions deliberately NOT locked**, each with its experiment and a pre-registered threshold |
+| `docs/v4/09_ROADMAP.md` | R0–R8, critical path, phase gates |
+
+**Phase state:** R0 (decision freeze) **done** — documents only, zero code changed.
+**R1 (foundations) done 2026-09-01.** New schema (rooms, faculty availability,
+requests, conversations, traces, guard decisions); `data/institution.yaml` +
+`data/generator/` replacing the v2 inline seeder; Alembic; test fixtures;
+v3 results archived. Admissions, `fl/` and **both ML models** deleted — the
+CART/RF were trained on labels our own rules generated. 63 tests pass.
+**R0.5 (provider viability gate) done 2026-08-31 — and NOTHING PASSED.** All three
+local models fail the pre-registered thresholds (1.5B 7/8, 3B 5/8, 7B 4/8); both
+hosted candidates were untestable (no API key in the environment) and are recorded
+as untested, not estimated. Per the gate's own clause the thresholds were **not**
+relaxed, so **no provider is adopted and D1 stays OPEN**. Evidence:
+`evaluation/results/v4_gates/r05_provider.{json,md}` + `r05_findings.md`.
+**R3 is blocked on D1.** R2 (timetable) is unblocked and is the next phase.
+M7's latency threshold was re-registered 2026-09-01 (D13 closed,
+`03_LLM_LAYER.md` §2.3.1) — verified to change no 2026-08-31 verdict.
+
+**Four things a session must not quietly decide** (see `OPEN_DECISIONS.md`): the LLM
+provider (D1 — closed by the R0.5 probe), a second timetable search algorithm (D2 — only if
+seed failure > 5% over 10 seeds), a fourth agent (D3), and a frontend rewrite (D4). Each is
+adopted only by recording the measurement that justified it.
+
+**Everything in "Rules that matter here" and "Gotchas" below still applies verbatim.** The
+v3 phase table is **historical record** — accurate for what was built up to 2026-08-25, and
+no longer the plan.
+
+---
+
+## Status — v3 phases (HISTORICAL, frozen 2026-08-25; superseded by `docs/v4/09_ROADMAP.md`)
 
 | Phase | What | State |
 |---|---|---|
@@ -64,17 +195,51 @@ If P6 or a similar live-Ollama capture ever needs re-running and dies
 repeatedly, reach for that resumable script rather than the plain one —
 it's safe to just keep re-invoking the identical command.
 
-P3's dev-only pass and P6 are both done as of 2026-08-25. Next unstarted
-work: scaling P3 to the 3-seed convention once real annotated data
-exists (tracks with P5), or P5 itself once external co-authors are
-unblocked. P2, P4 and now P6 are done; don't restart that work.
+P3's dev-only pass and P6 are both done as of 2026-08-25. P2, P4 and P6
+are done; don't restart that work.
+
+**Superseded 2026-08-31.** v3's remaining phases (P5 held-out set, P8 doc
+rewrite) are **not** the next work — the project was re-aimed at R0. P5's
+external-author blocker is carried into v4 with the bar corrected from
+"external co-authors" to "authors blind to the implementation"
+(`docs/v4/06_BENCHMARK.md` §6), and recruitment moves from late-phase to
+R1. P8's doc rewrite becomes R8. The v3 routing, sweep and gate results
+stay citable **for their own instrument** and are archived at R1 to
+`evaluation/results/v3_archive/` — no v4 number may ever be differenced
+against one of them.
 
 ## Run it
 
 ```bash
-%LOCALAPPDATA%\Ollama\ollama.exe serve     # FIRST — portable install, not a service
 python run.py                              # -> http://localhost:8000
 ```
+
+**Ollama is no longer part of this project.** v5 uses a hosted provider over an
+OpenAI-compatible API; the credential lives in a gitignored `.env`. The old
+`%LOCALAPPDATA%\Ollama\ollama.exe serve` step is historical and is only
+relevant to re-running archived v3 captures.
+
+**Deployment:** `docker build -t mawos:dev .` then run with `PORT` set; `/health`
+returns `{"status","tier"}`. `render.yaml` declares the free web service + Postgres.
+`MAWOS_ENV=production` refuses to boot on the dev JWT secret. Note `config.py`
+rewrites bare `postgresql://` URLs to `postgresql+psycopg://` — SQLAlchemy would
+otherwise reach for psycopg2, which is not installed, and Render's connection
+string is the bare form.
+
+**R1 changed how data is made.** The institution is defined entirely by
+`data/institution.yaml` and built by `data/generator/` — deterministic,
+scale-parameterised, and feasibility-asserting. `backend/app/seed.py` is now a
+thin adapter, so `run.py` is unchanged. Useful commands:
+
+```bash
+python -m data.generator.build --digest --date 2026-09-01   # reproducibility check
+alembic upgrade head                                        # apply migrations
+```
+
+The institution name in `institution.yaml` is a **placeholder** pending
+`OPEN_DECISIONS.md` D12 — changing it is one edit plus a reseed. Nothing in
+`backend/`, `frontend/` or `data/` hardcodes an institution identity any more;
+`data/generator/config.py` refuses to load a config that reintroduces the v3 one.
 
 `llm.py` caches the Ollama availability check at startup, so the header badge
 only flips to `AI · hybrid router` if Ollama was already serving when MAWOS
@@ -164,7 +329,7 @@ visualization idea. Not part of P0–P8.
 ## Evaluation
 
 ```bash
-python -m pytest tests -q                 # 44 tests
+python -m pytest tests -q                 # 100 tests (v5, 2026-09-14)
 python evaluation/gate_p05.py             # P0.5 router viability gate
 python evaluation/capture_llm.py          # frozen-protocol LLM capture (live Ollama)
 python evaluation/capture_llm_resume.py --models 1.5b,7b   # same, but checkpointed/resumable if the process keeps getting killed

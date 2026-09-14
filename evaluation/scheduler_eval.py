@@ -49,7 +49,7 @@ from backend.app.database import SessionLocal           # noqa: E402
 from backend.app.models import TeachingAssignment       # noqa: E402
 from evaluation.benchmark import schedule_metrics as sm  # noqa: E402
 
-OUT_DIR = ROOT / "evaluation" / "results" / "v3_scheduler"
+OUT_DIR = ROOT / "evaluation" / "results" / "v3_archive" / "v3_scheduler"
 FROZEN = ROOT / "evaluation" / "results" / "v2_frozen" / "baseline.json"
 SEEDS = list(range(10))
 ITERS = 120_000
