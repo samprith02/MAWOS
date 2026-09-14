@@ -30,6 +30,7 @@ def guard_step(state: TurnState) -> dict:
     from ..database import SessionLocal
     from ..guard import authorise
     from ..models import User
+    from .. import trace
 
     writes = set(write_tool_names())
     refusals, allowed, needs_confirm = [], [], False
@@ -39,6 +40,10 @@ def guard_step(state: TurnState) -> dict:
         for task in state.get("plan", []):
             v = authorise(db, user, task["capability"], task.get("args", {}),
                           turn_id=state.get("turn_id"))
+            trace.record(db, state.get("turn_id", ""), len(refusals) + len(allowed),
+                         "guard", actor=task["capability"],
+                         verdict="allowed" if v.allowed else "denied",
+                         payload={"reason_code": v.reason_code})
             if not v.allowed:
                 refusals.append(Refusal(agent=task.get("agent", ""),
                                         reason_code=v.reason_code,

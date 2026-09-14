@@ -414,6 +414,13 @@ class TraceRecord(Base):
     latency_ms = Column(Float, nullable=False, default=0.0)
     created_at = Column(DateTime, default=utcnow)
 
+    def payload_dict(self) -> dict:
+        import json
+        try:
+            return json.loads(self.payload or "{}")
+        except ValueError:
+            return {}
+
 
 class GuardDecision(Base):
     """Every authorisation outcome -- allowed AND blocked, in the same shape.
