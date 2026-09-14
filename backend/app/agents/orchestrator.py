@@ -15,11 +15,17 @@ against a 3414 ms median). The gate
 replaces that availability switch with a measured one: see `router.py`
 and `evaluation/results/v3_gates/p4_router.md`.
 
-Escalation can still fail — Ollama absent, or the loop exhausting its
-rounds. It then degrades to the lexicon answer, which was computed first
-precisely so that path always exists. Same tools, same permissions; only
-the language understanding degrades. Tier and margin are reported on
-every response and logged.
+Escalation can still fail — no provider credential, a rate-limited or
+unreachable provider, or the loop exhausting its rounds. It then degrades
+to the lexicon answer, which was computed first precisely so that path
+always exists. Same tools, same permissions; only the language
+understanding degrades. Tier and margin are reported on every response
+and logged.
+
+**v5: the escalation target is a hosted provider, not local Ollama**
+(`llm.chat` dispatches; see that module). This loop is unchanged by the
+swap — the OpenAI schema translation lives entirely in `llm.py`, so the
+message shape built here is still the one v3 measured.
 """
 import json
 import time
@@ -82,7 +88,7 @@ class OrchestratorAgent(BaseAgent):
                 db.add(IntentLog(query=message, predicted_intent=first_tool,
                                  method="llm", latency_ms=round(latency, 1)))
                 db.commit()
-                resp = {"text": text, "mode": "llm", "model": llm.config.OLLAMA_MODEL,
+                resp = {"text": text, "mode": "llm", "model": llm.active_tier()["model"],
                         "tools_used": tools_used, "latency_ms": round(latency, 1)}
                 if gate:
                     resp["provenance"] = gate

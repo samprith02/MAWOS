@@ -66,6 +66,58 @@ module scope breaks the import.
 double-inserts a `HallTicket` and raises a UNIQUE constraint error. `EligibilityAgent.override`
 calls `db.flush()` explicitly for this reason — do not remove those flushes.
 
+### ⚠ The hosted provider is now ACTUALLY wired into the runtime (2026-09-14)
+
+Spec §3.3 step 5 says *"only then wire the winner into the runtime."* Plan Task 3 built
+`llm_provider.py` and **nothing consumed it** — `get_chat_model()` had zero call sites under
+`backend/app`, and `router.decide()` still gated escalation on `llm.check_ollama()`. The
+deployed instance therefore reported *"Local LLM not detected — lexicon only"* while holding a
+valid `GROQ_API_KEY`, because it was looking for a daemon that cannot exist on Render. This
+was a **plan-coverage gap, not a deliberate deferral**: no task in the plan modified
+`router.py`, `llm.py` or `orchestrator.py`, and no ledger ruling defers it.
+
+What the fix does, and the line it must not cross:
+
+| Layer | Answers | Changed by v5? |
+|---|---|---|
+| `router.should_escalate(margin)` | *Should* this query escalate? (`margin <= tau`) | **NO — frozen, PROTOCOL §9.3** |
+| `llm.escalation_available()` | *Can* an escalation be served? | Yes — hosted, then Ollama |
+
+Only the second changed. `router_config.json` is untouched and still hashes clean, so the
+policy deciding *which* queries escalate is byte-identical to what P4 tuned. Verified live:
+`margin 3.0 > τ=0` stays lexicon; `margin 0.0 ≤ τ=0` escalates to Groq, calls a real tool
+through the guard, and answers grounded.
+
+- `llm.chat()` dispatches hosted-first; `llm.chat_ollama()` is the retained local path.
+- **`evaluation/evaluate.py` calls `chat_ollama` explicitly.** That archived v3 harness must
+  never silently start measuring a hosted model because a key happens to be in the
+  environment — an instrument that changes what it measures without saying so is the same
+  failure class as the two discarded gate runs.
+- The OpenAI schema translation lives **only** in `llm._to_openai_messages` /
+  `_from_openai_message`. Three rules, each an observed HTTP 400 from Groq: `arguments` must
+  be a JSON string; every `tool_calls[]` needs `id`/`type`; the `role: tool` reply must echo
+  `tool_call_id`. The provider's call id rides in `_meta` so round 2 can echo it — drop it and
+  every multi-round tool conversation dies on its second request.
+- `router.stats` reports `model_tuned_against` (qwen2.5:3b — what τ was selected on) and
+  `model_serving` (groq:gpt-oss-120b) **separately**. They differ, and that gap is a real
+  limitation of the deployed router: τ was never tuned against the model now serving it. Say
+  so in the write-up rather than reporting one ambiguous "model" field.
+
+**`backend/` now reads `.env`** (`config._load_dotenv`, hand-rolled, process env wins). Until
+this, nothing under `backend/` loaded it, so a key in a local `.env` was invisible to
+`run.py` while the deployed instance had it as a real env var — local and deployed silently
+diverged. `MAWOS_SKIP_DOTENV=1` opts out; `tests/conftest.py` sets it *and* pops the provider
+keys, so the suite can never reach a real provider on someone's laptop.
+
+### ⚠ STILL NOT WIRED — the LangGraph runtime is unreachable from the API
+
+Separate from the above, and **not** fixed: `build_graph()` has zero call sites outside
+`tests/`, and `nodes.plan()` never calls a model — it returns an empty plan by construction.
+So `/chat` still runs the v3 orchestrator loop, and the graph's `interrupt()` confirmation
+path — spec §11's success criterion — is exercised only by tests. The guard, the trace and the
+MCP surface are all genuinely live; the *graph* is not on the request path. Do not describe
+the deployed system as "LangGraph-served" until this closes.
+
 ### Decision state (v5)
 
 - **D13 — closed** 2026-09-01 (M7 threshold 3.0 → 6.0 s).
@@ -236,16 +288,27 @@ python -m data.generator.build --digest --date 2026-09-01   # reproducibility ch
 alembic upgrade head                                        # apply migrations
 ```
 
-The institution name in `institution.yaml` is a **placeholder** pending
-`OPEN_DECISIONS.md` D12 — changing it is one edit plus a reseed. Nothing in
+The institution name in `institution.yaml` is **`MAWOS`** — D12 closed
+2026-09-14, the owner chose the project's own name over the placeholder
+*Vidyut Institute of Engineering & Technology*. It cost exactly what R1
+predicted: three lines in that one file, no code. `usn_prefix` stays `1VT`
+**on purpose** — changing it would invalidate `evaluation/probe/items.py`,
+whose USNs are baked into the committed D1 gate evidence. `INSTITUTION_NAME`
+is read at import, so the name changes on redeploy with no reseed; seeded
+email addresses keep the old domain until the DB is reseeded. Nothing in
 `backend/`, `frontend/` or `data/` hardcodes an institution identity any more;
 `data/generator/config.py` refuses to load a config that reintroduces the v3 one.
 
-`llm.py` caches the Ollama availability check at startup, so the header badge
-only flips to `AI · hybrid router` if Ollama was already serving when MAWOS
-booted. Without it the system still works — the lexicon answers everything,
-including the low-margin queries it would normally escalate, and the badge
-says `AI · lexicon only`.
+`llm.py` caches the **provider** availability check at startup (`llm.active_tier(force=True)`
+in `main.py`'s lifespan), so `/health` — Render's health-check target — never pays a network
+round trip. The header badge flips to `AI · hybrid router` when a tier is reachable and names
+it (`ai_provider`, e.g. `groq:gpt-oss-120b`); otherwise `AI · lexicon only`. Without any tier
+the system still works — the lexicon answers everything, including the low-margin queries it
+would normally escalate.
+
+`check_hosted()` makes a real `/models` call rather than testing `os.getenv`. A key that is
+**set but rejected** must report unavailable: lighting the badge for a tier the system cannot
+serve is the same defect as publishing a number from a broken instrument.
 
 **Routing is v3 now.** `backend/app/router.py` gates on the lexicon's own
 confidence (margin ≤ τ, τ = 0 frozen in `router_config.json`), not on whether
@@ -254,8 +317,13 @@ lexicon is the *primary* tier — do not call it a "fallback" in code, UI or
 docs. Config is hashed; hand-editing τ makes it a different experiment
 (PROTOCOL §9.3).
 
-Logins: `4MT23AI049`/`student123`, `aiml.f02`/`faculty123`, `hod.aiml`/
+Logins: `1VT22AI001`/`student123`, `aiml.f02`/`faculty123`, `hod.aiml`/
 `faculty123`, `principal`/`principal123`, `admin`/`admin123`.
+
+> The student login above **was** documented as `4MT23AI049` — the retired v3 USN, i.e. the
+> real institution's prefix, which `data/generator/config.py` now bans outright. It was stale
+> documentation, not live data (no seeded row has carried it since R1), but it was the one
+> place the banned prefix still appeared. Corrected 2026-09-14 to the actual seeded USN.
 
 **Timetable data can go stale.** `main.py` only auto-generates
 `timetable_slots` once, the first time the table is empty — it never
@@ -329,7 +397,7 @@ visualization idea. Not part of P0–P8.
 ## Evaluation
 
 ```bash
-python -m pytest tests -q                 # 100 tests (v5, 2026-09-14)
+python -m pytest tests -q                 # 146 tests (v5, 2026-09-14)
 python evaluation/gate_p05.py             # P0.5 router viability gate
 python evaluation/capture_llm.py          # frozen-protocol LLM capture (live Ollama)
 python evaluation/capture_llm_resume.py --models 1.5b,7b   # same, but checkpointed/resumable if the process keeps getting killed

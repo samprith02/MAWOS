@@ -12,6 +12,17 @@ from pathlib import Path
 _tmpdir = tempfile.mkdtemp(prefix="mawos_test_")
 os.environ["MAWOS_DATABASE_URL"] = f"sqlite:///{Path(_tmpdir) / 'test.db'}"
 
+# The suite must never reach a real LLM provider. v5 made that possible in
+# two new ways: `config._load_dotenv()` reads a developer's `.env`, and
+# `llm.check_hosted()` makes a real HTTP call when a credential is present.
+# Together those would turn `router.decide()` — exercised by
+# tests/test_orchestrator.py — into a network call whose result depends on
+# whose laptop is running the suite. Both are disabled here, before any
+# backend import, so escalation availability is deterministically False.
+os.environ["MAWOS_SKIP_DOTENV"] = "1"
+for _k in ("GROQ_API_KEY", "OPENROUTER_API_KEY", "GITHUB_MODELS_TOKEN"):
+    os.environ.pop(_k, None)
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 

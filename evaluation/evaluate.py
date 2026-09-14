@@ -270,7 +270,7 @@ def eval_intent_routing_llm(db, role_mode: str = "matched") -> dict | None:
     # figures and out of the error count.
     print("      warming up the model…")
     t_warm = time.perf_counter()
-    llm.chat([{"role": "system", "content": system},
+    llm.chat_ollama([{"role": "system", "content": system},
               {"role": "user", "content": "hello"}], tools=schemas)
     print(f"      warm-up took {(time.perf_counter() - t_warm):.1f}s")
 
@@ -287,7 +287,7 @@ def eval_intent_routing_llm(db, role_mode: str = "matched") -> dict | None:
         q_user, q_schemas, q_system = persona(expected)
         roles_used[expected] = q_user.role
         t0 = time.perf_counter()
-        reply = llm.chat([{"role": "system", "content": q_system},
+        reply = llm.chat_ollama([{"role": "system", "content": q_system},
                           {"role": "user", "content": query}], tools=q_schemas)
         latency = (time.perf_counter() - t0) * 1000
         latencies.append(latency)

@@ -1,24 +1,37 @@
-"""LLM layer v2.
+"""LLM layer.
 
-Primary path: local Ollama chat API with native tool calling (Qwen2.5-class
-models). The Orchestrator sends the conversation + the role-filtered tool
-schemas; the model decides which tools to call and finally writes a grounded
-natural-language answer.
+**The escalation tier is HOSTED as of v5** (spec 2026-09-13 3.3, step 5:
+"only then wire the winner into the runtime"). `chat()` dispatches to the
+OpenAI-compatible provider configured by `MAWOS_LLM_BASE_URL` /
+`MAWOS_LLM_MODEL` / `MAWOS_LLM_KEY_ENV`. Ollama is retained behind
+`chat_ollama()` for one reason only: re-running archived v3 captures
+locally. It is never selected while a hosted credential is present.
 
-Offline fallback: deterministic weighted-keyword classifier mapping a query
-to the single most likely tool. Always available; its share of traffic is
-the measured fallback-trigger rate.
+What did NOT change, and must not
+---------------------------------
+The deterministic weighted-keyword lexicon below is the **primary** tier,
+not a fallback (CLAUDE.md), and it is a frozen instrument. `classify_keyword`,
+`_LEXICON` and the margin definition are untouched by the v5 provider swap --
+P4's tau was selected against these exact weights, and editing them would
+make the deployed router a different experiment (PROTOCOL 9.3).
+
+Which queries escalate is `router.should_escalate(margin)` and nothing else.
+The functions here answer only *whether an escalation can be served*, which
+is an availability question. Conflating the two is precisely the v2 defect
+P4 was built to remove -- see `router.py`.
 
 11 intents (P2): `admission_query` was retired with `get_admissions_funnel`
 (docs/RESEARCH_PLAN_V3.md §7.1) — Admission no longer meets the agent
 criterion and this was its only chat-facing capability.
 """
+import json
+import os
 import re
 import time
 
 import httpx
 
-from . import config
+from . import config, llm_provider
 
 # fallback intent -> tool name
 INTENT_TOOL = {
@@ -131,10 +144,23 @@ def classify_keyword(query: str) -> IntentResult:
                         margin=margin)
 
 
+# ===================================================================
+# Availability of the escalation tier
+# ===================================================================
+# Read this before editing: these functions say whether an escalation CAN
+# be served. They never say whether one SHOULD happen -- that is
+# `router.should_escalate(margin)`, the P4 policy, and it is deliberately
+# not reachable from here.
+
 _ollama_available: bool | None = None
+_hosted_available: bool | None = None
 
 
 def check_ollama(force: bool = False) -> bool:
+    """Legacy local tier. Only consulted when NO hosted credential exists.
+
+    Kept so archived v3 captures can still be reproduced on a laptop.
+    """
     global _ollama_available
     if _ollama_available is not None and not force:
         return _ollama_available
@@ -146,8 +172,156 @@ def check_ollama(force: bool = False) -> bool:
     return _ollama_available
 
 
-def chat(messages: list[dict], tools: list[dict] | None = None) -> dict | None:
-    """One Ollama chat call. Returns the assistant message dict, or None."""
+def check_hosted(force: bool = False) -> bool:
+    """Is the configured hosted provider reachable AND the credential good?
+
+    A real `/models` call, not just an `os.getenv` check. The distinction
+    matters for honesty: a key that is set but rejected (typo, revoked,
+    wrong provider) would otherwise light the badge for a tier the system
+    cannot actually serve -- the same class of defect as reporting a number
+    from a broken instrument.
+
+    Cached for the process like `check_ollama`, with the same `force`
+    escape hatch. `main.py` warms this at startup so `/health` -- Render's
+    health-check target -- never pays the network round trip.
+    """
+    global _hosted_available
+    if _hosted_available is not None and not force:
+        return _hosted_available
+    key = os.getenv(config.LLM_API_KEY_ENV)
+    if not key:
+        _hosted_available = False
+        return False
+    try:
+        r = httpx.get(f"{config.LLM_BASE_URL.rstrip('/')}/models", timeout=10.0,
+                      headers={"Authorization": f"Bearer {key}"})
+        _hosted_available = r.status_code == 200
+    except Exception:
+        _hosted_available = False
+    return _hosted_available
+
+
+def escalation_available(force: bool = False) -> bool:
+    """Can an escalation-warranted query be served by any LLM tier?"""
+    return check_hosted(force) or check_ollama(force)
+
+
+def active_tier(force: bool = False) -> dict:
+    """What the badge, `/health` and the trace report as the live tier.
+
+    `label` is the honest provider string, never a hardcoded "Ollama".
+    """
+    if check_hosted(force):
+        info = llm_provider.active_provider()
+        return {"available": True, "kind": "hosted", "label": info["label"],
+                "model": info["model"], "base_url": info["base_url"]}
+    if check_ollama(force):
+        return {"available": True, "kind": "local",
+                "label": f"ollama:{config.OLLAMA_MODEL}",
+                "model": config.OLLAMA_MODEL, "base_url": config.OLLAMA_HOST}
+    return {"available": False, "kind": "none", "label": "lexicon-only",
+            "model": None, "base_url": None}
+
+
+def ai_mode() -> dict:
+    """The two fields every authed API response carries about the AI tier.
+
+    `ai_mode` keeps its v3 values ("llm" / "lexicon") so the existing SPA
+    needs no migration; `ai_provider` is the new field naming what actually
+    serves, so the UI can stop asserting "Ollama".
+    """
+    t = active_tier()
+    return {"ai_mode": "llm" if t["available"] else "lexicon",
+            "ai_provider": t["label"]}
+
+
+# ===================================================================
+# The escalation call itself
+# ===================================================================
+
+def _to_openai_messages(messages: list[dict]) -> list[dict]:
+    """Translate the Ollama-shaped conversation into a strictly OpenAI one.
+
+    The orchestrator builds its message list in Ollama's shape and appends
+    each assistant reply verbatim. The real Chat Completions schema that
+    Groq/OpenRouter/GitHub Models validate against is stricter in three
+    ways, EACH discovered live against Groq as an HTTP 400 during the D1
+    probe (see `evaluation/probe/providers.py`):
+
+    1. `tool_calls[].function.arguments` must be a JSON **string**, never
+       an object;
+    2. every `tool_calls[]` entry needs `id` and `type`;
+    3. the following `role: "tool"` message must echo that id back as
+       `tool_call_id`.
+
+    Doing this here -- rather than in the orchestrator -- is what keeps the
+    Ollama path byte-identical to what v3 measured. Exactly one of those
+    two sites may know about OpenAI's schema, and it is this one.
+    """
+    out: list[dict] = []
+    pending_ids: list[str] = []
+    for m in messages:
+        if m.get("role") == "assistant" and m.get("tool_calls"):
+            new_calls, ids = [], []
+            for i, c in enumerate(m["tool_calls"]):
+                fn = c.get("function", {})
+                args = fn.get("arguments")
+                if not isinstance(args, str):
+                    args = json.dumps(args if args is not None else {})
+                cid = (c.get("_meta") or {}).get("id") or f"call_{len(out)}_{i}"
+                ids.append(cid)
+                new_calls.append({"id": cid, "type": "function",
+                                  "function": {"name": fn.get("name", ""),
+                                               "arguments": args}})
+            out.append({"role": "assistant", "content": m.get("content") or "",
+                        "tool_calls": new_calls})
+            pending_ids = list(ids)
+        elif m.get("role") == "tool":
+            nm = {k: v for k, v in m.items() if k != "_meta"}
+            if pending_ids:
+                nm["tool_call_id"] = pending_ids.pop(0)
+            out.append(nm)
+        else:
+            out.append(m)
+    return out
+
+
+def _from_openai_message(msg: dict) -> dict:
+    """Normalise an OpenAI reply into the shape the orchestrator reads.
+
+    The provider's `tool_calls[].id` is carried in `_meta` so the NEXT
+    round can echo it as `tool_call_id` (rule 3 above). Dropping it would
+    make every multi-round tool conversation fail on its second request.
+    """
+    calls = []
+    for c in msg.get("tool_calls") or []:
+        fn = c.get("function", {})
+        args = fn.get("arguments")
+        if isinstance(args, str):
+            try:
+                args = json.loads(args) if args.strip() else {}
+            except ValueError:
+                args = {}
+        if not isinstance(args, dict):
+            args = {}
+        calls.append({"function": {"name": fn.get("name", ""),
+                                   "arguments": args},
+                      "_meta": {"id": c.get("id")}})
+    out: dict = {"role": "assistant", "content": msg.get("content") or ""}
+    if calls:
+        out["tool_calls"] = calls
+    return out
+
+
+def chat_ollama(messages: list[dict], tools: list[dict] | None = None) -> dict | None:
+    """One local Ollama chat call. Returns the assistant message, or None.
+
+    Named explicitly (it was the unqualified `chat()` in v3) so the archived
+    v3 harness in `evaluation/evaluate.py` can never silently start
+    measuring a hosted model just because a key happens to be in the
+    environment. An instrument that changes what it measures without saying
+    so is the failure mode CLAUDE.md's "check M9 first" rule exists to catch.
+    """
     if not check_ollama():
         return None
     try:
@@ -161,3 +335,47 @@ def chat(messages: list[dict], tools: list[dict] | None = None) -> dict | None:
         return r.json().get("message")
     except Exception:
         return None
+
+
+def chat_hosted(messages: list[dict], tools: list[dict] | None = None) -> dict | None:
+    """One hosted chat call over the OpenAI-compatible API.
+
+    Any failure returns None rather than raising -- including HTTP 429,
+    which a free tier will produce under demo load. The caller then degrades
+    to the lexicon answer it already computed and *says so* in the routing
+    record (`fallback_from="llm"`), so a rate-limited turn stays visible in
+    the trace instead of passing for a confident lexicon hit.
+    """
+    key = os.getenv(config.LLM_API_KEY_ENV)
+    if not key:
+        return None
+    body = {"model": config.LLM_MODEL,
+            "messages": _to_openai_messages(messages),
+            "temperature": 0.1}
+    if tools:
+        body["tools"] = tools
+    try:
+        r = httpx.post(f"{config.LLM_BASE_URL.rstrip('/')}/chat/completions",
+                       json=body, timeout=config.LLM_TIMEOUT_S,
+                       headers={"Authorization": f"Bearer {key}"})
+        r.raise_for_status()
+        choices = r.json().get("choices") or []
+        if not choices:
+            return None
+        return _from_openai_message(choices[0].get("message") or {})
+    except Exception:
+        return None
+
+
+def chat(messages: list[dict], tools: list[dict] | None = None) -> dict | None:
+    """One escalation round on whichever tier is live.
+
+    Hosted first, unconditionally: the hosted provider is v5's runtime tier,
+    and a developer who still has Ollama running locally must not be served
+    by a different system than the deployed instance uses.
+    """
+    if check_hosted():
+        return chat_hosted(messages, tools)
+    if check_ollama():
+        return chat_ollama(messages, tools)
+    return None

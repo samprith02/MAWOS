@@ -9,6 +9,41 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+
+def _load_dotenv() -> None:
+    """Read `.env` for credentials the environment does not already carry.
+
+    Same loader (and same semantics) as `evaluation/provider_probe.py`: the
+    process environment always wins, so an exported key is never
+    overridden, and values are never printed. Hand-rolled rather than
+    depending on python-dotenv — one dependency less to licence-check.
+
+    **Why this exists.** Until v5 nothing under `backend/` read `.env` at
+    all, so `GROQ_API_KEY` in a local `.env` was invisible to `run.py` and
+    the app silently ran lexicon-only on the developer's machine while the
+    deployed instance had the key as a real environment variable. Local and
+    deployed behaviour must not diverge on something this easy to miss.
+
+    `MAWOS_SKIP_DOTENV=1` opts out; `tests/conftest.py` sets it so the
+    suite can never reach a real provider because of an ambient credential.
+    """
+    if os.getenv("MAWOS_SKIP_DOTENV") == "1":
+        return
+    f = BASE_DIR / ".env"
+    if not f.exists():
+        return
+    for line in f.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, _, v = line.partition("=")
+        k, v = k.strip(), v.strip().strip('"').strip("'")
+        if k and v and not os.getenv(k):
+            os.environ[k] = v
+
+
+_load_dotenv()
+
 # Shared Institutional Context Store.
 # Default: SQLite file. Set MAWOS_DATABASE_URL=postgresql://... to use Postgres.
 DATABASE_URL = os.getenv("MAWOS_DATABASE_URL", f"sqlite:///{BASE_DIR / 'mawos.db'}")
