@@ -1,276 +1,191 @@
-# MAWOS v6 — product aim: a smart multi-agent college ERP
+# v6 — product aim: VidyaERP is the base
 
-**Date:** 2026-09-14
-**Supersedes as the driver:** `2026-09-13-mawos-v5-design.md` (v5's *engineering* stands; its
-research framing is demoted — see §1)
-**Status:** proposed scope, not yet executed
+**Date:** 2026-09-14 · **revised the same day, before execution**
+**Status:** proposed scope, nothing built on it yet
 
 ---
 
-## 1. What changed, and the one thing to be honest about
+## 0. What this revision changes, and why
 
-The owner has re-aimed the project:
+The first draft of this document proposed keeping **MAWOS** as the base and adopting Chronos as
+the shell. Then `VidyaERP/erp/` appeared — 4,282 lines of Python, built in about an hour — and
+it is better than MAWOS at almost everything MAWOS was trying to be.
 
-> "our main aim is just SMART and Advanced Multi agent based college ERP SYSTEM … mainly focus
-> on admin type. main feature is like one can query llm agent inside the erp to get any info,
-> send any requests, timetable rescheduling when certain teacher is absent"
+**That draft is withdrawn. VidyaERP is the base.** Keeping MAWOS as the foundation because more
+time went into it is the sunk-cost mistake, and this document existing at all is a reason to
+catch it now rather than after another month.
 
-and has explicitly lifted the research-first constraint:
+### Why MAWOS took two months and lost
 
-> "dont strictly depend on research, research is not that important for now … for research we
-> can do it completely different"
+Worth stating once, plainly, because the mechanism is what matters — not the comparison.
 
-**Research is demoted from gate to appendix. It is not deleted.** Everything under
-`evaluation/` stays — the probe, the gates, PROTOCOL, the D-register, the archived runs. They
-remain valid evidence for the report and the viva. What stops is their *authority to block
-product work*. A decision no longer waits for a pre-registered measurement; it waits for
-someone to try it and see whether it is good.
+MAWOS spent two months producing **governance, not product**: a research protocol, pre-registered
+thresholds, frozen instruments, a 14-item decision register in which features could not be built
+until a measurement justified them, and an explicit "do not build" list. Each of those was real
+work. None of it was a feature. Two things the owner asked for repeatedly — rooms, and a
+backtracking solver — were *forbidden by name* (R2 deferred; **D2: "do not build"**).
 
-### The thing to be honest about
+VidyaERP had one clear product brief and no constraints, so an hour of work went entirely into
+features. Same tooling, opposite instructions.
 
-Two features the owner asked for repeatedly were blocked **by research decisions, by name**:
+This is not a defence of the two months, and the first draft of this spec made the same error at
+a smaller scale — it still treated MAWOS as the foundation and still preserved the research
+corpus as a live concern. The correction is to rank the three codebases on **what they do**, not
+on what they cost.
 
-| Asked for | Blocked by | Recorded where |
+---
+
+## 1. VidyaERP, verified
+
+Checked in the source, not taken from its README.
+
+| Claim | Verified at | Verdict |
 |---|---|---|
-| Rooms as a real timetable entity | R2 deferred wholesale | `02_SCOPE.md`, v5 §7.4 cut order |
-| MRV / backtracking search | **D2: "do not build"** | `OPEN_DECISIONS.md` D2 |
-| The Chronos timetable UI | "borrowed only the visualization idea" | `CLAUDE.md`, P-table note |
+| Three coverage strategies generated per absence | `agents.py:227` (A), `:300` (B), `:318` (C) | **Real** |
+| Re-ranked by a weighted score | `agents.py:326` — `confidence*0.6 + coverage*0.25 + continuity*0.15` | **Real** |
+| PolicyGuard is outside the model | `agents.py:84`, `WRITE_INTENTS` → HITL | **Real** |
+| A write with no in-turn approval is blocked | `tools.py:347` returns `{"BLOCKED": …}` before touching the DB | **Real** |
+| Coverage percentages are computed | `cov_a/cov_b/cov_c` from actual covered-leg ratios | **Real** |
+| Plan A confidence is computed | `min(96, mean(candidate scores × 1.05))` | **Real** |
 
-The `teacher-erp-with-timetable-simulation/` app was never integrated for a reason nobody
-stated out loud: **it is in `.gitignore` (line 51).** It has never been in the repository,
-never been pushed, and is invisible to every clone and every agent working from one. It was
-not overlooked — it was structurally unreachable.
+**One honest caveat, and it is the obvious next improvement, not a takedown.** Not every number
+in the ranking is computed:
 
-That is the correct explanation, and it is also the correct criticism: the research framing
-converted "the owner asked for this three times" into "D2 says do not build," and nobody
-revisited it. Lifting the framing is what unblocks it.
+- `continuity` is a **constant per strategy** (74 / 92 / 88). Defensible — continuity genuinely
+  is a property of the strategy rather than of the instance — but it should be said out loud.
+- Plan B and C confidence are **formulaic**: `71 + min(20, swaps*6)` and a flat `66`.
+
+So the ranking is driven by one genuinely measured axis (A's confidence, everyone's coverage)
+and two partly-assumed ones. That is fine for a demo and will be the first question an examiner
+asks. §5 fixes it.
+
+### What VidyaERP has that MAWOS never built
+
+Substitution/Timetable/Faculty/Student/Finance/Exam/Request agents with a supervisor · entity
+resolver with fuzzy faculty matching and Indian date parsing · 20 tools · a **tool router** that
+narrows 20 → 4–8 per utterance (−64% payload) · **model failover chain** across providers on 429
+· rule engine and LLM engine behind *identical* guardrails · multi-turn pending state with
+context switching · disambiguation with match % · undo by reference id · immutable audit ledger ·
+delegation ceilings in rupees · notifications to sections, substitutes and HOD.
+
+### The one thing MAWOS has that VidyaERP does not
+
+**An MCP server.** `grep -rn "mcp" VidyaERP/erp/*.py` returns nothing. MAWOS's
+`mcp_server.py` puts the same guarded tools in front of Claude Desktop and ChatGPT, and it is
+parity-tested. Both apps are Python + FastAPI + an OpenAI-compatible provider, so this ports
+close to directly.
 
 ---
 
-## 2. Where MAWOS actually stands — measured, not asserted
+## 2. The decision
 
-Not everything is bad, and the parts that are good are the parts that are hard to rebuild.
-Being accurate here decides what gets kept.
+> **One application: VidyaERP.** Two things get ported into it. Everything else becomes
+> reference material.
 
-### Genuinely strong — keep, do not touch
-
-| Asset | Why it is worth keeping |
+| Codebase | Role from here |
 |---|---|
-| `backend/app/guard.py` | Deterministic authorisation. `tools.execute()` is the **only** call site of any tool function in the whole app, and every call passes the guard, which logs allowed *and* denied in one shape. This is the rare part; most projects cannot say it |
-| `backend/app/mcp_server.py` | External LLMs (Claude Desktop, ChatGPT) reach the same tools behind the same guard. Parity-tested |
-| `contracts.py` | `AgentTask → AgentResult \| NeedInfo \| Refusal`. Three outcomes, not two — `NeedInfo` is what makes an agent ask instead of guess |
-| `trace.py` + `GuardDecision` | Every turn is inspectable and every authorisation is countable |
-| Hybrid router | ~90% of queries never touch the LLM. On a free tier that is not a research artefact, it is the thing that keeps the demo inside rate limits |
-| The ERP domain | Attendance, fees, marks, eligibility, scholarships, placements, notifications — real workflows, already wired to agents and tools |
+| **VidyaERP** | **The product.** All new work lands here |
+| **MAWOS** | Donates `mcp_server.py`. `evaluation/` stays as report material. Otherwise archived |
+| **Chronos** | Donates the **timetable generation** algorithm, which VidyaERP lacks. Otherwise reference |
 
-### Genuinely thin — this is what "worst" actually refers to
-
-The timetable **solver is not broken**. Measured just now, on the live DB:
-
-```
-sections 40 · slots 720/720 placed · unplaced 0 · teacher_conflicts 0
-placement_rate 100.0 · objective 604 → 210 · solve_ms 1293
-```
-
-It solves. What is missing is everything *around* it:
-
-| Gap | Detail |
-|---|---|
-| **Rooms are not a decision variable** | `scheduler.py:257` writes `room=f"{dept}-{year}{sec}"` — a derived label. There is no room, no capacity, no lab, no contention |
-| **No teacher absence** | Nothing models a teacher being unavailable. The flagship feature has no substrate |
-| **Grid is hardcoded** | `N_DAYS, N_PERIODS = 5, 6` with 6-bit occupancy masks. Changing it is a solver rewrite, not config |
-| **Data goes stale** | `main.py` generates slots once when the table is empty and never again. The live grid drifts from what the solver would now produce — already documented, never fixed |
-| **The UI is nothing** | Vanilla-JS SPA, no build step. Functional; not something to show anyone |
-| **LangGraph is not on the request path** | `build_graph()` has zero call sites outside `tests/`; `nodes.plan()` returns an empty plan by construction. `/chat` still runs the v3 loop |
+Rejected: keeping three codebases; running Chronos as a Next.js sidecar (a second stack and a
+second deployment for one feature); keeping MAWOS as the base (sunk cost).
 
 ---
 
-## 3. The decision: adopt Chronos as the product shell
+## 3. Port one — timetable generation from scratch
 
-`teacher-erp-with-timetable-simulation/` ("Chronos") is 6,022 lines of TypeScript —
-Next.js 16 · Drizzle · Postgres · Tailwind 4 · a pure-TS MRV-backtracking + hill-climbing
-solver written as a `function*` generator so the same code can stream its decisions to the
-browser for live animation, or be drained synchronously by a seeder.
+The owner's own assessment: *"just timetable generation from scratch is not there in it, rest all
+it feels like best smart erp."* That is the single functional gap.
 
-**It already contains what MAWOS spent two months not building:**
+Chronos's `src/lib/solver/engine.ts` is 755 lines of MRV backtracking + bounded min-conflicts
+repair + hill-climb polish, documented in `SOLVER_GUIDE.md`, and it models **rooms** as a real
+decision dimension along with `teachers.unavailable` and `assignments.locked`. Port it to Python
+inside VidyaERP — roughly 400–600 lines against a documented algorithm — rather than running a
+second stack for it.
 
-| Chronos has | MAWOS status |
-|---|---|
-| `rooms` as a first-class table and solver dimension | never built (R2 deferred) |
-| `teachers.unavailable: number[]`, enforced in the engine at `engine.ts:228` | never built |
-| `assignments.locked: boolean` — pin an assignment across a re-solve | never built |
-| Configurable `days` / `periodsPerDay` / `breakSlots` | hardcoded 5×6 |
-| MRV backtracking + bounded min-conflicts repair + hill-climb polish | **D2 said do not build** |
-| Streaming live-trace UI (`SolverSim.tsx`, 798 lines) | a wrapper that replays a trace |
-| CRUD for teachers · subjects · rooms · classes · curriculum · settings | partially, in a raw SPA |
-| Run history, compare, publish | never built |
+Keep from the port:
+- Rooms as a decision variable, with type and capacity
+- Configurable days / periods / break slots (MAWOS hardcoded `5 × 6` with 6-bit masks)
+- Assignment pinning, so a generation run can be constrained by what must not move
+- The **generator structure** (`yield` per decision) so the same solver streams its search to
+  the console for a live animated trace, or drains synchronously for a seeder
 
-`unavailable` + `locked` together are **exactly** the two primitives the flagship feature
-needs. This is not a rewrite — it is wiring something that already exists.
-
-### The architecture
-
-This is not a new topology. **v5 §4.1 already planned "Next.js console on Vercel + FastAPI on
-Render."** The only change is that Chronos *is* the Next.js app rather than one built from
-scratch.
-
-```
-┌─────────────────────────────┐         ┌──────────────────────────────┐
-│  Chronos  (Next.js, Vercel) │         │  MAWOS  (FastAPI, Render)    │
-│                             │         │                              │
-│  • admin ERP screens        │  HTTP   │  • LangGraph turn runtime    │
-│  • timetable + simulator    │ ◄─────► │  • deterministic GUARD       │
-│  • MRV solver (/api/solve)  │         │  • agents + tool registry    │
-│  • rooms/teachers/lessons   │         │  • MCP server                │
-│  • chat panel (new)         │         │  • trace + provenance        │
-└──────────────┬──────────────┘         └───────────────┬──────────────┘
-               │                                        │
-               └──────────────► Postgres ◄──────────────┘
-                        strict table ownership
-```
-
-**Rules that keep two ORMs over one database from becoming a mess:**
-
-1. **One owner per table.** Chronos/Drizzle owns `teachers, subjects, rooms, class_groups,
-   lessons, runs, assignments, settings`. MAWOS/SQLAlchemy owns `students, attendance, fees,
-   marks, hall_tickets, guard_decisions, trace_records, conversations`.
-2. **No cross-ORM writes, ever.** MAWOS never writes a Chronos table and vice versa.
-3. **Cross-domain access is HTTP, not SQL.** MAWOS's timetable agent is an HTTP client of
-   Chronos's `/api/solve`, `/api/resources/[type]`, `/api/runs`. This is what makes the guard
-   still meaningful: a call that crosses the boundary is a *capability*, and capabilities pass
-   the guard.
-4. Migrations stay independent — `drizzle-kit push` for its tables, Alembic for MAWOS's.
-
-### Why not the alternatives
-
-- **Port the solver to Python.** Throws away the 798-line live-trace UI — the thing actually
-  wanted — to gain stack purity nobody is paying for.
-- **Rebuild Chronos's screens inside MAWOS's SPA.** Strictly worse on every axis.
-- **Keep both solvers.** Two sources of truth for the timetable. No.
-
-MAWOS's `scheduler.py` is **retired from the product** and kept in the repository as the
-frozen v3 baseline the archived ITC-2007 benchmark scored. It stops being the thing that
-generates the timetable users see.
+MAWOS's simulated-annealing scheduler places 720/720 slots with 0 conflicts in 1.3 s, so it is a
+legitimate second option — but it has no rooms and a hardcoded grid, which is exactly what needs
+fixing. Take Chronos's structure; borrow the annealing polish only if the hill-climb underperforms.
 
 ---
 
-## 4. The flagship feature: absence rescheduling, end to end
+## 4. Port two — MCP
 
-This is the demo. It uses every part worth keeping.
+Expose VidyaERP's existing tools over MCP so an admin can drive the ERP from Claude Desktop or
+ChatGPT. The rule that makes it worth doing: **the MCP surface must be a thin delegation to the
+same tool functions behind the same PolicyGuard** — no second authorisation path, no tool that
+exists only over MCP. MAWOS's parity suite replays the same adversarial items through both
+entry points and asserts identical verdicts; port that test alongside the server.
 
-```
-Admin, in the ERP chat panel:
-  "Prof. Rao is out Thursday afternoon — fix the timetable"
-
- 1  PLAN       model turns it into tasks; resolves "Rao" → teacher_id,
-               "Thursday afternoon" → slot indices
- 2  CLARIFY    ambiguous? ask. ("Thursday of this week or next?")
-               → NeedInfo STOPS the turn. It does not guess.
- 3  GUARD      apply_timetable_change is a WRITE, roles=(hod, principal, admin).
-               Deterministic. Logged whether allowed or denied.
- 4  PROPOSE    set teacher.unavailable += those slots
-               lock every assignment that must not move
-               call Chronos /api/solve in repair mode
-               → a DIFF: 3 lessons move, 37 stay, objective 210 → 218
- 5  CONFIRM    LangGraph interrupt(). A human sees the diff and approves.
-               Checkpointed — a process restart does not lose the proposal.
- 6  EXECUTE    publish the run; cascade: affected sections notified,
-               attendance expectations updated
- 7  TRACE      every step above is persisted and renderable
-```
-
-**Why this is a good flagship:** it is a real administrative task, it is impossible without
-an agent (natural language → constrained re-solve), it is dangerous enough to justify a guard
-and a confirmation, and it produces a *visibly animated* result. It also exercises the
-`NeedInfo` path, which is the behaviour the D1 probe measured every candidate model failing.
+This is the demo line that nothing else in the project can claim: *the same guard holds even
+when an external LLM we do not control is driving.*
 
 ---
 
-## 5. Wiring LangGraph onto the request path
+## 5. Make the coverage ranking defensible
 
-Scoped as asked. Today `build_graph()` has no caller outside `tests/` and `nodes.plan()`
-returns `state.get("plan") or []` — an empty plan by construction.
+Per §1's caveat. Small, high-value, and it is what turns a good demo into a good viva answer.
 
-| # | Task | Detail |
-|---|---|---|
-| 1 | `plan()` calls the model | Bind role-filtered tool schemas, ask for a task list, parse into `AgentTask[]`. Returns `NeedInfo` when a required argument is genuinely missing rather than defaulting it |
-| 2 | `synthesize()` calls the model | Compose the final answer **only** from `outcomes`, then run the existing provenance gate over it |
-| 3 | `POST /api/agent/turn` | Runs the graph. `thread_id` = conversation id, so checkpointing is per conversation. Returns either an answer, a clarifying question, or a pending confirmation |
-| 4 | `POST /api/agent/confirm` | Resumes an interrupted turn with `Command(resume={"approve": bool})` |
-| 5 | Keep the lexicon as a fast path | A high-margin single-read query answers deterministically without entering the graph. This is not legacy — on a free tier it is what keeps ~90% of traffic off the rate limit |
-| 6 | Trace endpoint + viewer | `GET /api/agent/trace/{turn_id}` → the Chronos trace panel |
-
-**Migration note.** `/chat` keeps working throughout. The graph lands behind
-`/api/agent/turn` and the UI switches when it is better, so there is never a window with no
-working assistant.
+- **Compute continuity** instead of asserting it: syllabus hours preserved, whether the batch's
+  own teacher still delivers the session, how far a make-up slips from the original date.
+- **Compute B and C confidence** from the same candidate scores A uses — swap quality for B,
+  make-up proximity and room availability for C.
+- **Show the weights in the UI.** `0.6 / 0.25 / 0.15` is a policy choice; surfacing it invites
+  the right question instead of hiding it.
+- **Report a plan as uncovered when it is.** `cov_*` already measures this; make an incomplete
+  plan visibly incomplete rather than letting rank order imply it is fine.
 
 ---
 
-## 6. Data — what is actually wrong with it
+## 6. Phases
 
-The owner's judgement is that the synthetic data is bad. Concretely, what is weak:
+**A — Consolidate.** VidyaERP into the repository properly (it is currently untracked, as
+Chronos was — that is what made Chronos invisible for two months). One README stating which
+codebase is live. MAWOS and Chronos marked reference. Deploy VidyaERP: Render or equivalent,
+`/health`, Groq key from the environment, never git.
 
-| Problem | Fix |
-|---|---|
-| No rooms, labs or capacity at all | Comes free with Chronos's schema — generate a real room inventory with types and capacities |
-| Teacher availability is uniform | Give teachers real unavailability patterns (research day, part-time, shared across departments) — this is what makes rescheduling non-trivial |
-| No academic calendar | Terms, holidays, exam weeks, mid-term breaks. Attendance and timetable both currently float in an undated void |
-| Attendance is `rng.random() < 0.82` per record | Correlate it: by student, by subject, by weekday, with streaks. Uncorrelated noise makes every analytic look the same |
-| Lessons have no structure | Multi-period lab blocks, tutorials, electives with subsets of a class |
-| 1 department demoed | 5 departments already generate; give each distinct load so cross-department comparison is interesting |
+**B — Timetable generation.** §3. Generation endpoint, rooms in the schema, streaming trace, the
+animated grid in the existing console.
 
-`data/generator/` stays — it is deterministic, scale-parameterised and feasibility-asserting,
-which is genuinely good work. It gets *extended* to Chronos's richer schema, not replaced.
+**C — MCP.** §4, including the parity test.
 
----
+**D — Depth.** §5's ranking work, then richer data: real room inventory, non-uniform teacher
+availability, an academic calendar, correlated attendance instead of `rng.random() < 0.82`,
+multi-period lab blocks.
 
-## 7. Scope
-
-### Phase A — foundation
-- Un-ignore Chronos, bring it into the repository (its own top-level directory)
-- One Postgres, table ownership documented, both migration paths working
-- Chronos deploys to Vercel; MAWOS stays on Render; `/health` on both
-
-### Phase B — the agent on the request path
-- §5 tasks 1–4: `plan()` and `synthesize()` call the model; the two agent endpoints
-- Chat panel inside Chronos, talking to MAWOS
-- Trace viewer
-
-### Phase C — the flagship
-- `reschedule_for_absence` write tool, behind the guard
-- Chronos repair-mode solve endpoint (unavailable + locked → diff)
-- Diff UI with confirm/reject
-- The downstream cascade
-
-### Phase D — depth
-- Requests & approvals (leave, room booking, timetable-change requests) as a real module
-- Data rework per §6
-- Admin analytics that use the richer data
-
-### Will not build
-- A second timetable algorithm — Chronos's MRV **is** the second algorithm
-- Rewriting MAWOS's ERP CRUD screens before the agent work is done
-- Any new research instrument
+**Not building:** a second ERP shell; a rewrite of anything that already works in VidyaERP; any
+new research instrument.
 
 ---
 
-## 8. Risks
+## 7. What happens to the research
 
-| Risk | Mitigation |
-|---|---|
-| Two stacks is more to run | It is also the topology v5 already planned. One command per side; both deploy independently |
-| Two ORMs over one DB drift | Strict table ownership; no cross-ORM writes; cross-domain access over HTTP only |
-| Chronos is unreviewed 30-minute code | It works, and it is ours. Read the solver before trusting it in a demo; it is 755 lines |
-| Free-tier rate limits during a live demo | The lexicon fast path keeps ~90% of traffic off the provider. Warm Render before demoing |
-| The re-aim becomes a third rewrite | It is not a rewrite. The guard, tools, agents, MCP and trace are untouched; the *timetable and the shell* are replaced by something that already exists |
+`evaluation/` stays exactly where it is, in the MAWOS tree, as **report material**. The probe,
+the gates, PROTOCOL, the decision register and the archived runs are all still valid evidence of
+what was measured. They stop having any authority over product work.
+
+If a paper is wanted later, the honest subject is no longer "bounded LLM autonomy over an
+institutional system" in the abstract — it is the thing now actually built and testable:
+**a deterministic authorisation layer that holds identically whether the caller is the app's own
+planner or an external LLM over MCP.** That is a real claim with a real experiment, and §4
+produces it as a side effect of shipping.
 
 ---
 
-## 9. Success criterion
+## 8. Success criterion
 
-> An admin opens the ERP, types *"Prof. Rao is out Thursday afternoon — fix the timetable"*,
-> is asked one clarifying question, sees a proposed diff of three moved lessons with the cost
-> delta, approves it, watches the solver animate the repair, and can then open the trace and
-> see every step — including the guard's authorisation — recorded.
+> An admin opens VidyaERP, says *"Prof. Sneha Mallya is absent next Monday, arrange coverage"*,
+> gets three ranked plans with **computed** confidence, coverage and continuity, says
+> *"apply plan B"*, sees the timetable update with overridden cells marked and notifications
+> dispatched — and can then reach the same guarded tools from Claude Desktop over MCP and get
+> the identical PolicyGuard verdict.
 
-Everything in §7 serves that sentence.
+Steps one through four already work today. §3, §4 and §5 are what remain.

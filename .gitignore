@@ -49,3 +49,4 @@ node_modules/
 # and is tracked in its own repo, so it is not vendored into this history.
 # Reverse by deleting this line if the team decides to fold it in.
 teacher-erp-with-timetable-simulation/
+.sudo_as_admin_successful
