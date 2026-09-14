@@ -67,13 +67,13 @@ signature, then run the two commands above.
 
 | Role | Login | What that role can actually do |
 |---|---|---|
-| Student | `4MT23AI049` / `student123` | attendance & CIE marks, fees + pay, hall-ticket status, scholarship, placements, personal timetable + CSV download, notices, assistant |
+| Student | `1VT22AI001` / `student123` | attendance & CIE marks, fees + pay, hall-ticket status, scholarship, placements, personal timetable + CSV download, notices, assistant |
 | Faculty | `aiml.f02` / `faculty123` | own teaching assignments, **mark class attendance** (only for assigned subject-sections — enforced server-side), enter internal marks, own teaching timetable |
 | HOD | `hod.aiml` / `faculty123` | department analytics, section-wise timetables, **regenerate the department timetable**, fee-defaulter list |
 | Principal | `principal` / `principal123` | institution-wide analytics: department comparison, fee collection, placements, admissions funnel |
 | Admin | `admin` / `admin123` | **full admissions pipeline** (verify → merit rank → allot seats vs intake → enrol), demo cascade trigger |
 
-Any USN from `4MT23AI001`–`4MT26CV6xx` works as a student login; faculty are
+Any USN from `1VT22AI001`–`1VT26CV6xx` works as a student login; faculty are
 `{dept}.f02`…`{dept}.f15`; HODs are `hod.{dept}` for aiml/cse/ece/me/cv.
 
 ---

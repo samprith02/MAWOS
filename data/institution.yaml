@@ -8,16 +8,22 @@
 # Everything here is fictional. The system deliberately does not depend on
 # any real college's identity or data.
 #
-# >>> The name below is a PLACEHOLDER. OPEN_DECISIONS.md D12 records that
-# >>> choosing it is the project owner's call. Because it is a config value,
-# >>> changing it costs one edit here and a reseed -- no code changes.
+# >>> D12 CLOSED 2026-09-14: the owner chose the project's own name, MAWOS.
+# >>> The placeholder ("Vidyut Institute of Engineering & Technology") is gone.
+# >>> `usn_prefix` deliberately KEEPS its value -- see the note beside it.
 
 institution:
-  name:          "Vidyut Institute of Engineering & Technology"
-  short_name:    "VIET"
-  name_is_placeholder: true          # see OPEN_DECISIONS.md D12
+  name:          "MAWOS"
+  short_name:    "MAWOS"
+  name_is_placeholder: false         # D12 closed 2026-09-14 -- owner's choice
+  # UNCHANGED ON PURPOSE. `1VT` is an opaque fictional code, and D12 was a
+  # decision about the displayed NAME only. Changing it would invalidate
+  # `evaluation/probe/items.py`, whose USNs (1VT23AI049, 1VT23AI037) are
+  # baked into the committed D1 gate evidence -- re-running the probe
+  # against a renamed prefix would no longer reproduce the published run.
+  # A cosmetic gain is not worth silently breaking a published finding.
   usn_prefix:    "1VT"               # fictional; the loader rejects the v3 prefix
-  email_domain:  "viet.edu.in"       # fictional; the loader rejects the v3 domain
+  email_domain:  "mawos.edu.in"      # fictional; the loader rejects the v3 domain
   established:   2004
   affiliation:   "Affiliated to a State Technological University"
   city:          "Kadamba"           # fictional
