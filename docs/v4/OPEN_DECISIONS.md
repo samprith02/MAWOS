@@ -155,6 +155,26 @@ something the gate supports.
 
 **R3 is blocked on this decision.**
 
+#### Runtime default configured to the failing candidate (2026-09-14) — Task 3
+
+Task 3 (`backend/app/llm_provider.py`, `backend/app/config.py`) wires `MAWOS_LLM_MODEL`'s
+default to `openai/gpt-oss-120b` on Groq — the exact candidate this decision just recorded as
+INELIGIBLE. **Adopting a provider that failed the gate is a project decision made explicitly
+and recorded, not something the gate supports.**
+
+**D1 REMAINS OPEN.** The thresholds were not relaxed to justify this: the gate's own verdict
+above stands unchanged. The named failure is **M2 correct-tool 75.0% vs ≥85%** (10 points
+short, deterministic across all 3 seeds) — every other mandatory measure passed. The mitigation
+is architectural, not statistical: the deterministic guard (`backend/app/guard.py`, Task 4)
+authorises every action regardless of which tool the model picks, so a wrong-tool selection
+cannot produce an unauthorised effect — it can at worst produce a denied or misdirected read,
+which the guard logs the same as any other decision. This mitigation is why the MVRS demo can
+run on a model measured at 75% correct-tool selection without the tool-choice error becoming a
+safety failure; it is not evidence that changes M2, and it does not close D1.
+
+**R3 is still blocked on D1 as a research decision** — this entry authorises the *runtime
+default* for the demo/dev path, not the closing of D1 itself.
+
 ---
 
 ### D2 — Whether to build MRV/backtracking as a second search stage · **HIGH RISK OF DRIFT**
@@ -435,5 +455,7 @@ evidence lives. Reversing a `DO NOT BUILD` entry from `02_SCOPE.md` §2.4 is als
 | 2026-09-14 | D1 | **First Groq run DISCARDED, not scored** — 83.1% hard-failure rate (74/89 calls), diagnosed as 100% harness-caused: 60 HTTP 429 (no client-side pacing against Groq's 30 RPM free tier) + 14 HTTP 400 (assistant `tool_calls[].function.arguments` echoed back as a dict where the API requires a JSON string). Same defect class D14 closed — the instrument measuring itself | Deleted, never published as D1 evidence: `r05_provider_hosted.{json,md}`, `_r05_checkpoint.json` | Task 2a brief, this entry |
 | 2026-09-14 | D1 | **Harness repaired** (`OpenAICompatibleProvider`: `json.dumps` arguments + `id`/`tool_call_id` conformance; `_pace()` pacing at 2.5 s default (`MAWOS_OPENAI_PACING_S`) + bounded 429 retry, 2 attempts, 5 s then 15 s, retries excluded from `latency_ms`) — mirrors `GeminiProvider`'s existing pattern, not a second mechanism | — | `evaluation/probe/providers.py` |
 | 2026-09-14 | D1 | **Groq re-run completed clean; still OPEN — INELIGIBLE on real merits.** `groq:gpt-oss-120b` fails only M2 correct-tool (75.0% vs ≥85%, 10 pts short); M1/M3/M4/M5/M6/M7/M9 all pass. M9 fell to 2.8% (4/143), confirming the harness fix: 3 residual failures are TPM-based 429s that survived both retries, 1 is the model's own invalid `get_timetable` argument (`year: null`), rejected server-side — neither is the fixed dict/pacing defect. Deterministic across all 3 seeds (temp 0.0): A02 answered with a clarifying question instead of calling `get_exam_schedule`; A04 called no tool (2/3 seeds) or the wrong one (1/3) | 75 item-runs × up to 3 rounds = 143 LLM calls, 73 tool calls (0 invalid), 4 hard failures. Candidate substitution (`llama-3.3-70b-versatile`→`openai/gpt-oss-120b`, decommissioned) and probe-item USN repair (`4MT…`→`1VT…`, R1 institution) both dated here; neither is differenced against 08-31/09-01 (`fingerprint()` changed) | `evaluation/results/v5_gates/r05_provider_hosted.{json,md}` |
+
+| 2026-09-14 | D1 | **Runtime default configured to the failing candidate; D1 REMAINS OPEN.** `backend/app/config.py` defaults `MAWOS_LLM_MODEL` to `openai/gpt-oss-120b` (Groq) — the candidate just recorded INELIGIBLE. Adopting a provider that failed the gate is a project decision made explicitly and recorded, not something the gate supports. Thresholds not relaxed; the named failure (M2 correct-tool 75.0% vs ≥85%) stands as measured. Mitigated by the deterministic guard, which authorises every action regardless of tool choice | No new measurement — this is a configuration decision, not a re-run | `backend/app/llm_provider.py`, `backend/app/config.py`, this entry |
 
 **Not closed, and deliberately so:** D1. R3 is blocked on it.

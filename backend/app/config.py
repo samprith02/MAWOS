@@ -88,3 +88,23 @@ ML_DATA_DIR = BASE_DIR / "ml" / "data"
 
 # Frontend static files
 STATIC_DIR = BASE_DIR / "frontend" / "static"
+
+# --- v5 hosted LLM provider (D1). One adapter, three candidates: Groq,
+# OpenRouter and GitHub Models are all OpenAI-compatible, so switching
+# provider for the degradation run is config, never code.
+#
+# D1 is OPEN: the default candidate below (groq:gpt-oss-120b) was measured
+# INELIGIBLE by the R0.5 gate (M2 correct-tool 75.0% vs >=85% threshold,
+# deterministic across all 3 seeds; every other mandatory measure passed).
+# It is wired in anyway as a deliberate, recorded project decision -- see
+# docs/v4/OPEN_DECISIONS.md, D1, "Runtime default configured to the failing
+# candidate (2026-09-14)". The deterministic guard authorises every action
+# regardless of which tool the model picks, so this does not create an
+# unauthorised-effect risk. A missing MAWOS_LLM_KEY_ENV credential degrades
+# the system to its deterministic tier -- the PRIMARY tier, never a
+# "fallback" -- rather than failing the app.
+LLM_BASE_URL = os.getenv("MAWOS_LLM_BASE_URL", "https://api.groq.com/openai/v1")
+LLM_MODEL = os.getenv("MAWOS_LLM_MODEL", "openai/gpt-oss-120b")
+LLM_API_KEY_ENV = os.getenv("MAWOS_LLM_KEY_ENV", "GROQ_API_KEY")
+LLM_TIMEOUT_S = float(os.getenv("MAWOS_LLM_TIMEOUT", "30"))
+LLM_LABEL = os.getenv("MAWOS_LLM_LABEL", "groq:gpt-oss-120b")
