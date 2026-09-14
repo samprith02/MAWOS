@@ -10,11 +10,12 @@ Write-tools are wrapped by PolicyGuard: they refuse to commit unless the admin
 gave explicit approval **in the current turn**. The model cannot talk its way past this.
 """
 import re, datetime as dt
-import nlu, db
+import nlu, db, solver
 from nlu import TODAY, day_of
 from agents import (rows, one, fac_name, subj_name, plabel, _span, PERIOD_SPAN,
                     SubstitutionAgent, TimetableAgent, FacultyAgent, StudentAgent,
                     FinanceAgent, ExamAgent, RequestAgent, NotifyAgent, AnalyticsAgent,
+                    Auditor,
                     B_text, B_table, B_cards, B_plans, B_notice, B_grid)
 
 APPROVAL_RX = re.compile(
@@ -391,6 +392,99 @@ def t_undo_last_change(con, S, U, **kw):
             "trace": [("SubstitutionAgent", "rollback", f"plan {last['plan_ref']} reverted")]}
 
 
+def _gen_scope(scope, dept, sem, section):
+    scope = "all" if str(scope).lower().startswith("all") else "class"
+    if scope == "class" and not (dept and sem and section):
+        return None, {"error": "Regenerating one section needs dept, sem and section. "
+                               "Pass scope='all' to rebuild the whole college."}
+    return (scope, dept, int(sem) if sem else None, section), None
+
+
+def t_plan_timetable_generation(con, S, U, scope="class", dept=None, sem=None, section=None,
+                                seed=7, **kw):
+    """Build a timetable from scratch and REPORT it. Writes nothing."""
+    parsed, err = _gen_scope(scope, dept, sem, section)
+    if err:
+        return {"data": err, "blocks": [], "trace": []}
+    scope, dept, sem, section = parsed
+    inp = solver.build_input(con, scope=scope, dept=dept, sem=sem, section=section, seed=int(seed))
+    res = solver.run(inp)
+    target = "the whole college" if scope == "all" else f"{dept}-{sem}{section}"
+    S["pending"] = {"kind": "timetable_generation", "scope": scope, "dept": dept,
+                    "sem": sem, "section": section, "result": res, "target": target}
+    warn = []
+    if res["unplaced"]:
+        warn.append(f"{len(res['unplaced'])} period(s) could not be placed and became "
+                    f"activity slots: " + ", ".join(sorted({u['subject'] for u in res['unplaced']})))
+    if res["capacity_relaxed"]:
+        over = sorted({r["cls"] for r in res["capacity_relaxed"]})
+        warn.append(f"{len(res['capacity_relaxed'])} lab block(s) exceed room capacity for "
+                    f"{', '.join(over[:4])}{'...' if len(over) > 4 else ''} — this dataset has no "
+                    f"lab batch splitting, so the constraint was relaxed and recorded.")
+    return {"data": {"proposed": True, "target": target, "scope": scope,
+                     "placed": res["placed"], "total": res["total"],
+                     "activity_slots": res["activity_slots"], "sections": len(res["classes"]),
+                     "backtracks": res["backtracks"], "restarts": res["restarts"],
+                     "soft_score": res["score"], "solve_ms": res["ms"],
+                     "unplaced": len(res["unplaced"]), "warnings": warn,
+                     "instruction": "Nothing is written yet. Ask the admin to confirm, then call "
+                                    "apply_timetable_generation."},
+            "blocks": [B_table(["Metric", "Value"],
+                               [["Scope", target],
+                                ["Sections rebuilt", str(len(res["classes"]))],
+                                ["Curriculum periods placed", f"{res['placed']} / {res['total']}"],
+                                ["Activity periods filled", str(res["activity_slots"])],
+                                ["Search backtracks", str(res["backtracks"])],
+                                ["Solve time", f"{res['ms']} ms"]],
+                               title=f"Proposed timetable — {target}")]
+                      + ([B_notice([{"title": "Before you approve", "body": w} for w in warn])]
+                         if warn else []),
+            "trace": [("PolicyGuard", "rbac_check", "write_gate=HITL · nothing written yet"),
+                      ("TimetableAgent", "generate",
+                       f"{res['placed']}/{res['total']} placed in {res['ms']}ms, "
+                       f"{res['backtracks']} backtracks")]}
+
+
+def t_apply_timetable_generation(con, S, U, **kw):
+    """COMMIT a proposed timetable. Deletes and rewrites the scope, so it is gated."""
+    p = S.get("pending")
+    if not p or p.get("kind") != "timetable_generation":
+        return {"data": {"error": "No generated timetable is pending. "
+                                  "Call plan_timetable_generation first."},
+                "blocks": [], "trace": []}
+    if not approved_this_turn(U):
+        return {"data": {"BLOCKED": "PolicyGuard: regenerating a timetable deletes and rewrites "
+                                    "every affected period. It needs explicit admin approval in "
+                                    "this turn. Ask, then call again."},
+                "blocks": [], "trace": [("PolicyGuard", "write_blocked",
+                                         "no explicit approval in turn")]}
+    res = p["result"]
+    solver.apply(con, res, scope=p["scope"], dept=p["dept"], sem=p["sem"], section=p["section"])
+    problems = solver.verify(con, scope=p["scope"], dept=p["dept"], sem=p["sem"],
+                             section=p["section"])
+    Auditor().log(con, "admin", "TimetableAgent", "timetable.generate",
+                  {"scope": p["scope"], "target": p["target"], "placed": res["placed"],
+                   "total": res["total"], "ms": res["ms"]},
+                  "Applied" if not problems else f"Applied with {len(problems)} problem(s)")
+    S["pending"] = None
+    return {"data": {"applied": True, "target": p["target"],
+                     "periods_written": len(res["bookings"]),
+                     "verification": "clean" if not problems else problems[:5],
+                     "note": "Verified independently after the write, not taken on the "
+                             "solver's word."},
+            "blocks": [B_table(["Check", "Result"],
+                               [["Periods written", str(len(res["bookings"]))],
+                                ["Faculty double-booking", "none"],
+                                ["Room double-booking", "none"],
+                                ["Contiguous day blocks", "yes"]]
+                               if not problems else [["Problem", x] for x in problems[:6]],
+                               title=f"Applied — {p['target']}")],
+            "refresh": True,
+            "trace": [("PolicyGuard", "write_authorisation", "admin approved timetable rebuild"),
+                      ("TimetableAgent", "commit", f"{len(res['bookings'])} periods written"),
+                      ("Auditor", "log", "timetable.generate recorded in the ledger")]}
+
+
 def t_decide_request(con, S, U, request_id=None, decision="approve", **kw):
     if not approved_this_turn(U):
         return {"data": {"BLOCKED": "PolicyGuard: approving/rejecting needs explicit admin confirmation "
@@ -489,6 +583,14 @@ REGISTRY = [
      "COMMIT a previously proposed coverage plan by its code (A/B/C). Only after the admin explicitly "
      "approves in the current message.", _p({"plan_code": _S}, ["plan_code"])),
     (t_undo_last_change, "undo_last_change", "Roll back the most recent applied coverage plan.", _p({})),
+    (t_plan_timetable_generation, "plan_timetable_generation",
+     "PROPOSE a timetable built FROM SCRATCH by the constraint solver, for one section "
+     "(scope='class' with dept/sem/section) or the whole college (scope='all'). Writes NOTHING - "
+     "returns what it would place. Always call this before apply_timetable_generation.",
+     _p({"scope": _S, "dept": _S, "sem": _I, "section": _S, "seed": _I})),
+    (t_apply_timetable_generation, "apply_timetable_generation",
+     "COMMIT the proposed generated timetable. This DELETES and rewrites every period in scope, "
+     "so only call it after the admin explicitly approves in the current message.", _p({})),
     (t_decide_request, "decide_request",
      "Approve or reject a request by id. Needs explicit admin confirmation this turn.",
      _p({"request_id": _I, "decision": _S}, ["request_id", "decision"])),
@@ -514,6 +616,8 @@ TOOL_GROUPS = {
     "absence.cover":   ["plan_absence_coverage", "apply_coverage_plan", "undo_last_change",
                         "list_leaves", "find_free_faculty", "faculty_timetable"],
     "timetable.view":  ["get_timetable", "faculty_timetable", "find_free_faculty", "find_free_rooms"],
+    "timetable.generate": ["plan_timetable_generation", "apply_timetable_generation",
+                           "get_timetable", "faculty_workload"],
     "faculty.query":   ["faculty_profile", "faculty_workload", "faculty_timetable"],
     "student.query":   ["student_lookup", "attendance_defaulters"],
     "finance.query":   ["fee_summary", "list_requests"],
@@ -553,7 +657,10 @@ def select_tools(text, session=None, limit=9):
         picked = list(CORE)
     # a live proposal always keeps its commit/rollback verbs on the table
     if session and session.get("pending"):
-        for name in ("apply_coverage_plan", "undo_last_change"):
+        commit = ("apply_timetable_generation"
+                  if session["pending"].get("kind") == "timetable_generation"
+                  else "apply_coverage_plan")
+        for name in (commit, "undo_last_change"):
             if name not in picked:
                 picked.insert(0, name)
     if "institution_overview" not in picked and len(picked) < limit:

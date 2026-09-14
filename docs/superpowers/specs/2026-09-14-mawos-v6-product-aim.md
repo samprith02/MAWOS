@@ -93,7 +93,32 @@ second deployment for one feature); keeping MAWOS as the base (sunk cost).
 
 ---
 
-## 3. Port one — timetable generation from scratch
+## 3. Port one — timetable generation from scratch · **DONE 2026-09-14**
+
+> Landed as `VidyaERP/erp/solver.py` + `tests/solver_test.py` (44 assertions, all passing),
+> `POST /api/timetable/generate/apply`, `GET /api/timetable/generate/stream`, two guarded tools,
+> and the live grid in Master Timetable → **Generate from scratch**.
+>
+> **Measured:** 456 curriculum periods across 21 sections in ~0.3 s, 0 clashes, verified by an
+> independent re-read of the committed rows. Degrades rather than collapses under room scarcity —
+> 93% placed with a single lab room for the whole college.
+>
+> **Three defects found and fixed while porting**, each by measurement rather than inspection:
+> 1. Staffing ignored pinned teacher load, so a scoped rebuild promised hours the search then
+>    could not place (20/25 placed, silently backfilled with activities).
+> 2. The reference's unwind-until-empty backtracking thrashed on a tight instance — 3,205
+>    placements against 3,183 undos, 24 of 456 periods surviving, full budget burned. Replaced
+>    with conflict-directed unwinding **plus** a stuck-variable cap, which was the one that
+>    actually mattered: the reference never parks the culprit because its `recovered` flag goes
+>    true when some *other* frame retries successfully. 20,003 ms → 288 ms.
+> 3. `app.py` read `index.html` without an encoding, so the console 500s under a cp1252 default
+>    locale on a curly quote the file has always carried. Pre-existing, unrelated to the port.
+>
+> Two limits are reported rather than hidden: lab capacity is relaxed (no batch splitting in the
+> dataset) with every affected class named, and teacher unavailability is honoured as an input but
+> nothing populates it yet.
+
+### The original plan, for the record
 
 The owner's own assessment: *"just timetable generation from scratch is not there in it, rest all
 it feels like best smart erp."* That is the single functional gap.
@@ -152,8 +177,8 @@ Chronos was — that is what made Chronos invisible for two months). One README 
 codebase is live. MAWOS and Chronos marked reference. Deploy VidyaERP: Render or equivalent,
 `/health`, Groq key from the environment, never git.
 
-**B — Timetable generation.** §3. Generation endpoint, rooms in the schema, streaming trace, the
-animated grid in the existing console.
+**B — Timetable generation. DONE 2026-09-14.** §3. Generation endpoint, rooms as a decision
+variable, streaming trace, the animated grid in the existing console, both guarded tools.
 
 **C — MCP.** §4, including the parity test.
 
@@ -188,4 +213,11 @@ produces it as a side effect of shipping.
 > dispatched — and can then reach the same guarded tools from Claude Desktop over MCP and get
 > the identical PolicyGuard verdict.
 
-Steps one through four already work today. §3, §4 and §5 are what remain.
+Steps one through four already work today. **§3 is done.** §4 and §5 are what remain.
+
+A second criterion, now met, belongs beside it — the one the owner asked for by name for two
+months and the register kept refusing:
+
+> An admin picks a section, clicks **Generate from scratch**, and watches the solver place its
+> lesson blocks live — rejections explained, backtracks visible, phases advancing — then approves,
+> and the timetable is written and independently verified before it says it worked.

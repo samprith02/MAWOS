@@ -1,11 +1,12 @@
 """VidyaERP :: FastAPI application"""
 import os, json, datetime as dt
 from fastapi import FastAPI, Body
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-import db, orchestrator as orch, llm, llm_agent
-from agents import rows, one, fac_name, PERIOD_TIME, TimetableAgent, AnalyticsAgent, RequestAgent
+import db, orchestrator as orch, llm, llm_agent, solver
+from agents import (rows, one, fac_name, PERIOD_TIME, TimetableAgent, AnalyticsAgent,
+                    RequestAgent, Auditor)
 from nlu import TODAY, DAYS, day_of
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -17,7 +18,10 @@ app = FastAPI(title="VidyaERP", docs_url="/api/docs")
 
 @app.get("/", response_class=HTMLResponse)
 def index():
-    with open(os.path.join(HERE, "static", "index.html")) as f:
+    # encoding is explicit on purpose: the console contains typographic quotes and
+    # '·' separators, and Windows defaults open() to cp1252, which cannot decode
+    # them - the whole page 500s on a byte the file has always carried.
+    with open(os.path.join(HERE, "static", "index.html"), encoding="utf-8") as f:
         return f.read()
 
 
@@ -76,6 +80,68 @@ def timetable(dept: str = "CSE", sem: int = 5, section: str = "A", date: str = "
 @app.get("/api/classes")
 def classes():
     return rows(con, "SELECT DISTINCT dept, sem, section FROM timetable ORDER BY dept, sem, section")
+
+
+# ------------------------------------------------------ timetable generation
+# The stream is a PREVIEW and writes nothing; applying is a separate POST. The
+# two agree because the solver is deterministic on its seed - asserted by
+# tests/solver_test.py ("same seed gives an identical timetable"), so the client
+# never has to ship a whole timetable back to commit what it just watched.
+def _gen_args(p):
+    scope = "all" if str(p.get("scope", "class")).lower().startswith("all") else "class"
+    return {"scope": scope,
+            "dept": (p.get("dept") or "CSE").upper() if scope == "class" else None,
+            "sem": int(p.get("sem") or 5) if scope == "class" else None,
+            "section": (p.get("section") or "A").upper() if scope == "class" else None,
+            "seed": int(p.get("seed") or 7)}
+
+
+@app.get("/api/timetable/generate/stream")
+def generate_stream(scope: str = "class", dept: str = "CSE", sem: int = 5,
+                    section: str = "A", seed: int = 7):
+    a = _gen_args({"scope": scope, "dept": dept, "sem": sem, "section": section, "seed": seed})
+
+    def events():
+        inp = solver.build_input(con, **a)
+        gen = solver.solve(inp)
+        try:
+            while True:
+                yield "data: " + json.dumps(next(gen)) + "\n\n"
+        except StopIteration as stop:
+            res = stop.value
+        yield "data: " + json.dumps({
+            "t": "result", **{k: res[k] for k in
+                              ("ok", "placed", "total", "steps", "backtracks", "conflicts",
+                               "restarts", "score", "ms", "activity_slots", "timed_out",
+                               "unplaced", "capacity_relaxed", "classes")},
+            "bookings": [{"cls": "-".join(str(x) for x in b["cls"]), "day": b["day"],
+                          "period": b["period"], "subject": b["subject"],
+                          "faculty": b["faculty"], "room": b["room"], "kind": b["kind"]}
+                         for b in res["bookings"]],
+            "args": a}) + "\n\n"
+
+    return StreamingResponse(events(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@app.post("/api/timetable/generate/apply")
+def generate_apply(payload: dict = Body(default={})):
+    """Commit a generated timetable. Re-solves with the same seed, then verifies."""
+    a = _gen_args(payload)
+    inp = solver.build_input(con, **a)
+    res = solver.run(inp)
+    solver.apply(con, res, scope=a["scope"], dept=a["dept"], sem=a["sem"], section=a["section"])
+    problems = solver.verify(con, scope=a["scope"], dept=a["dept"], sem=a["sem"],
+                             section=a["section"])
+    target = "the whole college" if a["scope"] == "all" else f"{a['dept']}-{a['sem']}{a['section']}"
+    Auditor().log(con, payload.get("actor", "admin"), "TimetableAgent", "timetable.generate",
+                  {**a, "placed": res["placed"], "total": res["total"], "ms": res["ms"]},
+                  "Applied" if not problems else f"Applied with {len(problems)} problem(s)")
+    return {"ok": not problems, "target": target, "placed": res["placed"], "total": res["total"],
+            "periods_written": len(res["bookings"]), "activity_slots": res["activity_slots"],
+            "ms": res["ms"], "backtracks": res["backtracks"],
+            "unplaced": res["unplaced"], "capacity_relaxed": res["capacity_relaxed"],
+            "problems": problems}
 
 
 @app.get("/api/faculty")

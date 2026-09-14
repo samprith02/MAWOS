@@ -44,11 +44,12 @@ Presets for OpenAI, Groq, OpenRouter, Together, DeepSeek, Gemini-compat and loca
 listed in `.env.example`. No SDK is installed — `llm.py` talks raw HTTP over `urllib`, so there
 is nothing to `pip install`. Restart the server and the badge flips to green.
 
-**The 20 tools the model can call:** `institution_overview · get_timetable · faculty_timetable ·
+**The 22 tools the model can call:** `institution_overview · get_timetable · faculty_timetable ·
 find_free_faculty · find_free_rooms · faculty_profile · faculty_workload · student_lookup ·
 attendance_defaulters · fee_summary · exam_schedule · exam_eligibility · list_requests ·
-list_leaves · plan_absence_coverage · apply_coverage_plan · undo_last_change · decide_request ·
-create_request · broadcast_notice`
+list_leaves · plan_absence_coverage · apply_coverage_plan · plan_timetable_generation ·
+apply_timetable_generation · undo_last_change · decide_request · create_request ·
+broadcast_notice`
 
 **Write-guard, proven by test:** `tests/mock_llm.py` includes a *rogue agent* endpoint that tries
 to call `apply_coverage_plan` with no admin approval. PolicyGuard returns `{"BLOCKED": ...}`,
@@ -65,7 +66,7 @@ multi-hop turn was spending 7,196 of them. Four things fixed that:
 
 | Technique | Effect |
 |---|---|
-| **Tool router** — the rule-engine NLU pre-selects ~4–8 of the 20 tools per utterance | tool payload **−64%**, and the model picks better from a short menu |
+| **Tool router** — the rule-engine NLU pre-selects ~4–8 of the 22 tools per utterance | tool payload **−64%**, and the model picks better from a short menu |
 | **Prompt diet** — live-context preamble trimmed, history 8→4 turns, tool results capped at 2.8 KB | system prompt ~1,500 → ~600 tokens |
 | **Model failover chain** — `LLM_FALLBACK_MODELS`, tried in order on 429/5xx/`tool_use_failed` | quotas are *per model*, so the chain multiplies usable throughput |
 | **Nullable optional params** — every non-required arg accepts `null` | models emit `{"dept": null}` constantly; strict validators 400 on it. 41 params were latent landmines |
@@ -76,7 +77,7 @@ if the whole chain is exhausted by falling back to the rule engine with an hones
 The trace shows exactly which of these happened:
 
 ```
-· ToolRouter    narrow_toolset    7 of 20 tools offered: plan_absence_coverage, …
+· ToolRouter    narrow_toolset    7 of 22 tools offered: plan_absence_coverage, …
 · LLM Planner   reason (hop 1)    openai/gpt-oss-120b · 1032→107 tok · 513ms
 · LLM Planner   model_failover    primary rate-limited → answered on qwen/qwen3.8-27b
 ```
@@ -84,8 +85,9 @@ The trace shows exactly which of these happened:
 ### Tests
 
 ```bash
-python3 tests/smoke.py      # deterministic rule-engine regression (no API cost)
-python3 tests/live_llm.py   # 6 real-model queries: engine, latency, tokens, table leaks
+python3 tests/solver_test.py  # timetable solver: 44 assertions, no server, no API cost
+python3 tests/smoke.py        # deterministic rule-engine regression (needs the server, no API cost)
+python3 tests/live_llm.py     # 6 real-model queries: engine, latency, tokens, table leaks
 ```
 
 ## 3. Agent architecture
@@ -226,6 +228,50 @@ Because labs are contiguous blocks, the SubstitutionAgent groups consecutive per
 subject into **one teaching block**: an absent lab instructor produces a single `P1–P3` coverage
 decision, not three unrelated ones.
 
+### Building a timetable from scratch (`solver.py`)
+
+The seeder above *generates the shipped data*. `solver.py` is the same job as a **feature**: a
+constraint solver an admin can run on demand, watch, and approve — Master Timetable →
+**Generate from scratch**.
+
+Ported from the Chronos reference solver (`teacher-erp-with-timetable-simulation`, 755 lines of
+TypeScript) and adapted to the rules above. Five phases:
+
+| Phase | What it does |
+|---|---|
+| Staffing | one teacher owns a subject for a class, by expertise then load |
+| Search | backtracking with MRV variable ordering and cost-ranked value ordering |
+| Repair | min-conflicts ejection for anything the search could not place |
+| Polish | hill-climbing relocation + pairwise exchange, to close gaps and front-load core subjects |
+| Fill | every remaining period becomes a real academic activity — the day stays solid |
+
+`solve()` is a **generator**. The browser streams every decision over SSE and replays it onto a
+live grid, so what you watch *is* the search, not a re-enactment; a caller that just wants a
+timetable drains the same generator synchronously. There is one code path, not two.
+
+Three things it adds over the reference, because this college needs them: **multi-period blocks**
+(a lab is 3 consecutive periods inside one session), **per-class day length** (sem 3 sits 7
+periods, sem 7 sits 5, Saturday is short), and **pinning** — regenerate one section and every
+other section's bookings are frozen and respected, so the rebuild has to fit around teachers who
+are already booked elsewhere.
+
+**Nothing is written until you approve.** The stream is a preview; `POST
+/api/timetable/generate/apply` re-solves with the same seed (the solver is deterministic on it)
+and commits, then runs `solver.verify()` — an independent re-read of the committed rows — before
+reporting success. Through the copilot the same work is two tools,
+`plan_timetable_generation` then `apply_timetable_generation`, and the second refuses without
+explicit admin approval in the current turn, like every other write.
+
+Measured on the seeded institution: **456 curriculum periods across 21 sections in ~0.3 s**, 0
+backtracks, 0 clashes. Under deliberate room scarcity it degrades instead of collapsing — at one
+lab room for the whole college it still places 93% and keeps every day contiguous.
+
+**Two limits it reports rather than hides.** Lab rooms seat 36 and a CSE section is ~60, because
+real colleges split a lab into batches and this dataset has no batches — the solver relaxes the
+capacity constraint and names every affected class in `capacity_relaxed`, shown as an amber
+warning above the Apply button. And teacher unavailability is honoured as an input but nothing
+populates it yet: approved leave drives the *rescheduling* path, not generation.
+
 ---
 
 ## 8. Files
@@ -234,16 +280,18 @@ decision, not three unrelated ones.
 erp/
 ├── app.py              FastAPI routes, engine switch, static hosting
 ├── db.py               schema + seeder + CONTIGUOUS timetable generator + verify()
+├── solver.py           from-scratch timetable solver (MRV backtracking, streams its trace)
 ├── nlu.py              intent scoring, priority rules, entity + Indian date parsing
 ├── agents.py           the nine specialists + PolicyGuard + Auditor
 ├── orchestrator.py     rule-engine supervisor: routing, HITL state machine
 ├── llm.py              provider-agnostic OpenAI-compatible client (urllib, no SDK)
-├── tools.py            the 20 tool schemas + PolicyGuard-wrapped dispatch
+├── tools.py            the 22 tool schemas + PolicyGuard-wrapped dispatch
 ├── llm_agent.py        the LLM reasoning loop (plan → call tools → answer), with failover
 ├── .env / .env.example LLM configuration
 ├── static/index.html   admin console SPA (dark, zero external assets)
 └── tests/
     ├── smoke.py        end-to-end conversation regression
+    ├── solver_test.py  timetable solver regression (no server, no API cost)
     └── mock_llm.py     fake OpenAI endpoint + rogue-agent guard test
 ```
 

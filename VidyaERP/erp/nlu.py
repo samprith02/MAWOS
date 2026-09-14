@@ -30,6 +30,12 @@ INTENTS = {
                ("free faculty", 5), ("who is free", 5), ("available faculty", 4), ("free slot", 4),
                ("room availability", 4), ("free room", 4), ("vacant", 3)],
         "desc": "Read timetable, workload, free faculty/rooms"},
+    "timetable.generate": {
+        "kw": [("generate timetable", 6), ("create timetable", 6), ("build timetable", 6),
+               ("new timetable", 5), ("regenerate", 6), ("rebuild", 5), ("from scratch", 5),
+               ("re-generate", 6), ("timetable generation", 6), ("run the solver", 5),
+               ("prepare the timetable", 5)],
+        "desc": "Build a timetable from scratch with the constraint solver"},
     "student.query": {
         "kw": [("student", 4), ("usn", 5), ("attendance", 5), ("defaulter", 5), ("shortage", 4),
                ("cgpa", 4), ("backlog", 4), ("mentor", 3), ("hostel", 3), ("condonation", 4),
@@ -85,6 +91,9 @@ PRIORITY = [
      r"anyone else on leave)\b", "absence.cover", 10),
     (r"^\s*(?:approve|reject|sanction)\b|\bpending approvals?\b|\bbulk approve\b", "request.manage", 12),
     (r"\b(?:undo|roll ?back|revert)\b", "absence.cover", 12),
+    (r"\b(?:generate|regenerate|re-generate|rebuild|re-build|build|create|prepare|draw up)\b"
+     r"[^.?!]{0,40}\b(?:time ?table|schedule)\b|"
+     r"\btime ?table\b[^.?!]{0,25}\bfrom scratch\b", "timetable.generate", 16),
     (r"\btime ?table\b", "timetable.view", 8),
     (r"\battendance\b.*\b(?:defaulter|shortage|below|less than|<)\b", "student.query", 10),
 ]

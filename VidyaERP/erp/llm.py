@@ -16,7 +16,7 @@ def load_env(path=ENV_PATH):
     if not os.path.exists(path):
         return {}
     out = {}
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line or line.startswith("#") or "=" not in line:

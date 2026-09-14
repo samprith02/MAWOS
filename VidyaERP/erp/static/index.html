@@ -333,6 +333,52 @@ select:focus,input[type=text]:focus{border-color:#8fa4e5;box-shadow:0 0 0 3px rg
   .leg{grid-template-columns:64px 75px minmax(0,1fr)}
   .pf{align-items:flex-start;flex-direction:column}
 }
+
+/* ---------- timetable generation: live solver ---------- */
+.solver{margin:10px 0 4px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:var(--shadow-sm);overflow:hidden}
+.solver .sh{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.solver .sh b{font-size:12.5px}
+.solver .sh .spacer{flex:1}
+.phases{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.phase{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;border:1px solid var(--line2);background:#fff;color:var(--dim);font-size:10px;font-weight:650;letter-spacing:.02em;transition:all .2s ease}
+.phase.on{border-color:var(--acc);background:#eef2ff;color:var(--acc)}
+.phase.done{border-color:#bfe3d3;background:#effaf5;color:var(--good)}
+.phase i{width:5px;height:5px;border-radius:50%;background:currentColor;display:block}
+.sstats{display:flex;gap:0;flex-wrap:wrap;border-bottom:1px solid var(--line);background:#fff}
+.sstat{flex:1 1 104px;padding:9px 13px;border-right:1px solid var(--line)}
+.sstat:last-child{border-right:0}
+.sstat .l{color:var(--dim);font-size:9px;font-weight:650;letter-spacing:.09em;text-transform:uppercase}
+.sstat .v{margin-top:2px;font-size:15px;font-weight:660;font-variant-numeric:tabular-nums;color:var(--txt)}
+.sbar{height:3px;background:var(--panel3);overflow:hidden}
+.sbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .18s linear}
+.sbody{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:0;align-items:stretch}
+.sgridwrap{overflow:auto;padding:12px;min-width:0}
+.sgrid{width:100%;min-width:620px;border-collapse:separate;border-spacing:0;font-size:10px;table-layout:fixed}
+.sgrid th{padding:6px 4px;background:var(--panel2);color:var(--mut);text-align:center;font-size:8.5px;font-weight:650;border-bottom:1px solid var(--line);white-space:nowrap}
+.sgrid th.dh{width:46px;text-align:left;padding-left:9px}
+.sgrid td{height:42px;padding:2px;border-right:1px solid #edf0f4;border-bottom:1px solid #edf0f4;vertical-align:top}
+.sgrid td.dh{background:var(--panel2);color:#475467;text-align:center;font-size:9.5px;font-weight:650;vertical-align:middle}
+.sgrid .sc{height:100%;border-radius:5px;padding:4px 5px;border-left:2px solid transparent;background:var(--panel3);opacity:0;transform:scale(.9);transition:opacity .16s ease,transform .16s ease}
+.sgrid .sc.in{opacity:1;transform:scale(1)}
+.sgrid .sc.T{background:#eef2ff;border-left-color:var(--acc)}
+.sgrid .sc.L{background:#f2eeff;border-left-color:var(--acc2)}
+.sgrid .sc.A{background:#f1f3f6;border-left-color:#a8b0bd}
+.sgrid .sc.hot{box-shadow:0 0 0 2px #fbbf6a;z-index:2;position:relative}
+.sgrid .sc .a{font-weight:660;color:#263b70;font-size:9.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sgrid .sc .b{color:var(--mut);font-size:8.5px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sgrid td.off{background:repeating-linear-gradient(45deg,#fafbfc,#fafbfc 4px,#f2f4f7 4px,#f2f4f7 8px)}
+.slog{border-left:1px solid var(--line);background:var(--panel2);overflow:auto;max-height:392px;padding:8px 10px;font:10.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.slog div{padding:2px 0;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slog b{color:var(--txt);font-weight:660}
+.slog .ok{color:var(--good)}
+.slog .no{color:var(--bad)}
+.slog .wn{color:var(--amber)}
+.slog .ph{color:var(--acc);font-weight:660;margin-top:5px}
+.sfoot{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:11px 14px;border-top:1px solid var(--line);background:var(--panel2)}
+.sfoot .msg{flex:1;min-width:180px;color:var(--mut);font-size:11.5px}
+.swarn{padding:9px 14px;border-top:1px solid #f3dcc0;background:#fffaf2;color:#8a5200;font-size:11px}
+.swarn b{color:#6d4100}
+@media(max-width:900px){.sbody{grid-template-columns:minmax(0,1fr)}.slog{border-left:0;border-top:1px solid var(--line);max-height:170px}}
 </style>
 </head>
 <body>
@@ -643,14 +689,199 @@ async function renderTT(el){
       ${c.dept==='CSE'&&c.sem===5&&c.section==='A'?'selected':''}>${c.dept} · Sem ${c.sem} · Sec ${c.section}</option>`).join('')}</select>
     <input type="text" id="dt" value="2026-09-04" aria-label="Operational date" style="width:130px"/>
     <button class="btn sm ghost" id="rl" type="button">Reload</button>
-    <span style="color:var(--dim);font-size:11.5px">Amber marks an approved change for the selected date</span></div>
+    <span class="spacer" style="flex:1"></span>
+    <select id="gscope" aria-label="Generation scope" title="What to rebuild">
+      <option value="class">Rebuild this section</option>
+      <option value="all">Rebuild the whole college</option></select>
+    <input type="number" id="gseed" value="7" min="1" max="9999" aria-label="Solver seed"
+      title="Solver seed — the same seed always produces the same timetable" style="width:66px"/>
+    <button class="btn sm" id="gen" type="button">Generate from scratch</button></div>
+    <div id="solverbox"></div>
     <div id="ttbox"></div>`;
   const load=async()=>{
     const [d,s,sec]=$('#cls').value.split('|');
     const g=await api(`/api/timetable?dept=${d}&sem=${s}&section=${sec}&date=${$('#dt').value}`);
     $('#ttbox').innerHTML=rGrid(g);
   };
-  $('#cls').onchange=load;$('#rl').onclick=load;await load();
+  $('#cls').onchange=load;$('#rl').onclick=load;
+  $('#gen').onclick=()=>runSolver(load);
+  await load();
+}
+
+/* ---------------- live timetable solver ----------------
+   Streams the solver's own decisions over SSE and replays them onto a grid, so
+   what you watch IS the search - not a re-enactment. The stream writes nothing;
+   Apply re-solves with the same seed (the solver is deterministic on it) and
+   commits, then verifies the result independently before reporting success. */
+let SOLVER_ES=null;
+function runSolver(reload){
+  if(SOLVER_ES){SOLVER_ES.close();SOLVER_ES=null;}
+  const [dept,sem,section]=$('#cls').value.split('|');
+  const scope=$('#gscope').value, seed=Math.max(1,parseInt($('#gseed').value||'7',10));
+  const focus=`${dept}-${sem}${section}`;
+  const args={scope,dept,sem,section,seed};
+  const PHASES=['Staffing','Search','Repair','Polish','Fill'];
+  const box=$('#solverbox');
+  box.innerHTML=`<div class="solver">
+    <div class="sh"><b>Constraint solver</b>
+      <span style="color:var(--dim);font-size:11px">${scope==='all'?'rebuilding all sections':'rebuilding '+esc(focus)}
+        · watching <b style="color:var(--mut)">${esc(focus)}</b> · seed ${seed}</span>
+      <span class="spacer"></span>
+      <div class="phases" id="sphases">${PHASES.map(p=>`<span class="phase" data-p="${p}"><i></i>${p}</span>`).join('')}</div>
+    </div>
+    <div class="sstats">
+      <div class="sstat"><div class="l">Placed</div><div class="v" id="st-pl">0</div></div>
+      <div class="sstat"><div class="l">Backtracks</div><div class="v" id="st-bt">0</div></div>
+      <div class="sstat"><div class="l">Rejected slots</div><div class="v" id="st-cf">0</div></div>
+      <div class="sstat"><div class="l">Improvements</div><div class="v" id="st-sw">0</div></div>
+      <div class="sstat"><div class="l">Elapsed</div><div class="v" id="st-ms">0.0s</div></div>
+    </div>
+    <div class="sbar"><i id="sbar"></i></div>
+    <div class="sbody"><div class="sgridwrap" id="sgridwrap">
+      <div style="color:var(--dim);padding:22px 4px">Connecting to the solver…</div></div>
+      <div class="slog" id="slog"></div></div>
+    <div id="swarnbox"></div>
+    <div class="sfoot"><div class="msg" id="smsg">Running — nothing has been written yet.</div>
+      <button class="btn sm ghost" id="sclose" type="button">Discard</button>
+      <button class="btn sm ok" id="sapply" type="button" disabled>Apply this timetable</button></div>
+  </div>`;
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  let META=null, VARS=[], CLS=[], PMAX=7, DAYS=[], focusIdx=-1, t0=Date.now();
+  let placed=0,bt=0,cf=0,sw=0,total=0,logN=0,finished=false;
+  const cell=(d,p)=>document.getElementById(`sc-${d}-${p}`);
+  const log=(cls,html)=>{const el=$('#slog');if(!el)return;
+    if(logN++>260){el.removeChild(el.firstChild);}
+    const d=document.createElement('div');d.className=cls||'';d.innerHTML=html;
+    el.appendChild(d);el.scrollTop=el.scrollHeight;};
+  const stat=()=>{const g=id=>document.getElementById(id);if(!g('st-pl'))return;
+    g('st-pl').textContent=total?`${placed}/${total}`:placed;g('st-bt').textContent=bt;
+    g('st-cf').textContent=cf.toLocaleString('en-IN');g('st-sw').textContent=sw;
+    g('st-ms').textContent=((Date.now()-t0)/1000).toFixed(1)+'s';
+    g('sbar').style.width=(total?100*placed/total:0)+'%';};
+  const phase=n=>{$$('#sphases .phase').forEach(e=>{
+      const i=PHASES.indexOf(e.dataset.p), j=PHASES.indexOf(n);
+      e.classList.toggle('on',i===j);e.classList.toggle('done',i>=0&&j>=0&&i<j);});};
+
+  function buildGrid(e){
+    META=e;VARS=e.vars;CLS=e.classes;PMAX=e.periods;DAYS=e.days;
+    const k=CLS.find(c=>c.label===focus)||CLS[0];
+    focusIdx=k?k.i:-1;total=e.total;
+    if(!k){$('#sgridwrap').innerHTML='<div style="color:var(--dim);padding:22px 4px">That section is not in this run.</div>';return;}
+    let h=`<table class="sgrid"><thead><tr><th class="dh">${esc(k.label)}</th>`;
+    for(let p=1;p<=PMAX;p++)h+=`<th>P${p}<br><span style="font-weight:400;color:#8b97a8">${(e.period_labels[p-1]||'').split('-')[0]}</span></th>`;
+    h+='</tr></thead><tbody>';
+    DAYS.forEach((d,di)=>{h+=`<tr><td class="dh">${esc(d)}</td>`;
+      for(let p=1;p<=PMAX;p++){
+        h+= p>k.day_len[di] ? '<td class="off"></td>'
+          : `<td><div class="sc" id="sc-${di}-${p}"><div class="a"></div><div class="b"></div></div></td>`;}
+      h+='</tr>';});
+    $('#sgridwrap').innerHTML=h+'</tbody></table>';
+  }
+  function paint(v,slot,room,cls){
+    const va=VARS[v];if(!va||va.c!==focusIdx)return;
+    const d=Math.floor(slot/PMAX), p0=slot%PMAX;
+    for(let j=0;j<va.len;j++){
+      const c=cell(d,p0+1+j);if(!c)continue;
+      c.className=`sc in ${cls} hot`;
+      c.querySelector('.a').textContent=va.s;
+      c.querySelector('.b').textContent=(room||'')+(va.len>1?' · lab':'');
+      setTimeout(()=>c&&c.classList.remove('hot'),420);
+    }
+  }
+  function clear(v,slot){
+    const va=VARS[v];if(!va||va.c!==focusIdx)return;
+    const d=Math.floor(slot/PMAX),p0=slot%PMAX;
+    for(let j=0;j<va.len;j++){const c=cell(d,p0+1+j);if(!c)continue;
+      c.className='sc';c.querySelector('.a').textContent='';c.querySelector('.b').textContent='';}
+  }
+  const nm=v=>VARS[v]?VARS[v].s:('#'+v);
+  const REASON={class:'class already busy',teacher:'teacher busy',unavail:'teacher unavailable',
+    room:'no free room',dayload:'daily load reached',weekload:'weekly load reached',
+    spread:'already that day',outside:'outside the day'};
+
+  function handle(e){
+    switch(e.t){
+      case 'init': buildGrid(e);
+        log('ph',`<b>${e.total}</b> lesson blocks · ${e.classes.length} section(s) · ${e.rooms.length} rooms${e.pins?` · ${e.pins} pinned periods`:''}`);
+        break;
+      case 'phase': phase(e.name); log('ph',`▸ ${esc(e.name)} — ${esc(e.note)}`); break;
+      case 'staff': log('',`<b>${esc(e.cls)}</b> ${esc(e.subject)} → ${esc(e.name)}`); break;
+      case 'pick': log('',`pick <b>${esc(nm(e.v))}</b> · ${e.d} option${e.d===1?'':'s'} (${esc(e.reason)})`); break;
+      case 'fail': cf++; log('',`&nbsp;&nbsp;✕ ${esc(REASON[e.c]||e.c)}${e.e?' — '+esc(String(e.e)):''}`); break;
+      case 'place': placed++; paint(e.v,e.s,e.r,VARS[e.v]&&VARS[e.v].len>1?'L':'T');
+        log('ok',`place <b>${esc(nm(e.v))}</b> → ${esc(e.r)}`); break;
+      case 'undo': placed=Math.max(0,placed-1); bt++; clear(e.v,e.s);
+        log('no',`undo <b>${esc(nm(e.v))}</b>`); break;
+      case 'stuck': log('wn',`stuck on <b>${esc(nm(e.v))}</b> — no legal slot left`); break;
+      case 'restart': log('wn',`restart #${e.n} — keeping the best ${e.placed} placements`); break;
+      case 'swap': sw++; clear(e.v,e.from); paint(e.v,e.to,e.r,VARS[e.v]&&VARS[e.v].len>1?'L':'T');
+        log('',`improve <b>${esc(nm(e.v))}</b> (−${e.gain})`); break;
+      case 'done': phase(null); break;
+      case 'result': finish(e); break;
+    }
+    stat();
+  }
+
+  function finish(r){
+    finished=true;
+    $$('#sphases .phase').forEach(e=>{e.classList.remove('on');e.classList.add('done');});
+    placed=r.placed;total=r.total;bt=r.backtracks;cf=r.conflicts;stat();
+    document.getElementById('st-ms').textContent=(r.ms/1000).toFixed(2)+'s';
+    // Repaint the focus section from the committed-shape result, so the grid the
+    // admin approves is the finished timetable, not wherever the animation ended.
+    const k=CLS.find(c=>c.i===focusIdx);
+    const key=k?`${k.dept}-${k.sem}-${k.section}`:null;   // server joins the tuple with '-'
+    if(k) r.bookings.filter(b=>b.cls===key)
+      .forEach(b=>{const di=DAYS.indexOf(b.day),c=cell(di,b.period);if(!c)return;
+        c.className='sc in '+(b.kind==='A'?'A':b.kind==='L'?'L':'T');
+        c.querySelector('.a').textContent=b.subject;
+        c.querySelector('.b').textContent=b.room||'';});
+    const warn=[];
+    if(r.unplaced.length)warn.push(`<b>${r.unplaced.length} curriculum period(s) could not be placed</b> and became activity slots: ${
+      [...new Set(r.unplaced.map(u=>u.subject))].slice(0,6).join(', ')}.`);
+    if(r.capacity_relaxed.length)warn.push(`<b>${r.capacity_relaxed.length} lab block(s) exceed room capacity</b> for ${
+      [...new Set(r.capacity_relaxed.map(x=>x.cls))].slice(0,5).join(', ')} — this dataset has no lab batch splitting, so the constraint was relaxed and recorded rather than hidden.`);
+    if(r.timed_out)warn.push('<b>The solver hit its time budget</b> and returned the best assignment it had.');
+    if(warn.length)$('#swarnbox').innerHTML=`<div class="swarn">${warn.map(w=>'<div>'+w+'</div>').join('')}</div>`;
+    $('#smsg').innerHTML=`Solved <b>${r.placed}/${r.total}</b> curriculum periods in <b>${(r.ms/1000).toFixed(2)}s</b>
+      · ${r.activity_slots} activity periods · ${r.backtracks} backtracks. Nothing is written yet.`;
+    $('#sapply').disabled=false;
+    log('ph',`▸ done — ${r.placed}/${r.total} placed, score ${r.score}`);
+  }
+
+  const es=new EventSource(`/api/timetable/generate/stream?scope=${scope}&dept=${dept}&sem=${sem}&section=${section}&seed=${seed}`);
+  SOLVER_ES=es;
+  // Events arrive far faster than anyone can read. Queue them and drain at a rate
+  // that scales with the backlog, so a 150-event run and a 2300-event run both
+  // stay watchable instead of one of them flashing past.
+  const q=[];
+  const timer=setInterval(()=>{
+    const n=Math.max(1,Math.ceil(q.length/40));
+    for(let i=0;i<n&&q.length;i++){try{handle(q.shift())}catch(_){}}
+    if(finished&&!q.length){clearInterval(timer);es.close();SOLVER_ES=null;}
+  },16);
+  es.onmessage=ev=>{try{q.push(JSON.parse(ev.data))}catch(_){}};
+  es.onerror=()=>{if(!finished){log('no','stream interrupted — nothing was written');
+    $('#smsg').textContent='The solver stream was interrupted. Nothing was written.';}
+    es.close();SOLVER_ES=null;};
+
+  $('#sclose').onclick=()=>{if(SOLVER_ES){SOLVER_ES.close();SOLVER_ES=null;}clearInterval(timer);box.innerHTML='';};
+  $('#sapply').onclick=async()=>{
+    const b=$('#sapply');b.disabled=true;b.textContent='Applying…';
+    try{
+      const r=await api('/api/timetable/generate/apply',{method:'POST',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify(args)});
+      if(r.problems&&r.problems.length){
+        $('#smsg').innerHTML=`<span style="color:var(--bad)">Applied, but verification found ${r.problems.length} problem(s): ${esc(r.problems[0])}</span>`;
+      }else{
+        $('#smsg').innerHTML=`<span style="color:var(--good)">Applied to <b>${esc(r.target)}</b> — ${r.periods_written} periods written and independently verified.</span>`;
+      }
+      b.textContent='Applied';
+      await reload();
+    }catch(err){b.disabled=false;b.textContent='Apply this timetable';
+      $('#smsg').innerHTML='<span style="color:var(--bad)">Apply failed — nothing was written.</span>';}
+  };
 }
 
 async function renderFac(el){

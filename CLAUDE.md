@@ -1,5 +1,48 @@
 # MAWOS — working notes for Claude
 
+## ⚠⚠ READ THIS FIRST — the product now lives in `VidyaERP/`, not in this tree
+
+**`docs/superpowers/specs/2026-09-14-mawos-v6-product-aim.md` is the current aim.** The owner's
+brief is *"SMART and advanced multi-agent college ERP, Indian engineering college, admin-first"* —
+not a research prototype. Research framing is **withdrawn**; `evaluation/` stays as report
+material and has no authority over product work.
+
+| Codebase | Role |
+|---|---|
+| **`VidyaERP/erp/`** | **The product.** All new work lands here |
+| `MAWOS` (this tree) | Reference. Donates `mcp_server.py` + its parity suite. Otherwise archived |
+| `teacher-erp-with-timetable-simulation/` (Chronos) | Reference. Donated its timetable solver |
+
+**Timetable generation from scratch landed 2026-09-14** — `VidyaERP/erp/solver.py`, ported from
+Chronos's `engine.ts` and adapted to Indian-college rules (3-period lab blocks inside one session,
+per-semester day length, contiguous days, pinning). `solve()` is a generator: the browser streams
+every decision over SSE onto a live grid, and a synchronous caller drains the same generator — one
+code path. 456 periods / 21 sections in ~0.3 s, 0 clashes. `python3 tests/solver_test.py` — 44
+assertions, no server, no API cost.
+
+Three things that will bite anyone touching it:
+
+- **MRV staleness is fine; stuck-variable thrash is not.** `dom[]` is an ordering heuristic
+  refreshed only for variables a placement can affect, because `build_cands()` re-derives the
+  truth for the variable actually chosen. But a variable that wipes out repeatedly must be
+  **parked** (`STUCK_LIMIT`) — the reference's `recovered` flag goes true when some *other* frame
+  retries, so the culprit is never parked and the search oscillates. Measured before the fix:
+  3,205 placements against 3,183 undos, 24 of 456 periods surviving, 20 s budget burned.
+- **Writes are guarded like every other write.** `plan_timetable_generation` proposes and writes
+  nothing; `apply_timetable_generation` refuses without explicit admin approval in the current
+  turn. The HTTP stream is a preview; `POST /api/timetable/generate/apply` re-solves with the same
+  seed (determinism is asserted by the suite) and commits, then `solver.verify()` re-reads the
+  committed rows before reporting success. Never report a write as clean on the solver's own word.
+- **Capacity relaxation is surfaced, never silent.** Lab rooms seat 36, a CSE section is ~60, and
+  this dataset has no lab batch splitting. The solver relaxes and names every affected class in
+  `capacity_relaxed`, shown as an amber warning above the Apply button. Do not "fix" this by
+  dropping the constraint.
+
+Everything below this block is MAWOS's own history. It is accurate for MAWOS and still governs
+any work in this tree — but MAWOS is no longer where features get built.
+
+---
+
 B.E. final-year research prototype (Dept. of AI&ML, MITE, Group 12).
 Framing: **event-driven multi-agent workflow orchestration engine for
 universities**. The contribution is the orchestration engine, not the agent
