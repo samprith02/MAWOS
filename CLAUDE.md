@@ -1,6 +1,12 @@
 # MAWOS — working notes for Claude
 
-## ⚠⚠ READ THIS FIRST — the product now lives in `VidyaERP/`, not in this tree
+## ⚠⚠ READ THIS FIRST — the product has MOVED OUT of this repository
+
+**VidyaERP is now its own repository: <https://github.com/samprith02/VidyaERP>**
+(Apache 2.0, published 2026-09-15, clean history). It is checked out at `../VidyaERP`, beside
+this tree. **All product work happens there, not here.** `MAWOS/VidyaERP/` was deleted from this
+repo on the same day to leave one source of truth; it survives in this history at `a0b9ea15` and
+earlier if you ever need the pre-split state.
 
 **`docs/superpowers/specs/2026-09-14-mawos-v6-product-aim.md` is the current aim.** The owner's
 brief is *"SMART and advanced multi-agent college ERP, Indian engineering college, admin-first"* —
@@ -9,11 +15,34 @@ material and has no authority over product work.
 
 | Codebase | Role |
 |---|---|
-| **`VidyaERP/erp/`** | **The product.** All new work lands here |
+| **`../VidyaERP`** (own repo, Apache 2.0) | **The product.** All new work lands here |
 | `MAWOS` (this tree) | Reference. Donates `mcp_server.py` + its parity suite. Otherwise archived |
-| `teacher-erp-with-timetable-simulation/` (Chronos) | Reference. Donated its timetable solver |
+| `teacher-erp-with-timetable-simulation/` (Chronos) | Reference. Donated its timetable solver. **The owner's own repo** (`samprith02/chronos-teacher-erp-timetable`) — earlier notes here called it "a teammate's", which was wrong and matters, because it is what makes the solver port his to relicense |
 
-**Timetable generation from scratch landed 2026-09-14** — `VidyaERP/erp/solver.py`, ported from
+### ⚠ This repository is PUBLIC and UNLICENSED — do not add a licence to it
+
+`samprith02/MAWOS` has been public since 2026-08-12 with `license: NONE`, which means all rights
+are reserved: visible, but nobody may legally reuse it. **Adding a LICENSE here would grant the
+world redistribution rights over things that are not ours to license.** `docs/OPEN_SOURCE_AUDIT.md`
+(2026-09-15) records the full audit; the two blockers are:
+
+- `MAWOS_Review1.pptx` / `.docx` carry four students' real USNs, the real institution and two
+  faculty guides' names. Consent for three classmates and two staff members is not ours to give.
+- `ml/data/external/` redistributes UCI dataset #320 — real records of 1,044 Portuguese
+  secondary students. `.gitignore:11` already intended to exclude these (`ml/data/*.csv`); the
+  rule just doesn't reach `ml/data/external/student/`. Nothing reads them at runtime — only the
+  derived `ml/data/calibration.json` is used, and `ml/calibrate.py:43` already prints the UCI
+  download URL when they're absent.
+
+Both are exposed **right now**, independent of licensing. Removing them from `HEAD` is a normal
+commit; removing them from history needs `git filter-repo` and a force-push that rewrites every
+commit hash cited in `OPEN_DECISIONS.md` and the execution ledger. Four commits touch those paths.
+That trade is the owner's call — see §4 of the audit.
+
+**No secrets were found** in tracked files or in any of the 75 commits, and `.env` is correctly
+ignored everywhere.
+
+**Timetable generation from scratch landed 2026-09-14** — `../VidyaERP/solver.py`, ported from
 Chronos's `engine.ts` and adapted to Indian-college rules (3-period lab blocks inside one session,
 per-semester day length, contiguous days, pinning). `solve()` is a generator: the browser streams
 every decision over SSE onto a live grid, and a synchronous caller drains the same generator — one

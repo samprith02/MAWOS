@@ -172,10 +172,18 @@ Per §1's caveat. Small, high-value, and it is what turns a good demo into a goo
 
 ## 6. Phases
 
-**A — Consolidate.** VidyaERP into the repository properly (it is currently untracked, as
-Chronos was — that is what made Chronos invisible for two months). One README stating which
-codebase is live. MAWOS and Chronos marked reference. Deploy VidyaERP: Render or equivalent,
-`/health`, Groq key from the environment, never git.
+**A — Consolidate. DONE 2026-09-15, but not the way this said.** The plan was to pull VidyaERP
+*into* the MAWOS repository. An open-source readiness audit (`docs/OPEN_SOURCE_AUDIT.md`) found
+that MAWOS cannot be licensed as it stands — it publicly redistributes UCI dataset #320 (real
+records of 1,044 minors) and, in two tracked presentation binaries, four students' real USNs and
+two faculty guides' names. Consent for classmates and staff is not ours to give.
+
+So VidyaERP went the other way: **out** to its own repository —
+<https://github.com/samprith02/VidyaERP>, Apache 2.0, clean history, 20 files, two dependencies.
+That resolves all three of the audit's blockers at once and gives the product its own identity
+instead of shipping as a subfolder of an archived research prototype. `MAWOS/VidyaERP/` was
+deleted to leave one source of truth. Still to do from this phase: **deploy** (Render or
+equivalent, `/health`, Groq key from the environment, never git).
 
 **B — Timetable generation. DONE 2026-09-14.** §3. Generation endpoint, rooms as a decision
 variable, streaming trace, the animated grid in the existing console, both guarded tools.
