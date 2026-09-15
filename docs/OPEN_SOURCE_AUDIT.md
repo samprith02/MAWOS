@@ -137,20 +137,42 @@ solver stream working.
 
 ---
 
-## 4. Still open — decisions for the repository owner
+## 4. Resolved 2026-09-15 — and a correction to this document's own tone
 
-1. **The MAWOS repository is still public, still unlicensed, and still exposes §2.3.** The
-   presentation binaries and the UCI records are readable by anyone today. Removing them from
-   `HEAD` is a normal commit; removing them from *history* needs `git filter-repo` and a
-   force-push, which rewrites every commit hash — including those cited in
-   `docs/v4/OPEN_DECISIONS.md` and the execution ledger. Only four commits touch those paths,
-   so the rewrite itself is small. `evaluation/results/REDACTIONS.md` already records the same
-   trade-off for the name redaction and reaches the same conclusion: it is the owner's call.
-2. **Licensing MAWOS** would additionally want a one-line agreement from the three co-authors
-   (§2.2).
-3. **AI-assistant terms.** VidyaERP was generated with LM Arena Agent Mode. Most providers
-   assign output ownership to the user, but that was not verifiable from here and is worth
-   confirming against their terms.
+**Both §2.3 items were untracked from `HEAD`** and the local copies kept, so
+`ml/calibrate.py` still reruns offline and the Review-1 material stays where it was. The
+`.gitignore` now names both, with the reason inline, so neither returns by accident. Only
+`ml/data/calibration.json` — the derived correlation matrix, which *is* ours — remains tracked,
+and that is the only thing the runtime ever read.
+
+**A correction worth recording, because this document overstated the case.** An earlier draft
+described both items as an "exposure" and repeated it. That was wrong in proportion:
+
+- The UCI dataset is **published research data** that anyone can download from UCI. Redistributing
+  it leaked nothing. The real issue was always **licensing** — CC BY 4.0 data cannot be
+  sublicensed under Apache 2.0 — and that issue dissolved the moment the decision was made not to
+  license this repository.
+- USNs are **not secrets**. They are printed on results and are queryable on VTU's public results
+  site. The genuine point is narrower: they belong to three classmates and two staff members who
+  were never asked. That is a matter of courtesy and consent, not of security.
+
+Neither was dangerous. Both were cheap to tidy, and are now tidied. Stating the severity
+accurately matters as much as finding the issue: an audit that inflates its findings trains its
+reader to discount the next one.
+
+### Still open
+
+1. **History is not rewritten.** Both items remain in commits already pushed. Removing them
+   needs `git filter-repo` and a force-push that rewrites every commit hash, including those
+   cited in `docs/v4/OPEN_DECISIONS.md` and the execution ledger. Four commits touch those paths.
+   Given the severity above, leaving history alone is a reasonable position, not a deferral —
+   `evaluation/results/REDACTIONS.md` reaches the same conclusion about the name redaction.
+2. **Licensing MAWOS is now possible but still not done.** With §2.3 cleared from `HEAD`, the
+   remaining condition is §2.2: a one-line agreement from the three co-authors, since their work
+   lives in this history even though none of their lines survive in `HEAD`. Not required for
+   anything currently planned — VidyaERP is the licensed, distributable project.
+3. **AI-assistant terms.** VidyaERP was generated with LM Arena Agent Mode. Most providers assign
+   output ownership to the user, but that was not verifiable from here and is worth confirming.
 
 ---
 

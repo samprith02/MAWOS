@@ -9,6 +9,23 @@ __pycache__/
 mawos.db
 ml/models/*.joblib
 ml/data/*.csv
+# The raw UCI Student Performance files (dataset #320, Cortez & Silva). The
+# `ml/data/*.csv` rule above was meant to exclude these and never reached them,
+# because they also live one directory deeper and inside a zip -- so the repo
+# redistributed 1,044 real students' records for a month. It is a public
+# dataset, so this is an attribution question rather than a leak, but it is not
+# ours to relicense and nothing reads it at runtime: only the derived
+# `ml/data/calibration.json` is loaded, and `ml/calibrate.py` already prints the
+# UCI download URL when the raw files are absent. Untracked 2026-09-15; the
+# local copies are kept so `calibrate.py` still reruns offline.
+ml/data/external/
+
+# Review-1 submission material. Kept locally, never tracked: it carries four
+# students' real USNs, the real institution and two faculty guides' names, and
+# publishing other people's identifiers is not ours to decide. Untracked
+# 2026-09-15.
+MAWOS_Review1.pptx
+MAWOS_Review1_Manuscript.docx
 # evaluation/results/ IS tracked. A result that is not version controlled
 # cannot be cited -- v2 ignored this whole tree, so none of its published
 # numbers were ever committed, and the P0.5 gate output was briefly in the

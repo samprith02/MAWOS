@@ -19,28 +19,30 @@ material and has no authority over product work.
 | `MAWOS` (this tree) | Reference. Donates `mcp_server.py` + its parity suite. Otherwise archived |
 | `teacher-erp-with-timetable-simulation/` (Chronos) | Reference. Donated its timetable solver. **The owner's own repo** (`samprith02/chronos-teacher-erp-timetable`) — earlier notes here called it "a teammate's", which was wrong and matters, because it is what makes the solver port his to relicense |
 
-### ⚠ This repository is PUBLIC and UNLICENSED — do not add a licence to it
+### This repository is PUBLIC and UNLICENSED — that is deliberate
 
 `samprith02/MAWOS` has been public since 2026-08-12 with `license: NONE`, which means all rights
-are reserved: visible, but nobody may legally reuse it. **Adding a LICENSE here would grant the
-world redistribution rights over things that are not ours to license.** `docs/OPEN_SOURCE_AUDIT.md`
-(2026-09-15) records the full audit; the two blockers are:
+are reserved: visible, but nobody may legally reuse it. **Don't add a LICENSE here without
+reading `docs/OPEN_SOURCE_AUDIT.md` first.** VidyaERP is the licensed, distributable project;
+this one is a research archive and does not need to be.
 
-- `MAWOS_Review1.pptx` / `.docx` carry four students' real USNs, the real institution and two
-  faculty guides' names. Consent for three classmates and two staff members is not ours to give.
-- `ml/data/external/` redistributes UCI dataset #320 — real records of 1,044 Portuguese
-  secondary students. `.gitignore:11` already intended to exclude these (`ml/data/*.csv`); the
-  rule just doesn't reach `ml/data/external/student/`. Nothing reads them at runtime — only the
-  derived `ml/data/calibration.json` is used, and `ml/calibrate.py:43` already prints the UCI
-  download URL when they're absent.
+Two things were untracked on 2026-09-15 (local copies kept, `.gitignore` names both with the
+reason inline, so neither returns by accident):
 
-Both are exposed **right now**, independent of licensing. Removing them from `HEAD` is a normal
-commit; removing them from history needs `git filter-repo` and a force-push that rewrites every
-commit hash cited in `OPEN_DECISIONS.md` and the execution ledger. Four commits touch those paths.
-That trade is the owner's call — see §4 of the audit.
+- `MAWOS_Review1.pptx` / `.docx` — four students' real USNs, the real institution, two faculty
+  guides' names. USNs aren't secrets (they're on public VTU results), but they belong to three
+  classmates and two staff who were never asked. Courtesy, not security.
+- `ml/data/external/` — UCI dataset #320. Public research data anyone can download, so nothing
+  leaked; the real issue was that CC BY 4.0 data can't be sublicensed under Apache 2.0, which
+  stopped mattering once MAWOS wasn't being licensed. Nothing reads it at runtime — only the
+  derived `ml/data/calibration.json`, which is ours and stays tracked, and `ml/calibrate.py:43`
+  already prints the UCI download URL when the raw files are absent.
 
-**No secrets were found** in tracked files or in any of the 75 commits, and `.env` is correctly
-ignored everywhere.
+**Both remain in git history**; only `HEAD` was cleaned. Given the severity above that's a
+reasonable place to stop, not a deferral — see §4 of the audit for the force-push trade-off.
+
+**No secrets were found** in tracked files or in any commit, and `.env` is correctly ignored
+everywhere.
 
 **Timetable generation from scratch landed 2026-09-14** — `../VidyaERP/solver.py`, ported from
 Chronos's `engine.ts` and adapted to Indian-college rules (3-period lab blocks inside one session,

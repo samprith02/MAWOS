@@ -6,12 +6,13 @@
 > ERP for an Indian engineering college, Apache 2.0, two dependencies. It supersedes this one.
 > It took the timetable solver with it; everything else here is research record.
 >
-> **This repository is public but deliberately *unlicensed* — all rights reserved.** That is not
-> an oversight. An open-source readiness audit ([`docs/OPEN_SOURCE_AUDIT.md`](docs/OPEN_SOURCE_AUDIT.md),
-> 2026-09-15) found two things here that are not ours to license: presentation binaries carrying
-> four students' real USNs and two faculty guides' names, and a redistributed copy of UCI dataset
-> #320 — real records of 1,044 Portuguese secondary-school students. Licensing the repository
-> would grant the world redistribution rights over both. **Do not add a LICENSE file here.**
+> **This repository is public but deliberately *unlicensed* — all rights reserved.** VidyaERP is
+> the licensed, distributable project; this one is a research archive and doesn't need to be.
+> An open-source readiness audit ([`docs/OPEN_SOURCE_AUDIT.md`](docs/OPEN_SOURCE_AUDIT.md),
+> 2026-09-15) found two things that weren't ours to sublicense — Review-1 presentation material
+> carrying classmates' and staff members' identifiers, and a redistributed copy of UCI dataset
+> #320. Both were untracked the same day; the audit records what they were and, equally, why
+> neither was as serious as its first draft claimed.
 >
 > **The text below is a historical record of the v3 research framing (frozen 2026-08-25) and is
 > stale in places** — it describes ten agents where P2 reduced the count to four, and a dataset
