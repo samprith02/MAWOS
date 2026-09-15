@@ -95,7 +95,9 @@ second deployment for one feature); keeping MAWOS as the base (sunk cost).
 
 ## 3. Port one — timetable generation from scratch · **DONE 2026-09-14**
 
-> Landed as `VidyaERP/erp/solver.py` + `tests/solver_test.py` (44 assertions, all passing),
+> Landed as `solver.py` + `tests/solver_test.py` (44 assertions, all passing) — at the time in
+> `VidyaERP/erp/`, and since 2026-09-15 at the root of its own repository,
+> <https://github.com/samprith02/VidyaERP>. Also:
 > `POST /api/timetable/generate/apply`, `GET /api/timetable/generate/stream`, two guarded tools,
 > and the live grid in Master Timetable → **Generate from scratch**.
 >

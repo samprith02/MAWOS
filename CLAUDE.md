@@ -46,10 +46,12 @@ ignored everywhere.
 Chronos's `engine.ts` and adapted to Indian-college rules (3-period lab blocks inside one session,
 per-semester day length, contiguous days, pinning). `solve()` is a generator: the browser streams
 every decision over SSE onto a live grid, and a synchronous caller drains the same generator — one
-code path. 456 periods / 21 sections in ~0.3 s, 0 clashes. `python3 tests/solver_test.py` — 44
-assertions, no server, no API cost.
+code path. 456 periods / 21 sections in ~0.3 s, 0 clashes. Run its suite **from the VidyaERP
+repo**, not here: `cd ../VidyaERP && python tests/solver_test.py` — 44 assertions, no server, no
+API cost.
 
-Three things that will bite anyone touching it:
+The three notes below are kept here only so this archive stays self-explanatory. **The
+authoritative copy now lives in `../VidyaERP/CLAUDE.md`**, alongside the code; edit that one.
 
 - **MRV staleness is fine; stuck-variable thrash is not.** `dom[]` is an ordering heuristic
   refreshed only for variables a placement can affect, because `build_cands()` re-derives the
@@ -414,11 +416,14 @@ builds itself. Backend: `backend/app/scheduler_live.py`, a strictly
 additive wrapper (zero diff to `scheduler.py`; duplicates only the
 ~45-line seed loop for eventing, calls the real unmodified `anneal()` via
 its existing `trace_every` hook). Route: `POST
-/hod/generate-timetable-live`. This exists because a teammate dropped a
-separate Next.js/Postgres reference app
-(`teacher-erp-with-timetable-simulation/`, untouched, not integrated) with
-a nicer live-trace UI for its own timetable solver; MAWOS kept its own
-frozen, ITC-2007-benchmarked SA scheduler and borrowed only the
+/hod/generate-timetable-live`. This exists because the owner's own separate
+Next.js/Postgres app — Chronos (`teacher-erp-with-timetable-simulation/`,
+gitignored, `samprith02/chronos-teacher-erp-timetable`) — had a nicer
+live-trace UI for its own timetable solver. **This paragraph used to say "a
+teammate dropped" it; that was wrong**, and it mattered enough to correct in
+two places: Chronos is the owner's, which is what made its solver his to port
+into VidyaERP and relicense under Apache 2.0 (see the header table).
+MAWOS kept its own frozen, ITC-2007-benchmarked SA scheduler and borrowed only the
 visualization idea. Not part of P0–P8.
 
 ## Rules that matter here

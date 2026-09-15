@@ -1,5 +1,24 @@
 # MAWOS — an event-driven multi-agent workflow orchestration engine for universities
 
+> ## ⚠ Archived. The product moved out of this repository.
+>
+> **Active project: [VidyaERP](https://github.com/samprith02/VidyaERP)** — a SMART multi-agent
+> ERP for an Indian engineering college, Apache 2.0, two dependencies. It supersedes this one.
+> It took the timetable solver with it; everything else here is research record.
+>
+> **This repository is public but deliberately *unlicensed* — all rights reserved.** That is not
+> an oversight. An open-source readiness audit ([`docs/OPEN_SOURCE_AUDIT.md`](docs/OPEN_SOURCE_AUDIT.md),
+> 2026-09-15) found two things here that are not ours to license: presentation binaries carrying
+> four students' real USNs and two faculty guides' names, and a redistributed copy of UCI dataset
+> #320 — real records of 1,044 Portuguese secondary-school students. Licensing the repository
+> would grant the world redistribution rights over both. **Do not add a LICENSE file here.**
+>
+> **The text below is a historical record of the v3 research framing (frozen 2026-08-25) and is
+> stale in places** — it describes ten agents where P2 reduced the count to four, and a dataset
+> that R1 replaced with `data/generator/`. `CLAUDE.md` and `docs/v4/` are the accurate sources.
+> It is left as written rather than retro-edited, because rewriting a superseded research claim
+> after the fact is how a record stops being one.
+
 B.E. Final-Year Research Prototype · Dept. of AI&ML, MITE · Group 12
 
 MAWOS models a **real institution** — 5 departments × 4 years × 2 sections
